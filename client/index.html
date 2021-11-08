@@ -8,13 +8,25 @@
     var socket = io()
     
     socket.on("newPosition", function(data){
+        // bg Colour
         ctx.clearRect(0, 0, 1440, 810)
-        for(var i = 0; i < data.length; i++){
-            ctx.fillRect(data[i].x, data[i].y, 20, 20)
-            ctx.fillText(data[i].number, data[i].x, data[i].y)
+        ctx.fillStyle = "#324536"
+        ctx.fillRect(0, 0, 1440, 810)
+
+        // Draw Players
+        for(var i = 0; i < data.player.length; i++){
+            ctx.fillStyle = "#b3b3b3"
+            ctx.fillRect(data.player[i].x, data.player[i].y, 20, 20)
+            ctx.fillText(data.player[i].number, data.player[i].x, data.player[i].y - 5)
+        }
+
+        // Draw Bullets
+        for(var i = 0; i < data.bullet.length; i++){
+            ctx.fillRect(data.bullet[i].x-3, data.bullet[i].y-3, 6, 6)
         }
     })
 
+    // Key-press Detection -----------------------------------------------------
     document.onkeydown = function(event){
         if(event.keyCode === 68) // d
             socket.emit("keyPress", {inputId:"right", state:true})
@@ -36,4 +48,5 @@
         else if(event.keyCode === 87) // w
             socket.emit("keyPress", {inputId:"up", state:false})
     }
+    // Key-press Detection -----------------------------------------------------
 </script>

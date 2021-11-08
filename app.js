@@ -1,4 +1,4 @@
-
+// Initialisation or Something --------------------------------------------------
 const { timeEnd } = require("console")
 var express = require("express")
 var app = express()
@@ -13,7 +13,9 @@ serv.listen(8080)
 console.log("Bismuth started")
 
 var SOCKET_LIST = {}
+// Initialisation or Something --------------------------------------------------
 
+// Entity -----------------------------------------------------------------------
 var Entity = function(){
     var self = {
         x:20,
@@ -31,7 +33,10 @@ var Entity = function(){
     }
     return self
 }
+// Entity -----------------------------------------------------------------------
 
+
+// Player -----------------------------------------------------------------------
 var Player = function(id){
     var self = Entity()
     self.id = id
@@ -98,7 +103,50 @@ Player.update = function(){
     }
     return pack
 }
+// Player -----------------------------------------------------------------------
 
+// Bullet -----------------------------------------------------------------------
+var Bullet = function(angle){
+    var self = Entity()
+    self.id = Math.random()
+    self.speedX = Math.cos(angle/180*Math.PI) * 10
+    self.speedY = Math.sin(angle/180*Math.PI) * 10
+
+    self.timer = 0
+    self.toRemove = false
+    var superUpdate = self.update
+    self.update = function(){
+        if (self.timer++ > 500) // Remove after 500 frames
+            self.toRemove = true
+        superUpdate()
+    }
+    Bullet.list[self.id] = self
+    return self
+}
+Bullet.list = {}
+
+Bullet.update = function(){
+    if (Math.random() < 0.1){
+        Bullet(Math.random()*360)
+    }
+
+    var pack = []
+    for (var i in Bullet.list){
+        var bullet = Bullet.list[i]
+        bullet.update()
+        if (bullet.toRemove == true) 
+            delete Bullet.list[i];
+        pack.push({
+            x:bullet.x,
+            y:bullet.y,
+            number:bullet.number
+        })
+    }
+    return pack
+}
+// Bullet -----------------------------------------------------------------------
+
+// Connections & Server Stuff ---------------------------------------------------
 var io = require("socket.io") (serv, {})
 io.sockets.on("connection", function(socket){
     socket.id = Math.random()
@@ -113,10 +161,16 @@ io.sockets.on("connection", function(socket){
 
 })
 
+// Game Loop
 setInterval(function(){
-    var pack = Player.update()
+    var pack = { // Array of Packs
+        player:Player.update(),
+        bullet:Bullet.update()
+    }
+
     for (var i in SOCKET_LIST){
         var socket = SOCKET_LIST[i]
         socket.emit("newPosition", pack)
     }
-}, 1000/144)
+}, 1000/144) // 144 updates per second (so people with 144Hz monitors won't complain)
+// Connections & Server Stuff ---------------------------------------------------
