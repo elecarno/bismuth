@@ -14,7 +14,7 @@
     var chatInput = document.getElementById("chat-input")
     var chatForm = document.getElementById("chat-form")
     var ctx = document.getElementById("ctx").getContext("2d")
-    ctx.font = "30px Arial"
+    ctx.font = "10px Arial"
 
     var socket = io()
     
@@ -28,13 +28,21 @@
         for(var i = 0; i < data.player.length; i++){
             ctx.fillStyle = "#b3b3b3"
             ctx.fillRect(data.player[i].x, data.player[i].y, 20, 20)
-            ctx.fillText(data.player[i].number, data.player[i].x, data.player[i].y - 5)
+            ctx.fillText("player " + data.player[i].number, data.player[i].x - 10, data.player[i].y - 5)
         }
 
         // Draw Bullets
         for(var i = 0; i < data.bullet.length; i++){
+            ctx.fillStyle = "#121212"
             ctx.fillRect(data.bullet[i].x-3, data.bullet[i].y-3, 6, 6)
         }
+
+        // Draw Floofs
+        for(var i = 0; i < data.floof.length; i++){
+            ctx.fillStyle = "#58754c"
+            ctx.fillRect(data.floof[i].x-7, data.floof[i].y-7, 14, 14)
+            ctx.fillText("floof " + data.floof[i].number, data.floof[i].x - 15, data.floof[i].y - 10)
+        }        
     })
 
     // Chat  -------------------------------------------------------------------

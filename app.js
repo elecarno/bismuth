@@ -10,7 +10,7 @@ app.get("/", function(req, res){
 })
 app.use("/client", express.static(__dirname + "/client"))
 
-serv.listen(8080)
+serv.listen(2000)
 console.log("Bismuth started")
 
 var SOCKET_LIST = {}
@@ -19,8 +19,8 @@ var SOCKET_LIST = {}
 // Entity -----------------------------------------------------------------------
 var Entity = function(){
     var self = {
-        x:250,
-        y:250,
+        x:Math.random() * 2000,
+        y:Math.random() * 1000,
         speedX:0,
         speedY:0,
         id:"",
@@ -44,7 +44,7 @@ var Entity = function(){
 var Player = function(id){
     var self = Entity()
     self.id = id
-    self.number = "" + Math.floor(10 * Math.random())
+    self.number = "" + Math.floor(Math.random() * 100)
     self.pressingRight = false
     self.pressingLeft = false
     self.pressingUp = false
@@ -174,10 +174,90 @@ Bullet.update = function(){
 }
 // Bullet -----------------------------------------------------------------------
 
+// Floof ------------------------------------------------------------------------
+var Floof = function(){
+    var self = Entity()
+    self.id = Math.random()
+    self.number = "" + Math.floor(Math.random() * 100)
+    self.speedX = 0
+    self.speedY = 0
+    self.timer = 0
+    self.toRemove = false
+    var superUpdate = self.update
+    self.update = function(){
+        direction = Math.random()
+        axis = Math.random()
+        if(direction > 0.5){
+            if (axis >= 0.5)
+                this.speedX += Math.random()
+            else
+                this.speedY += Math.random()
+        }
+        else if (direction < 0.5){
+            if (axis > 0.5)
+                this.speedX -= Math.random()
+            else
+                this.speedY -= Math.random()
+        }
+        if (this.speedX > 1)
+            this.speedX = 1
+        if (this.speedY > 1)
+            this.speedY = 1
+
+        if (self.timer++ > 432){ // Remove after 432 frames (3 seconds I think)
+            self.toRemove = true
+            /*
+            for(var i in SOCKET_LIST){
+                SOCKET_LIST[i].emit("addToChat", "floof " + self.number + " died of old age")
+            }
+            */
+        }        
+
+        superUpdate()
+
+        // Collision
+        for (var i in Bullet.list){
+            var b = Bullet.list[i]
+            if(self.getDistance(b) < 32){
+                // handle collision
+                self.toRemove = true
+                for(var i in SOCKET_LIST){
+                    SOCKET_LIST[i].emit("addToChat", "floof " + self.number + " was killed")
+                }
+            }
+        }
+    }
+    Floof.list[self.id] = self
+    return self
+}
+Floof.list = {}
+
+Floof.update = function(){
+    if (Math.random() < 0.1){
+        Floof()
+    }
+
+    var pack = []
+    for (var i in Floof.list){
+        var floof = Floof.list[i]
+        floof.update()
+        if (floof.toRemove) 
+            delete Floof.list[i];
+        else
+            pack.push({
+                x:floof.x,
+                y:floof.y,
+                number:floof.number
+            })
+    }
+    return pack
+}
+// Floof ------------------------------------------------------------------------
+
 // Connections & Server Stuff ---------------------------------------------------
 
 //!!!!!!!!!!!!!!!!!!!!!!!!!!!
-var DEBUG = false // IMPORTANT
+var DEBUG = true // IMPORTANT
 //!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 var io = require("socket.io") (serv, {})
@@ -213,7 +293,8 @@ io.sockets.on("connection", function(socket){
 setInterval(function(){
     var pack = { // Array of Packs
         player:Player.update(),
-        bullet:Bullet.update()
+        bullet:Bullet.update(),
+        floof:Floof.update()
     }
 
     for (var i in SOCKET_LIST){
