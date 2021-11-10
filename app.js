@@ -1,4 +1,6 @@
 // Initialisation or Something --------------------------------------------------
+var mongojs = require("mongojs")
+var db = mongojs('localhost:27017/Bismuth', ['account','progress'])
 const { timeEnd } = require("console")
 var express = require("express")
 const { ftruncate } = require("fs")
@@ -10,7 +12,7 @@ app.get("/", function(req, res){
 })
 app.use("/client", express.static(__dirname + "/client"))
 
-serv.listen(2000)
+serv.listen(8080)
 console.log("Bismuth started")
 
 var SOCKET_LIST = {}
@@ -257,15 +259,66 @@ Floof.update = function(){
 // Connections & Server Stuff ---------------------------------------------------
 
 //!!!!!!!!!!!!!!!!!!!!!!!!!!!
-var DEBUG = true // IMPORTANT
+var DEBUG = false // IMPORTANT
 //!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+var USERS = {
+    // username:password
+    "bob":"asd",
+    "bob2":"bob"
+}
+
+var isValidPassword = function(data, cb){
+    db.account.find({username:data.username, password:data.password}, function(err, res){
+        if(res.length > 0)
+            cb(true)
+        else
+            cb(false)
+    })
+}
+
+var isUsernameTaken = function(data, cb){
+    db.account.find({username:data.username}, function(err, res){
+        if(res.length > 0)
+            cb(true)
+        else
+            cb(false)
+    })
+}
+
+var addUser = function(data, cb){
+    db.account.insert({username:data.username, password:data.password}, function(err){
+        cb()
+    })
+}
 
 var io = require("socket.io") (serv, {})
 io.sockets.on("connection", function(socket){
     socket.id = Math.random()
     SOCKET_LIST[socket.id] = socket  
 
-    Player.onConnect(socket)
+    socket.on("signIn", function(data){
+        isValidPassword(data, function(result){
+            if(result){
+                Player.onConnect(socket)
+                socket.emit("signInResponse",{success: true})
+            } else {
+                socket.emit("signInResponse",{success: false})
+            }
+        })  
+    })
+
+    socket.on("signUp", function(data){
+        isUsernameTaken(data, function(result){
+            if(result){
+                socket.emit("signUpResponse",{success: false})
+            } else {
+                addUser(data, function(){
+                    socket.emit("signUpResponse",{success: true})
+                })
+            }
+        })
+    })
 
     socket.on("disconnect", function(){
         delete SOCKET_LIST[socket.id]
