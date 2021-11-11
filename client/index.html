@@ -56,35 +56,156 @@
     var chatText = document.getElementById("chat-text")
     var chatInput = document.getElementById("chat-input")
     var chatForm = document.getElementById("chat-form")
+    
     var ctx = document.getElementById("ctx").getContext("2d")
     ctx.font = "10px Arial"
+
+    // init
+    var Player = function(initPack){
+        var self = {}
+        self.id = initPack.id
+        self.number = initPack.number
+        self.x = initPack.x
+        self.y = initPack.y
+        self.hp = initPack.hp
+        self.hpMax = initPack.hpMax
+        self.score = initPack.score
+
+        self.draw = function(){
+            ctx.fillStyle = "#b3b3b3"
+            ctx.fillRect(self.x, self.y, 20, 20)
+            ctx.fillText("player " + self.number, self.x - 10, self.y - 15)
+            ctx.fillText(self.score, self.x - 10, self.y - 3)
+            ctx.fillStyle = "#7ecf8b"
+            var hpWidth = 30 * self.hp / self.hpMax
+            ctx.fillRect(self.x - hpWidth/2, self.y - 28, hpWidth, 4)
+        }
+
+        Player.list[self.id] = self
+        return self
+    }
+    Player.list = {}
+
+    var Bullet = function(initPack){
+        var self = {}
+        self.id = initPack.id
+        self.x = initPack.x
+        self.y = initPack.y
+
+        self.draw = function(){
+            ctx.fillStyle = "#121212"
+            ctx.fillRect(self.x-3, self.y-3, 6, 6)
+        }
+
+        Bullet.list[self.id] = self
+        return self
+    }
+    Bullet.list = {}
+
+    var Floof = function(initPack){
+        var self = {}
+        self.id = initPack.id
+        self.number = initPack.number
+        self.x = initPack.x
+        self.y = initPack.y
+
+        self.draw = function(){
+            ctx.fillStyle = "#58754c"
+            ctx.fillRect(self.x-7, self.y-7, 14, 14)
+            ctx.fillText("floof " + self.number, self.x - 15, self.y - 10)
+        }
+
+        Floof.list[self.id] = self
+        return self
+    }
+    Floof.list = {}
+
+    socket.on("init",function(data){
+        for (var i = 0; i < data.player.length; i++){
+            new Player(data.player[i])
+        }
+        for (var i = 0; i < data.bullet.length; i++){
+            new Bullet(data.bullet[i])
+        }
+        for (var i = 0; i < data.floof.length; i++){
+            new Floof(data.floof[i])
+        }
+    })
+
+    // update
+    socket.on("update",function(data){
+        for(var i = 0; i < data.player.length; i++){
+            var pack = data.player[i]
+            var p = Player.list[pack.id]
+            if(p){
+                if(pack.x !== undefined)
+                    p.x = pack.x
+                if(pack.x !== undefined)
+                    p.y = pack.y
+                if(pack.hp !== undefined)
+                    p.hp = pack.hp
+                if(pack.hpMax !== undefined)
+                    p.hpMax = pack.hpMax
+                if(pack.score !== undefined)
+                    p.score = pack.score
+            }
+        }
+        for(var i = 0; i < data.bullet.length; i++){
+            var pack = data.bullet[i]
+            var b = Bullet.list[pack.id]
+            if(b){
+                if(pack.x !== undefined)
+                    b.x = pack.x
+                if(pack.x !== undefined)
+                    b.y = pack.y
+            }
+        }
+        for(var i = 0; i < data.floof.length; i++){
+            var pack = data.floof[i]
+            var f = Floof.list[pack.id]
+            if(f){
+                if(pack.x !== undefined)
+                    f.x = pack.x
+                if(pack.x !== undefined)
+                    f.y = pack.y
+            }
+        }
+    })
     
-    socket.on("newPosition", function(data){
+    // remove
+    socket.on("remove",function(data){
+        for(var i = 0; i < data.player.length; i++){
+            delete Player.list[data.player[i]]
+        }
+        for(var i = 0; i < data.bullet.length; i++){
+            delete Bullet.list[data.bullet[i]]
+        }
+        for(var i = 0; i < data.floof.length; i++){
+            delete Floof.list[data.floof[i]]
+        }
+    })
+
+    setInterval(function(){
         // bg Colour
         ctx.clearRect(0, 0, 1440, 810)
         ctx.fillStyle = "#324536"
         ctx.fillRect(0, 0, 1440, 810)
 
         // Draw Players
-        for(var i = 0; i < data.player.length; i++){
-            ctx.fillStyle = "#b3b3b3"
-            ctx.fillRect(data.player[i].x, data.player[i].y, 20, 20)
-            ctx.fillText("player " + data.player[i].number, data.player[i].x - 10, data.player[i].y - 5)
+        for(var i in Player.list){
+            Player.list[i].draw()
         }
 
         // Draw Bullets
-        for(var i = 0; i < data.bullet.length; i++){
-            ctx.fillStyle = "#121212"
-            ctx.fillRect(data.bullet[i].x-3, data.bullet[i].y-3, 6, 6)
+        for(var i in Bullet.list){
+            Bullet.list[i].draw()
         }
 
         // Draw Floofs
-        for(var i = 0; i < data.floof.length; i++){
-            ctx.fillStyle = "#58754c"
-            ctx.fillRect(data.floof[i].x-7, data.floof[i].y-7, 14, 14)
-            ctx.fillText("floof " + data.floof[i].number, data.floof[i].x - 15, data.floof[i].y - 10)
+        for(var i in Floof.list){
+            Floof.list[i].draw()
         }        
-    })
+    },1000/144)
 
     // Chat  -------------------------------------------------------------------
     socket.on("addToChat", function(data){

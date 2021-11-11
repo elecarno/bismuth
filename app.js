@@ -55,6 +55,9 @@ var Player = function(id){
     self.pressingSecondary = false
     self.mouseAngle = 0
     self.maxSpeed = 5
+    self.hp = 100
+    self.hpMax = 100
+    self.score = 0
 
     var superUpdate = self.update;
     self.update = function(){
@@ -87,7 +90,30 @@ var Player = function(id){
         else
             self.speedY = 0
     }
+
+    self.getInitPack = function(){
+        return {
+            id:self.id,
+            x:self.x,
+            y:self.y,
+            number:self.number,
+            hp:self.hp,
+            hpMax:self.hpMax,
+            score:self.score,
+        }
+    }
+    self.getUpdatePack = function(){
+        return {
+            id:self.id,
+            x:self.x,
+            y:self.y,
+            hp:self.hp,
+            score:self.score,
+        }
+    }
+
     Player.list[id] = self
+    initPack.player.push(self.getInitPack())
     return self
 }
 Player.list = {}
@@ -107,11 +133,25 @@ Player.onConnect = function(socket){
             player.pressingPrimary = data.state
         else if (data.inputId === "mouseAngle")
             player.mouseAngle = data.state
+    })  
+
+    socket.emit("init",{
+        player:Player.getAllInitPack(),
+        bullet:Bullet.getAllInitPack(),
+        floof:Floof.getAllInitPack(),
     })
+}
+
+Player.getAllInitPack = function(){
+    var players = []
+    for(var i in Player.list)
+        players.push(Player.list[i].getInitPack())
+    return players
 }
 
 Player.onDisconnect = function(socket){
     delete Player.list[socket.id]
+    removePack.player.push(socket.id)
 }
 
 Player.update = function(){
@@ -119,11 +159,7 @@ Player.update = function(){
     for (var i in Player.list){
         var player = Player.list[i]
         player.update()
-        pack.push({
-            x:player.x,
-            y:player.y,
-            number:player.number
-        })
+        pack.push(player.getUpdatePack())
     }
     return pack
 }
@@ -148,12 +184,37 @@ var Bullet = function(parent, angle){
         for (var i in Player.list){
             var p = Player.list[i]
             if(self.getDistance(p) < 32 && self.parent !== p.id){
-                // handle collision, ex: hp--
+                p.hp -= 1
+                if(p.hp <= 0){
+                    var shooter = Player.list[self.parent]
+                    if(shooter)
+                        shooter.score += 10
+                    p.hp = p.hpMax
+                    p.x = 720
+                    p.y = 405
+                }
                 self.toRemove = true
             }
         }
     }
+
+    self.getInitPack = function(){
+        return {
+            id:self.id,
+            x:self.x,
+            y:self.y,
+        }
+    }
+    self.getUpdatePack = function(){
+        return {
+            id:self.id,
+            x:self.x,
+            y:self.y,
+        }
+    }
+
     Bullet.list[self.id] = self
+    initPack.bullet.push(self.getInitPack())
     return self
 }
 Bullet.list = {}
@@ -163,16 +224,20 @@ Bullet.update = function(){
     for (var i in Bullet.list){
         var bullet = Bullet.list[i]
         bullet.update()
-        if (bullet.toRemove) 
+        if (bullet.toRemove) {
             delete Bullet.list[i];
-        else
-            pack.push({
-                x:bullet.x,
-                y:bullet.y,
-                number:bullet.number
-            })
+            removePack.bullet.push(bullet.id)
+        } else
+            pack.push(bullet.getUpdatePack())
     }
     return pack
+}
+
+Bullet.getAllInitPack = function(){
+    var bullets = []
+    for(var i in Bullet.list)
+        bullets.push(Bullet.list[i].getInitPack())
+    return bullets
 }
 // Bullet -----------------------------------------------------------------------
 
@@ -225,11 +290,30 @@ var Floof = function(){
                 self.toRemove = true
                 for(var i in SOCKET_LIST){
                     SOCKET_LIST[i].emit("addToChat", "floof " + self.number + " was killed")
-                }
+                }         
             }
         }
     }
+
+    self.getInitPack = function(){
+        return {
+            id:self.id,
+            x:self.x,
+            y:self.y,
+            number:self.number
+        }
+    }
+    self.getUpdatePack = function(){
+        return {
+            id:self.id,
+            x:self.x,
+            y:self.y,
+        }
+    }
+
+
     Floof.list[self.id] = self
+    initPack.floof.push(self.getInitPack())
     return self
 }
 Floof.list = {}
@@ -243,16 +327,20 @@ Floof.update = function(){
     for (var i in Floof.list){
         var floof = Floof.list[i]
         floof.update()
-        if (floof.toRemove) 
+        if (floof.toRemove) {
             delete Floof.list[i];
-        else
-            pack.push({
-                x:floof.x,
-                y:floof.y,
-                number:floof.number
-            })
+            removePack.floof.push(floof.id)
+        } else
+            pack.push(floof.getUpdatePack())
     }
     return pack
+}
+
+Floof.getAllInitPack = function(){
+    var floofs = []
+    for(var i in Floof.list)
+        floofs.push(Floof.list[i].getInitPack())
+    return floofs
 }
 // Floof ------------------------------------------------------------------------
 
@@ -343,16 +431,29 @@ io.sockets.on("connection", function(socket){
 })
 
 // Game Loop
+var initPack = {player:[],bullet:[],floof:[]}
+var removePack = {player:[],bullet:[],floof:[]}
+
 setInterval(function(){
     var pack = { // Array of Packs
         player:Player.update(),
         bullet:Bullet.update(),
-        floof:Floof.update()
+        floof:Floof.update(),
     }
 
     for (var i in SOCKET_LIST){
         var socket = SOCKET_LIST[i]
-        socket.emit("newPosition", pack)
+        socket.emit("init", initPack)
+        socket.emit("update", pack)
+        socket.emit("remove", removePack)
     }
+
+    initPack.player = []
+    initPack.bullet = []
+    initPack.floof = []
+
+    removePack.player = []
+    removePack.bullet = []
+    removePack.floof = []
 }, 1000/144) // 144 updates per second (so people with 144Hz monitors won't complain)
 // Connections & Server Stuff ---------------------------------------------------
