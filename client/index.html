@@ -1,24 +1,38 @@
-<div id="signDiv">
+<link rel="stylesheet" href="/client/styles.css">
+
+<div id="signDiv" style="position:absolute;left: 500px">
     Username: <input id="signDiv-username" type="text"></input><br>
-    Password: <input id="signDiv-password" type="password"></input>
+    Password: <input id="signDiv-password" type="password"></input><br>
     <button id="signDiv-signIn">Sign In</button>
     <button id="signDiv-signUp">Sign Up</button>
 </div>
 
-<div id="gameDiv" style="display: none;">
-    <canvas id="ctx" width="1440" height="810" style="border:1px solid #7e7e7e"></canvas>
-
-    <div id="chat-text" style="width:500px;height:100px;overflow-y:scroll">
-        <div>Welcome to Bismuth!</div>
+<div id="gameDiv" style="position:absolute;display:none;left: 200px">
+    <div id="game" style="position:absolute;width:1440px;height:810px;">
+        <canvas id="ctx" width="1440" height="810" style="position:absolute;width:1440px;height:810px;border:1px solid #7e7e7e"></canvas>
+        
+        <div id="ui" style="position:absolute;width:1440px;height:810px;">
+            <div id="inventory" style="float:right"></div>
+        </div>
+    
     </div>
 
-    <form id="chat-form">
-        <input id="chat-input" type="text" style="width:500px"></input>
-    </form>
+    <div id="belowGame" style="margin-top:830px">
+        <div id="chat-text" style="width:500px;height:100px;overflow-y:scroll">
+            <div>Welcome to Bismuth!</div>
+        </div>
+
+        <form id="chat-form">
+            <input id="chat-input" type="text" style="width:500px"></input>
+        </form>
+    </div>
 </div>
 
 <script src="/socket.io/socket.io.js"></script>
+<script src="/client/inventory.js"></script>
 <script>
+    var WIDTH = 1440
+    var HEIGHT = 810
     var socket = io()
 
     // Sign in ======================================================================
@@ -58,27 +72,58 @@
     var chatForm = document.getElementById("chat-form")
     
     var ctx = document.getElementById("ctx").getContext("2d")
+    ctx.imageSmoothingEnabled = false
     ctx.font = "10px Arial"
+
+    // UI
+    var inventory = new Inventory("", socket, false);
+    socket.on("updateInvetory", function(items){
+        inventory.items = items
+        inventory.refreshRender()
+    })
+
+    // images
+    var Img = {}
+    Img.player = new Image()
+    Img.player.src = '/client/img/player.png'
+    Img.bullet = new Image()
+    Img.bullet.src = '/client/img/bullet.png'
+    Img.floof = new Image()
+    Img.floof.src = '/client/img/floof.png'
+    Img.map = new Image()
+    Img.map.src = '/client/img/map.png'
 
     // init
     var Player = function(initPack){
         var self = {}
         self.id = initPack.id
         self.number = initPack.number
+        self.username = initPack.username
         self.x = initPack.x
         self.y = initPack.y
         self.hp = initPack.hp
         self.hpMax = initPack.hpMax
         self.score = initPack.score
+        self.effects = initPack.effects
 
         self.draw = function(){
+            var width = Img.player.width*3
+            var height = Img.player.height*3
+
+            var x = self.x - Player.list[selfId].x + WIDTH/2
+            var y = self.y - Player.list[selfId].y + HEIGHT/2
+
+            ctx.drawImage(Img.player, 
+                0, 0, Img.player.width, Img.player.height,
+                x-width/2, y-height/2, width, height)
+
             ctx.fillStyle = "#b3b3b3"
-            ctx.fillRect(self.x, self.y, 20, 20)
-            ctx.fillText("player " + self.number, self.x - 10, self.y - 15)
-            ctx.fillText(self.score, self.x - 10, self.y - 3)
+            //ctx.fillRect(self.x, self.y, 20, 20)
+            ctx.fillText(self.username, x - 10, y - height*0.8)
+            ctx.fillText(self.score, x - 10, y - height*0.6)
             ctx.fillStyle = "#7ecf8b"
             var hpWidth = 30 * self.hp / self.hpMax
-            ctx.fillRect(self.x - hpWidth/2, self.y - 28, hpWidth, 4)
+            ctx.fillRect(x - hpWidth/2, y - height*0.55, hpWidth, 4)
         }
 
         Player.list[self.id] = self
@@ -93,8 +138,18 @@
         self.y = initPack.y
 
         self.draw = function(){
-            ctx.fillStyle = "#121212"
-            ctx.fillRect(self.x-3, self.y-3, 6, 6)
+            var width = Img.player.width/4
+            var height = Img.player.height/4
+
+            var x = self.x - Player.list[selfId].x + WIDTH/2
+            var y = self.y - Player.list[selfId].y + HEIGHT/2
+
+            ctx.drawImage(Img.bullet, 
+                0, 0, Img.bullet.width, Img.bullet.height,
+                x-width/2, y-height/2, width, height)
+            
+            //ctx.fillStyle = "#121212"
+            //ctx.fillRect(self.x-3, self.y-3, 6, 6)
         }
 
         Bullet.list[self.id] = self
@@ -106,13 +161,24 @@
         var self = {}
         self.id = initPack.id
         self.number = initPack.number
+        self.username = initPack.username
         self.x = initPack.x
         self.y = initPack.y
 
         self.draw = function(){
-            ctx.fillStyle = "#58754c"
-            ctx.fillRect(self.x-7, self.y-7, 14, 14)
-            ctx.fillText("floof " + self.number, self.x - 15, self.y - 10)
+            var width = Img.floof.width*2.5
+            var height = Img.floof.height*2.5
+
+            var x = self.x - Player.list[selfId].x + WIDTH/2
+            var y = self.y - Player.list[selfId].y + HEIGHT/2
+
+            ctx.drawImage(Img.floof, 
+                0, 0, Img.floof.width, Img.floof.height,
+                x-width/2, y-height/2, width, height)
+
+            ctx.fillStyle = "#b3b3b3"
+            //ctx.fillRect(self.x-7, self.y-7, 14, 14)
+            ctx.fillText("floof " + self.number, x - 15, y - 25)
         }
 
         Floof.list[self.id] = self
@@ -120,7 +186,11 @@
     }
     Floof.list = {}
 
+    var selfId = null
+
     socket.on("init",function(data){
+        if(data.selfId)
+            selfId = data.selfId
         for (var i = 0; i < data.player.length; i++){
             new Player(data.player[i])
         }
@@ -148,6 +218,8 @@
                     p.hpMax = pack.hpMax
                 if(pack.score !== undefined)
                     p.score = pack.score
+                if(pack.effects !== undefined)
+                    p.effects = pack.effects
             }
         }
         for(var i = 0; i < data.bullet.length; i++){
@@ -191,21 +263,52 @@
         ctx.fillStyle = "#324536"
         ctx.fillRect(0, 0, 1440, 810)
 
-        // Draw Players
+        if(!Player.list[selfId]){
+            return
+        }
+
+        // Draw Map
+        drawMap()
+
+        // Draw Entities
+        var renderDistance = 1440 // render distance in pixels
+
+        getDistance = function(pt){
+            return Math.sqrt(Math.pow(Player.list[selfId].x-pt.x, 2) + Math.pow(Player.list[selfId].y-pt.y, 2))
+        }   
+
         for(var i in Player.list){
-            Player.list[i].draw()
+            if(getDistance(Player.list[i]) < renderDistance)
+                Player.list[i].draw()
         }
-
-        // Draw Bullets
         for(var i in Bullet.list){
-            Bullet.list[i].draw()
+            if(getDistance(Bullet.list[i]) < renderDistance)
+                Bullet.list[i].draw()
         }
-
-        // Draw Floofs
         for(var i in Floof.list){
-            Floof.list[i].draw()
+            if(getDistance(Floof.list[i]) < renderDistance)
+                Floof.list[i].draw()
         }        
+
+        // Draw UI & HUD
+        drawScore()
+
     },1000/144)
+
+    var drawMap = function(){
+        var x = WIDTH/2 - Player.list[selfId].x
+        var y = HEIGHT/2 - Player.list[selfId].y
+        ctx.drawImage(Img.map, x, y, Img.map.width * 50, Img.map.height * 50)
+    }
+
+    var drawScore = function(){
+        ctx.fillStyle = "FFFFFF"
+        ctx.font = "30px Arial"
+        ctx.fillText("Effects: " + Player.list[selfId].effects, 30, 40)
+        ctx.fillText("Score: " + Player.list[selfId].score, 30, 80)
+        ctx.fillText("HP: " + Player.list[selfId].hp, 30, 120)
+        ctx.font = "10px Arial"
+    }
 
     // Chat  -------------------------------------------------------------------
     socket.on("addToChat", function(data){
@@ -261,6 +364,10 @@
         var y = -250 + event.clientY - 8
         var angle = Math.atan2(y, x) / Math.PI * 180
         socket.emit('keyPress',{inputId:'mouseAngle', state:angle})
+    }
+
+    document.oncontextmenu = function(event){
+        event.preventDefault()
     }
     // Key-press Detection -----------------------------------------------------
 </script>
