@@ -79,13 +79,22 @@ Player = function(id, username, socket, progress){
     self.hpMax = 100
     self.score = 0
 
+    self.inventory.addItem("hatchet", 1)
+    //self.inventory.addItem("ak", 1)
+
     var superUpdate = self.update;
     self.update = function(){
         self.updateSpeed()
         superUpdate()
 
         if(self.pressingPrimary){
-            self.shootBullet(self.mouseAngle)
+            if(self.inventory.hasItem("ak", 1)){
+                self.shootBullet(self.mouseAngle)
+            }
+
+            if(self.inventory.hasItem("hatchet", 1)){
+                self.meleeAttack(self.mouseAngle)
+            }
         }
     }
 
@@ -95,9 +104,15 @@ Player = function(id, username, socket, progress){
             self.inventory.addItem("medkit", 1)
         }
         */
-        var b = Bullet(self.id, angle)
-            b.x = self.x
-            b.y = self.y
+        var b = Bullet(self.id, angle, 8, 32)
+        b.x = self.x
+        b.y = self.y
+    }
+
+    self.meleeAttack = function(angle){
+        var b = Bullet(self.id, angle, 1, 32)
+        b.x = self.x
+        b.y = self.y
     }
 
     self.updateSpeed = function(){
@@ -145,7 +160,7 @@ Player = function(id, username, socket, progress){
         self.x = 25000
         self.y = 25000
 
-        // a bit buggy
+        // a bit buggy:
         //self.effects = []
         //self.maxSpeed = 10
     }
@@ -226,7 +241,7 @@ Player.update = function(){
 
 // Bullet -----------------------------------------------------------------------
 {
-Bullet = function(parent, angle){
+Bullet = function(parent, angle, lifetime, size){
     var self = Entity()
     self.id = Math.random()
     self.speedX = Math.cos(angle/180*Math.PI) * 45
@@ -236,14 +251,14 @@ Bullet = function(parent, angle){
     self.toRemove = false
     var superUpdate = self.update
     self.update = function(){
-        if (self.timer++ > 8) // Remove after (x) amount of frames/updates
+        if (self.timer++ > lifetime) // Remove after (x) amount of frames/updates
             self.toRemove = true
         superUpdate()
 
         // Collision
         for (var i in Player.list){
             var p = Player.list[i]
-            if(self.getDistance(p) < 32 && self.parent !== p.id){
+            if(self.getDistance(p) < size && self.parent !== p.id){
                 p.hp -= 1
                 if(p.hp <= 0){
                     var shooter = Player.list[self.parent]
@@ -313,6 +328,7 @@ Floof = function(){
     self.toRemove = false
     var superUpdate = self.update
     self.update = function(){
+        /*
         direction = Math.random()
         axis = Math.random()
         if(direction > 0.5){
@@ -332,7 +348,6 @@ Floof = function(){
         if (this.speedY > 0.3)
             this.speedY = 0.3
 
-        /*
         if (self.timer++ > 432){ // Remove after 432 frames (3 seconds I think)
             self.toRemove = true
             for(var i in SOCKET_LIST){
@@ -384,7 +399,7 @@ Floof.update = function(){
     for(var i in Floof.list){
         floofCount++
     }
-    if (Math.random() < 0.05 && floofCount < 250){
+    if (Math.random() < 0.05 && floofCount < 500){
         Floof()
     }
 

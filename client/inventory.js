@@ -123,3 +123,7 @@ Item("adrenaline","Adrenaline",function(player){
 Item("hatchet","Hatchet",function(player){
     
 })
+
+Item("ak","AK Rifle",function(player){
+    
+})

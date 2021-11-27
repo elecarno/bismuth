@@ -85,7 +85,9 @@
     // images
     var Img = {}
     Img.player = new Image()
-    Img.player.src = '/client/img/player.png'
+    Img.player.src = '/client/img/player/player_left.png'
+    Img.ak = new Image()
+    Img.ak.src = '/client/img/ak/ak_left.png'
     Img.bullet = new Image()
     Img.bullet.src = '/client/img/bullet.png'
     Img.floof = new Image()
@@ -116,6 +118,9 @@
             ctx.drawImage(Img.player, 
                 0, 0, Img.player.width, Img.player.height,
                 x-width/2, y-height/2, width, height)
+            ctx.drawImage(Img.ak, 
+                0, 0, Img.ak.width, Img.ak.height,
+                x-width/2, y-height/2, width, height)
 
             ctx.fillStyle = "#b3b3b3"
             //ctx.fillRect(self.x, self.y, 20, 20)
@@ -124,6 +129,7 @@
             ctx.fillStyle = "#7ecf8b"
             var hpWidth = 30 * self.hp / self.hpMax
             ctx.fillRect(x - hpWidth/2, y - height*0.55, hpWidth, 4)
+            ctx.fillStyle = "#b3b3b3"
         }
 
         Player.list[self.id] = self
@@ -302,11 +308,12 @@
     }
 
     var drawScore = function(){
-        ctx.fillStyle = "FFFFFF"
         ctx.font = "30px Arial"
         ctx.fillText("Effects: " + Player.list[selfId].effects, 30, 40)
         ctx.fillText("Score: " + Player.list[selfId].score, 30, 80)
         ctx.fillText("HP: " + Player.list[selfId].hp, 30, 120)
+        ctx.fillText("x: " + Player.list[selfId].x / 50, 30, 250)
+        ctx.fillText("y: " + Player.list[selfId].y / 50, 30, 290)
         ctx.font = "10px Arial"
     }
 
@@ -330,12 +337,18 @@
 
     // Key-press Detection -----------------------------------------------------
     document.onkeydown = function(event){
-        if(event.keyCode === 68) // d
+        if(event.keyCode === 68){ // d
             socket.emit("keyPress", {inputId:"right", state:true})
+            Img.player.src = '/client/img/player/player_right.png'
+            Img.ak.src = '/client/img/ak/ak_right.png'
+        }
         else if(event.keyCode === 83) // s
             socket.emit("keyPress", {inputId:"down", state:true})
-        else if(event.keyCode === 65) // a
+        else if(event.keyCode === 65){ // a
             socket.emit("keyPress", {inputId:"left", state:true})
+            Img.player.src = '/client/img/player/player_left.png'
+            Img.ak.src = '/client/img/ak/ak_left.png'
+        }
         else if(event.keyCode === 87) // w
             socket.emit("keyPress", {inputId:"up", state:true})
     }
@@ -351,17 +364,17 @@
             socket.emit("keyPress", {inputId:"up", state:false})
     }
 
-    document.onmousedown = function(event) {
+    document.onmousedown = function(event){
         socket.emit('keyPress',{inputId:'primary', state:true})
     }
 
-    document.onmouseup = function(event) {
+    document.onmouseup = function(event){
         socket.emit('keyPress',{inputId:'primary', state:false})
     }
 
     document.onmousemove = function(event){
-        var x = -250 + event.clientX - 8
-        var y = -250 + event.clientY - 8
+        var x = -720 + event.clientX - 8
+        var y = -450 + event.clientY - 8
         var angle = Math.atan2(y, x) / Math.PI * 180
         socket.emit('keyPress',{inputId:'mouseAngle', state:angle})
     }
