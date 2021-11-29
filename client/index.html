@@ -35,6 +35,27 @@
     var HEIGHT = 810
     var socket = io()
 
+    World = function () {
+    var self = {
+        map:{}
+    }
+
+    self.getChunkOnly = function(x, y) {
+        const idx = (x << 16) | y
+        if (idx in self.map)
+            return self.map[idx]
+        else
+            return null
+    }
+
+    self.addChunk = function(chunk){
+        const idx = (chunk.x << 16) | chunk.y
+        self.map[idx] = chunk
+    }
+
+    return self
+}
+
     // Sign in ======================================================================
     var signDiv = document.getElementById("signDiv")
     var signDivUsername = document.getElementById("signDiv-username")
@@ -112,7 +133,7 @@
         self.hpMax = initPack.hpMax
         self.score = initPack.score
         self.effects = initPack.effects
-        self.chunk = initPack.chunk
+        self.world = new World()
 
         self.draw = function(){
             var width = Img.player.width*3
@@ -232,8 +253,8 @@
                     p.score = pack.score
                 if(pack.effects !== undefined)
                     p.effects = pack.effects
-                if(pack.chunk !== undefined)
-                    p.chunk = pack.chunk
+                if(pack.chunk !== undefined && pack.chunk !== null)
+                    p.world.addChunk(pack.chunk)
             }
         }
         for(var i = 0; i < data.bullet.length; i++){
@@ -311,25 +332,38 @@
     },1000/144)
 
     var drawMap = function(){
+        /*
         var x = WIDTH/2 - Player.list[selfId].x
         var y = HEIGHT/2 - Player.list[selfId].y
         ctx.drawImage(Img.map, x, y, Img.map.width * 50, Img.map.height * 50)
+        */
 
-        let chunk = Player.list[selfId].chunk
-        
-        for(let i = 0; i < chunk.height; i++){
-            for(let j = 0; j < chunk.width; j++){
-                let col = chunk.tiles[i * chunk.width + j]
-                if (col > 0.5)
-                    ctx.fillStyle = "#738e75"
-                else 
-                    ctx.fillStyle = "#648267"
 
-                let tilex = (chunk.x * 50 * 64) + (j * 50) - Player.list[selfId].x + WIDTH/2
-                let tiley = (chunk.y * 50 * 64) + (i * 50) - Player.list[selfId].y + HEIGHT/2
-                ctx.fillRect(tilex, tiley, 50, 50)
+    //let chunk = Player.list[selfId].world.map
+        for (let [idx, chunk] of Object.entries(Player.list[selfId].world.map)){
+            for(let i = 0; i < chunk.height; i++){
+                for(let j = 0; j < chunk.width; j++){
+                    let col = chunk.tiles[i * chunk.width + j]
+                    if (col < 0)
+                        ctx.fillStyle = "#829174"
+                    else 
+                        ctx.fillStyle = "#4e524b"
+
+                    let tilex = (chunk.x * 50 * 64) + (j * 50) - Player.list[selfId].x + WIDTH/2
+                    let tiley = (chunk.y * 50 * 64) + (i * 50) - Player.list[selfId].y + HEIGHT/2
+                    ctx.fillRect(tilex, tiley, 50, 50)
+                }
             }
         }
+
+        // Spawn Plate
+        ctx.fillStyle = "#787878"
+        ctx.fillRect(25500 - Player.list[selfId].x + WIDTH/2, 25500 - Player.list[selfId].y + HEIGHT/2, 200, 200)
+        ctx.fillStyle = "#919191"
+        ctx.font = "20px Arial"
+        ctx.fillStyle = "#dbdbdb"
+        ctx.fillText("Welcome to the Caves", 25500 - Player.list[selfId].x + WIDTH/2, 25500 - Player.list[selfId].y + HEIGHT/2 + 50)
+        ctx.font = "10px Arial"
     }
 
     var drawScore = function(){

@@ -13,8 +13,8 @@ function randomRange(min, max) {
 Entity = function(){
     var self = {
         // 1 tile = 50px, co-ords = (x * 50, y * 50)
-        x:25000, // spawn at (500, 500)
-        y:25000,
+        x:25600, // spawn at (500, 500)
+        y:25600,
         speedX:0,
         speedY:0,
         id:"",
@@ -82,6 +82,7 @@ Player = function(id, username, socket, progress){
     self.hp = 100
     self.hpMax = 100
     self.score = 0
+    self.loadedChunks = []
 
     self.inventory.addItem("hatchet", 1)
     //self.inventory.addItem("ak", 1)
@@ -120,16 +121,17 @@ Player = function(id, username, socket, progress){
     }
 
     self.updateSpeed = function(){
-        if(self.pressingRight)
+        let worldsize = 51200 // width and height of world in pixels
+        if(self.pressingRight && self.x < worldsize)
             self.speedX = self.maxSpeed
-        else if(self.pressingLeft)
+        else if(self.pressingLeft && self.x > 0)
             self.speedX = -self.maxSpeed
         else
             self.speedX = 0
 
-        if(self.pressingUp)
+        if(self.pressingUp && self.y > 0)
             self.speedY = -self.maxSpeed
-        else if(self.pressingDown)
+        else if(self.pressingDown && self.y < worldsize)
             self.speedY = self.maxSpeed
         else
             self.speedY = 0
@@ -150,6 +152,17 @@ Player = function(id, username, socket, progress){
         }
     }
     self.getUpdatePack = function(){
+        let chunkx = Math.floor((self.x / 50) / 64)
+        let chunky = Math.floor((self.y / 50) / 64)
+        const idx = (chunkx << 16) | chunky
+
+        let chunkToSend = null
+
+        if (!self.loadedChunks.includes(idx)){
+            self.loadedChunks.push(idx)
+            chunkToSend = world.getChunk(Math.floor((self.x / 50) / 64), Math.floor((self.y / 50) / 64))
+        }
+        
         return {
             id:self.id,
             x:self.x,
@@ -157,7 +170,7 @@ Player = function(id, username, socket, progress){
             hp:self.hp,
             score:self.score,
             effects:self.effects,
-            chunk:world.getChunk(Math.floor((self.x / 50) / 64), Math.floor((self.y / 50) / 64))
+            chunk:chunkToSend,
         }
     }
 
@@ -255,6 +268,7 @@ Bullet = function(parent, angle, lifetime, size){
     self.parent = parent
     self.timer = 0
     self.toRemove = false
+
     var superUpdate = self.update
     self.update = function(){
         if (self.timer++ > lifetime) // Remove after (x) amount of frames/updates
