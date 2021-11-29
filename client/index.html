@@ -83,17 +83,22 @@
     })
 
     // images
+    {
     var Img = {}
     Img.player = new Image()
     Img.player.src = '/client/img/player/player_left.png'
     Img.ak = new Image()
     Img.ak.src = '/client/img/ak/ak_left.png'
+    Img.hatchet = new Image()
+    Img.hatchet.src = '/client/img/hatchet/hatchet_left.png'
     Img.bullet = new Image()
     Img.bullet.src = '/client/img/bullet.png'
     Img.floof = new Image()
     Img.floof.src = '/client/img/floof.png'
     Img.map = new Image()
     Img.map.src = '/client/img/map.png'
+    }
+
 
     // init
     var Player = function(initPack){
@@ -107,6 +112,7 @@
         self.hpMax = initPack.hpMax
         self.score = initPack.score
         self.effects = initPack.effects
+        self.chunk = initPack.chunk
 
         self.draw = function(){
             var width = Img.player.width*3
@@ -118,8 +124,8 @@
             ctx.drawImage(Img.player, 
                 0, 0, Img.player.width, Img.player.height,
                 x-width/2, y-height/2, width, height)
-            ctx.drawImage(Img.ak, 
-                0, 0, Img.ak.width, Img.ak.height,
+            ctx.drawImage(Img.hatchet, 
+                0, 0, Img.hatchet.width, Img.hatchet.height,
                 x-width/2, y-height/2, width, height)
 
             ctx.fillStyle = "#b3b3b3"
@@ -226,6 +232,8 @@
                     p.score = pack.score
                 if(pack.effects !== undefined)
                     p.effects = pack.effects
+                if(pack.chunk !== undefined)
+                    p.chunk = pack.chunk
             }
         }
         for(var i = 0; i < data.bullet.length; i++){
@@ -263,6 +271,7 @@
         }
     })
 
+    // Game Rendering Loop
     setInterval(function(){
         // bg Colour
         ctx.clearRect(0, 0, 1440, 810)
@@ -305,6 +314,22 @@
         var x = WIDTH/2 - Player.list[selfId].x
         var y = HEIGHT/2 - Player.list[selfId].y
         ctx.drawImage(Img.map, x, y, Img.map.width * 50, Img.map.height * 50)
+
+        let chunk = Player.list[selfId].chunk
+        
+        for(let i = 0; i < chunk.height; i++){
+            for(let j = 0; j < chunk.width; j++){
+                let col = chunk.tiles[i * chunk.width + j]
+                if (col > 0.5)
+                    ctx.fillStyle = "#738e75"
+                else 
+                    ctx.fillStyle = "#648267"
+
+                let tilex = (chunk.x * 50 * 64) + (j * 50) - Player.list[selfId].x + WIDTH/2
+                let tiley = (chunk.y * 50 * 64) + (i * 50) - Player.list[selfId].y + HEIGHT/2
+                ctx.fillRect(tilex, tiley, 50, 50)
+            }
+        }
     }
 
     var drawScore = function(){
@@ -312,8 +337,12 @@
         ctx.fillText("Effects: " + Player.list[selfId].effects, 30, 40)
         ctx.fillText("Score: " + Player.list[selfId].score, 30, 80)
         ctx.fillText("HP: " + Player.list[selfId].hp, 30, 120)
+
         ctx.fillText("x: " + Player.list[selfId].x / 50, 30, 250)
         ctx.fillText("y: " + Player.list[selfId].y / 50, 30, 290)
+
+        ctx.fillText("cx: " + Player.list[selfId].chunk.x, 30, 350)
+        ctx.fillText("cy: " + Player.list[selfId].chunk.y, 30, 390)
         ctx.font = "10px Arial"
     }
 
@@ -324,7 +353,7 @@
     socket.on("evalAnswer", function(data){
         console.log(data)
     })
-
+    
     chatForm.onsubmit = function(e){
         e.preventDefault()
         if(chatInput.value[0] === '/')
@@ -341,6 +370,7 @@
             socket.emit("keyPress", {inputId:"right", state:true})
             Img.player.src = '/client/img/player/player_right.png'
             Img.ak.src = '/client/img/ak/ak_right.png'
+            Img.hatchet.src = '/client/img/hatchet/hatchet_right.png'
         }
         else if(event.keyCode === 83) // s
             socket.emit("keyPress", {inputId:"down", state:true})
@@ -348,6 +378,7 @@
             socket.emit("keyPress", {inputId:"left", state:true})
             Img.player.src = '/client/img/player/player_left.png'
             Img.ak.src = '/client/img/ak/ak_left.png'
+            Img.hatchet.src = '/client/img/hatchet/hatchet_left.png'
         }
         else if(event.keyCode === 87) // w
             socket.emit("keyPress", {inputId:"up", state:true})

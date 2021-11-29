@@ -1,3 +1,7 @@
+require('./world')
+
+world = new World()
+
 var initPack = {player:[],bullet:[],floof:[]}
 var removePack = {player:[],bullet:[],floof:[]}
 
@@ -142,6 +146,7 @@ Player = function(id, username, socket, progress){
             hpMax:self.hpMax,
             score:self.score,
             effects:self.effects,
+            chunk:world.getChunk(Math.floor((self.x / 50) / 64), Math.floor((self.y / 50) / 64))
         }
     }
     self.getUpdatePack = function(){
@@ -152,6 +157,7 @@ Player = function(id, username, socket, progress){
             hp:self.hp,
             score:self.score,
             effects:self.effects,
+            chunk:world.getChunk(Math.floor((self.x / 50) / 64), Math.floor((self.y / 50) / 64))
         }
     }
 
@@ -327,6 +333,16 @@ Floof = function(){
     self.timer = 0
     self.toRemove = false
     var superUpdate = self.update
+
+    direction = Math.random()
+    if(direction > 0.5){
+        self.speedX = Math.random() * 5
+        self.speedY = Math.random() * 5
+    } else {
+        self.speedX = Math.random() * -5
+        self.speedY = Math.random() * -5
+    }
+
     self.update = function(){
         /*
         direction = Math.random()
