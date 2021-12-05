@@ -118,6 +118,16 @@
     Img.floof.src = '/client/img/floof.png'
     Img.map = new Image()
     Img.map.src = '/client/img/map.png'
+
+    Img.toad_shroom = new Image()
+    Img.toad_shroom.src = '/client/img/tiles/toad_shroom.png'
+    Img.pollen_shroom = new Image()
+    Img.pollen_shroom.src = '/client/img/tiles/pollen_shroom.png'
+    Img.cave_flower = new Image()
+    Img.cave_flower.src = '/client/img/tiles/cave_flower.png'
+
+    Img.overlay = new Image()
+    Img.overlay.src = '/client/img/overlay.png'
     }
 
 
@@ -145,8 +155,8 @@
             ctx.drawImage(Img.player, 
                 0, 0, Img.player.width, Img.player.height,
                 x-width/2, y-height/2, width, height)
-            ctx.drawImage(Img.hatchet, 
-                0, 0, Img.hatchet.width, Img.hatchet.height,
+            ctx.drawImage(Img.ak, 
+                0, 0, Img.ak.width, Img.ak.height,
                 x-width/2, y-height/2, width, height)
 
             ctx.fillStyle = "#b3b3b3"
@@ -254,7 +264,8 @@
                 if(pack.effects !== undefined)
                     p.effects = pack.effects
                 if(pack.chunk !== undefined && pack.chunk !== null)
-                    p.world.addChunk(pack.chunk)
+                    for(let i = 0; i < pack.chunk.length; i++)
+                        p.world.addChunk(pack.chunk[i])
             }
         }
         for(var i = 0; i < data.bullet.length; i++){
@@ -327,6 +338,7 @@
         }        
 
         // Draw UI & HUD
+        //ctx.drawImage(Img.overlay, 0, 0, 1440, 810)
         drawScore()
 
     },1000/144)
@@ -339,19 +351,35 @@
         */
 
 
-    //let chunk = Player.list[selfId].world.map
+        //let chunk = Player.list[selfId].world.map
         for (let [idx, chunk] of Object.entries(Player.list[selfId].world.map)){
             for(let i = 0; i < chunk.height; i++){
                 for(let j = 0; j < chunk.width; j++){
                     let col = chunk.tiles[i * chunk.width + j]
-                    if (col < 0)
+                    // world tiles
+                    if (col === 1)
                         ctx.fillStyle = "#829174"
-                    else 
+                    else if (col === 2)
+                        ctx.fillStyle = "#6a7560"
+                    else if (col === 3)
                         ctx.fillStyle = "#4e524b"
 
-                    let tilex = (chunk.x * 50 * 64) + (j * 50) - Player.list[selfId].x + WIDTH/2
-                    let tiley = (chunk.y * 50 * 64) + (i * 50) - Player.list[selfId].y + HEIGHT/2
+                    let tilex = (chunk.x * 50 * chunk.width) + (j * 50) - Player.list[selfId].x + WIDTH/2
+                    let tiley = (chunk.y * 50 * chunk.height) + (i * 50) - Player.list[selfId].y + HEIGHT/2
                     ctx.fillRect(tilex, tiley, 50, 50)
+                
+                    // other tiles
+                    if (col > 3){
+                        ctx.fillStyle = "#829174"
+                        ctx.fillRect(tilex, tiley, 50, 50)
+
+                        if (col === 4)
+                            ctx.drawImage(Img.toad_shroom, tilex, tiley, 50, 50)
+                        if (col === 5)
+                            ctx.drawImage(Img.pollen_shroom, tilex, tiley, 50, 50)
+                        if (col === 6)
+                            ctx.drawImage(Img.cave_flower, tilex, tiley, 50, 50)
+                    }
                 }
             }
         }
@@ -374,9 +402,6 @@
 
         ctx.fillText("x: " + Player.list[selfId].x / 50, 30, 250)
         ctx.fillText("y: " + Player.list[selfId].y / 50, 30, 290)
-
-        ctx.fillText("cx: " + Player.list[selfId].chunk.x, 30, 350)
-        ctx.fillText("cy: " + Player.list[selfId].chunk.y, 30, 390)
         ctx.font = "10px Arial"
     }
 
@@ -400,20 +425,12 @@
 
     // Key-press Detection -----------------------------------------------------
     document.onkeydown = function(event){
-        if(event.keyCode === 68){ // d
+        if(event.keyCode === 68) // d
             socket.emit("keyPress", {inputId:"right", state:true})
-            Img.player.src = '/client/img/player/player_right.png'
-            Img.ak.src = '/client/img/ak/ak_right.png'
-            Img.hatchet.src = '/client/img/hatchet/hatchet_right.png'
-        }
         else if(event.keyCode === 83) // s
             socket.emit("keyPress", {inputId:"down", state:true})
-        else if(event.keyCode === 65){ // a
+        else if(event.keyCode === 65) // a
             socket.emit("keyPress", {inputId:"left", state:true})
-            Img.player.src = '/client/img/player/player_left.png'
-            Img.ak.src = '/client/img/ak/ak_left.png'
-            Img.hatchet.src = '/client/img/hatchet/hatchet_left.png'
-        }
         else if(event.keyCode === 87) // w
             socket.emit("keyPress", {inputId:"up", state:true})
     }

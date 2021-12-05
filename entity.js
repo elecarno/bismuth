@@ -1,6 +1,7 @@
 require('./world')
 
 world = new World()
+var colTiles = [3]
 
 var initPack = {player:[],bullet:[],floof:[]}
 var removePack = {player:[],bullet:[],floof:[]}
@@ -84,8 +85,8 @@ Player = function(id, username, socket, progress){
     self.score = 0
     self.loadedChunks = []
 
-    self.inventory.addItem("hatchet", 1)
-    //self.inventory.addItem("ak", 1)
+    //self.inventory.addItem("hatchet", 1)
+    self.inventory.addItem("ak", 1)
 
     var superUpdate = self.update;
     self.update = function(){
@@ -121,18 +122,61 @@ Player = function(id, username, socket, progress){
     }
 
     self.updateSpeed = function(){
+        let currentChunk = world.getChunk(Math.floor((self.x / 50) / 32), Math.floor((self.y / 50) / 32))
+        let xInChunk = Math.floor(self.x / 50 - currentChunk.x * 32)
+        let yInChunk = Math.floor(self.y / 50 - currentChunk.y * 32)
+
+        getTile = function(xic, yic){
+            return currentChunk.tiles[yic * currentChunk.width + xic]
+        }
+
+        //console.log(getTile(xInChunk, yInChunk))
+
+        let topRight = colTiles.includes(getTile(xInChunk + 1, yInChunk + 1))
+        let bottomRight = colTiles.includes(getTile(xInChunk + 1, yInChunk - 1))
+        let topLeft = colTiles.includes(getTile(xInChunk - 1, yInChunk + 1))
+        let bottomLeft = colTiles.includes(getTile(xInChunk - 1, yInChunk - 1))
+        let rightTop = colTiles.includes(getTile(xInChunk + 1, yInChunk - 1))
+        let leftTop = colTiles.includes(getTile(xInChunk - 1, yInChunk - 1))
+        let rightBottom = colTiles.includes(getTile(xInChunk + 1, yInChunk + 1))
+        let leftBottom = colTiles.includes(getTile(xInChunk - 1, yInChunk + 1))
+
         let worldsize = 51200 // width and height of world in pixels
-        if(self.pressingRight && self.x < worldsize)
+        if(self.pressingRight && self.x < worldsize && !topRight && !bottomRight)
             self.speedX = self.maxSpeed
-        else if(self.pressingLeft && self.x > 0)
+        else if(self.pressingLeft && self.x > 0 && !topLeft && !bottomLeft)
             self.speedX = -self.maxSpeed
+        else if(topRight && bottomRight){
+            if(xInChunk >= 30)
+                self.speedX = self.maxSpeed
+            else
+                self.speedX = -1
+        }
+        else if(topLeft && bottomLeft){
+            if(xInChunk <= 0)
+                self.speedX = -self.maxSpeed
+            else
+                self.speedX = 1
+        }
         else
             self.speedX = 0
 
-        if(self.pressingUp && self.y > 0)
+        if(self.pressingUp && self.y > 0 && !rightTop && !leftTop)
             self.speedY = -self.maxSpeed
-        else if(self.pressingDown && self.y < worldsize)
+        else if(self.pressingDown && self.y < worldsize && !rightBottom && !leftBottom)
             self.speedY = self.maxSpeed
+        else if (rightTop && leftTop){
+            if(yInChunk <= 0)
+                self.speedY = -self.maxSpeed
+            else
+                self.speedY = 1
+        }
+        else if (rightBottom && leftBottom){
+            if(yInChunk >= 30)
+                self.speedY = self.maxSpeed
+            else
+                self.speedY = -1
+        }
         else
             self.speedY = 0
     }
@@ -148,19 +192,29 @@ Player = function(id, username, socket, progress){
             hpMax:self.hpMax,
             score:self.score,
             effects:self.effects,
-            chunk:world.getChunk(Math.floor((self.x / 50) / 64), Math.floor((self.y / 50) / 64))
+            chunk:world.getChunk(Math.floor((self.x / 50) / 32), Math.floor((self.y / 50) / 32))
         }
     }
     self.getUpdatePack = function(){
-        let chunkx = Math.floor((self.x / 50) / 64)
-        let chunky = Math.floor((self.y / 50) / 64)
+        let chunkx = Math.floor((self.x / 50) / 32)
+        let chunky = Math.floor((self.y / 50) / 32)
         const idx = (chunkx << 16) | chunky
 
-        let chunkToSend = null
+        const idxleft = (chunkx - 1 << 16) | chunky
+
+        let chunkToSend = []
 
         if (!self.loadedChunks.includes(idx)){
             self.loadedChunks.push(idx)
-            chunkToSend = world.getChunk(Math.floor((self.x / 50) / 64), Math.floor((self.y / 50) / 64))
+            chunkToSend.push(world.getChunk(chunkx, chunky))
+            chunkToSend.push(world.getChunk(chunkx-1, chunky))
+            chunkToSend.push(world.getChunk(chunkx+1, chunky))
+            chunkToSend.push(world.getChunk(chunkx, chunky-1))
+            chunkToSend.push(world.getChunk(chunkx, chunky+1))
+            chunkToSend.push(world.getChunk(chunkx+1, chunky+1))
+            chunkToSend.push(world.getChunk(chunkx-1, chunky-1))
+            chunkToSend.push(world.getChunk(chunkx-1, chunky+1))
+            chunkToSend.push(world.getChunk(chunkx+1, chunky-1))
         }
         
         return {
@@ -176,8 +230,8 @@ Player = function(id, username, socket, progress){
 
     self.die = function(){
         self.hp = self.hpMax
-        self.x = 25000
-        self.y = 25000
+        self.x = 25600
+        self.y = 25600
 
         // a bit buggy:
         //self.effects = []
@@ -288,6 +342,15 @@ Bullet = function(parent, angle, lifetime, size){
                 self.toRemove = true
             }
         }
+
+        /*
+        let currentChunk = world.getChunk(Math.floor((self.x / 50) / 32), Math.floor((self.y / 50) / 32))
+        let xInChunk = Math.floor(self.x / 50 - currentChunk.x * 32)
+        let yInChunk = Math.floor(self.y / 50 - currentChunk.y * 32)
+
+        if (colTiles.includes(currentChunk.tiles[xInChunk * currentChunk.width + yInChunk]))
+            self.toRemove = true
+        */
     }
 
     self.getInitPack = function(){
@@ -348,8 +411,7 @@ Floof = function(){
     self.toRemove = false
     var superUpdate = self.update
 
-    direction = Math.random()
-    if(direction > 0.5){
+    if(Math.random() > 0.5){
         self.speedX = Math.random() * 5
         self.speedY = Math.random() * 5
     } else {
@@ -400,6 +462,43 @@ Floof = function(){
                 }      
             }
         }
+
+        let currentChunk = world.getChunk(Math.floor((self.x / 50) / 32), Math.floor((self.y / 50) / 32))
+        let xInChunk = Math.floor(self.x / 50 - currentChunk.x * 32)
+        let yInChunk = Math.floor(self.y / 50 - currentChunk.y * 32)
+
+        getTile = function(xic, yic){
+            return currentChunk.tiles[yic * currentChunk.width + xic]
+        }
+
+        let right = colTiles.includes(getTile(xInChunk + 1, yInChunk))
+        let left = colTiles.includes(getTile(xInChunk - 1, yInChunk))
+        let above = colTiles.includes(getTile(xInChunk, yInChunk - 1))
+        let under = colTiles.includes(getTile(xInChunk, yInChunk + 1))
+
+        if (right || left){
+            if(Math.random() > 0.5){
+                self.speedX = Math.random() * 5
+                self.speedY = Math.random() * 5
+            } else {
+                self.speedX = Math.random() * -5
+                self.speedY = Math.random() * -5
+            }
+            self.speedX = 0
+        }
+        if (above || under){
+            if(Math.random() > 0.5){
+                self.speedX = Math.random() * 5
+                self.speedY = Math.random() * 5
+            } else {
+                self.speedX = Math.random() * -5
+                self.speedY = Math.random() * -5
+            }
+            self.speedY = 0
+        }
+
+        if(colTiles.includes(getTile(xInChunk, yInChunk)))
+            self.toRemove = true
     }
 
     self.getInitPack = function(){
