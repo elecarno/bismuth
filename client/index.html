@@ -7,18 +7,18 @@
     <button id="signDiv-signUp">Sign Up</button>
 </div>
 
-<div id="gameDiv" style="position:absolute;display:none;left: 200px">
-    <div id="game" style="position:absolute;width:1440px;height:810px;">
-        <canvas id="ctx" width="1440" height="810" style="position:absolute;width:1440px;height:810px;border:1px solid #7e7e7e"></canvas>
+<div id="gameDiv" style="position:absolute;display:none;">
+    <div id="game" style="position:absolute;width:1800px;height:960px;">
+        <canvas id="ctx" width="1800" height="960" style="position:absolute;width:1800px;height:960px;"></canvas>
         
-        <div id="ui" style="position:absolute;width:1440px;height:810px;">
+        <div id="ui" style="position:absolute;width:1800px;height:960px;">
             <div id="inventory" style="float:right"></div>
         </div>
     
     </div>
 
-    <div id="belowGame" style="margin-top:830px">
-        <div id="chat-text" style="width:500px;height:100px;overflow-y:scroll">
+    <div id="belowGame" style="margin-left: 10px;">
+        <div id="chat-text" style="width:500px;height:100px;overflow-y:scroll;margin-top:830px;">
             <div>Welcome to Bismuth!</div>
         </div>
 
@@ -31,8 +31,8 @@
 <script src="/socket.io/socket.io.js"></script>
 <script src="/client/inventory.js"></script>
 <script>
-    var WIDTH = 1440
-    var HEIGHT = 810
+    var WIDTH = 1800
+    var HEIGHT = 960
     var socket = io()
 
     World = function () {
@@ -221,7 +221,7 @@
 
             ctx.fillStyle = "#b3b3b3"
             //ctx.fillRect(self.x-7, self.y-7, 14, 14)
-            ctx.fillText("floof " + self.number, x - 15, y - 25)
+            //ctx.fillText("floof " + self.number, x - 15, y - 25)
         }
 
         Floof.list[self.id] = self
@@ -306,9 +306,9 @@
     // Game Rendering Loop
     setInterval(function(){
         // bg Colour
-        ctx.clearRect(0, 0, 1440, 810)
+        ctx.clearRect(0, 0, WIDTH, HEIGHT)
         ctx.fillStyle = "#324536"
-        ctx.fillRect(0, 0, 1440, 810)
+        ctx.fillRect(0, 0, WIDTH, HEIGHT)
 
         if(!Player.list[selfId]){
             return
@@ -318,7 +318,7 @@
         drawMap()
 
         // Draw Entities
-        var renderDistance = 1440 // render distance in pixels
+        var renderDistance = 1800 // render distance in pixels
 
         getDistance = function(pt){
             return Math.sqrt(Math.pow(Player.list[selfId].x-pt.x, 2) + Math.pow(Player.list[selfId].y-pt.y, 2))
@@ -338,7 +338,7 @@
         }        
 
         // Draw UI & HUD
-        //ctx.drawImage(Img.overlay, 0, 0, 1440, 810)
+        //ctx.drawImage(Img.overlay, 0, 0, 1800, 810)
         drawScore()
 
     },1000/144)
@@ -456,10 +456,18 @@
 
     document.onmousemove = function(event){
         var x = -720 + event.clientX - 8
-        var y = -450 + event.clientY - 8
+        var y = -405 + event.clientY - 8
         var angle = Math.atan2(y, x) / Math.PI * 180
         socket.emit('keyPress',{inputId:'mouseAngle', state:angle})
     }
+
+    function getMousePos(canvas, evt) {
+    var rect = canvas.getBoundingClientRect();
+    return {
+      x: evt.clientX - rect.left,
+      y: evt.clientY - rect.top
+    };
+}
 
     document.oncontextmenu = function(event){
         event.preventDefault()

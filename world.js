@@ -1,5 +1,13 @@
+/*
+Good seeds (i.e: spawn not in a wall):
+0.07089678959081125
+*/
+
+const seed = 0.07089678959081125 //Math.random()
+//console.log(seed)
+
 const SimplexNoise = require('simplex-noise'),
-    simplex = new SimplexNoise(Math.random()),
+    simplex = new SimplexNoise(seed),
 
 Chunk = function (x, y) {
     var self = {

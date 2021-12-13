@@ -15,3 +15,20 @@ p{
 div{
     font-family: "Arial";
 }
+body {
+    background-color: #303030;
+}
+#gameDiv {
+    width: 1800px;
+    height: 960px;
+    position: absolute;
+    margin: auto;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+}
+#belowGame { 
+    position: absolute;
+    z-index: 99 !important; 
+}
