@@ -100,18 +100,29 @@ Player = function(id, username, socket, progress){
         self.mouseCanvasX = self.mouseX + self.x - 900 // 900 = 1800/2
         self.mouseCanvasY = self.mouseY + self.y - 480 // 480 = 960/2
 
+        let currentChunk = world.getChunk(Math.floor((self.x / 50) / 32), Math.floor((self.y / 50) / 32))
+        
         let currentMouseChunk = world.getChunk(Math.floor((self.mouseCanvasX / 50) / 32), Math.floor((self.mouseCanvasY / 50) / 32))
         let mouseXInChunk = Math.floor(self.mouseCanvasX / 50 - currentMouseChunk.x * 32)
         let mouseYInChunk = Math.floor(self.mouseCanvasY / 50 - currentMouseChunk.y * 32)
+
+        let mouseChunkX = Math.floor((self.mouseCanvasX / 50) / 32)
+        let mouseChunkY = Math.floor((self.mouseCanvasY / 50) / 32)
+        const mouseChunkidx = (mouseChunkX << 16) | mouseChunkY
 
         getTile = function(xic, yic){
             return currentMouseChunk.tiles[yic * currentMouseChunk.width + xic]
         }
 
         if(self.pressingPrimary){
-
-            //console.log(currentMouseChunk.tiles[mouseYInChunk * currentMouseChunk.width + mouseXInChunk])
-            currentMouseChunk.tiles[mouseYInChunk * currentMouseChunk.width + mouseXInChunk] = 3
+            
+            if(currentChunk = currentMouseChunk)
+                currentMouseChunk.tiles[mouseYInChunk * currentMouseChunk.width + mouseXInChunk] = 3
+            
+            if(self.loadedChunks.includes(mouseChunkidx)){
+                let chunkArrayIndex = self.loadedChunks.indexOf(mouseChunkidx)
+                self.loadedChunks.splice(chunkArrayIndex, 1)
+            }
 
             if(self.inventory.hasItem("ak", 1)){
                 self.shootBullet(self.mouseAngle)
