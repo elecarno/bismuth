@@ -78,6 +78,10 @@ Player = function(id, username, socket, progress){
     self.pressingDown = false
     self.pressingPrimary = false
     self.pressingSecondary = false
+    self.mouseX = 0
+    self.mouseY = 0
+    self.mouseCanvasX = 0
+    self.mouseCanvasY = 0
     self.mouseAngle = 0
     self.maxSpeed = 10
     self.hp = 100
@@ -86,14 +90,29 @@ Player = function(id, username, socket, progress){
     self.loadedChunks = []
 
     //self.inventory.addItem("hatchet", 1)
-    self.inventory.addItem("ak", 1)
+    //self.inventory.addItem("ak", 1)
 
     var superUpdate = self.update;
     self.update = function(){
         self.updateSpeed()
         superUpdate()
 
+        self.mouseCanvasX = self.mouseX + self.x - 900 // 900 = 1800/2
+        self.mouseCanvasY = self.mouseY + self.y - 480 // 480 = 960/2
+
+        let currentMouseChunk = world.getChunk(Math.floor((self.mouseCanvasX / 50) / 32), Math.floor((self.mouseCanvasY / 50) / 32))
+        let mouseXInChunk = Math.floor(self.mouseCanvasX / 50 - currentMouseChunk.x * 32)
+        let mouseYInChunk = Math.floor(self.mouseCanvasY / 50 - currentMouseChunk.y * 32)
+
+        getTile = function(xic, yic){
+            return currentMouseChunk.tiles[yic * currentMouseChunk.width + xic]
+        }
+
         if(self.pressingPrimary){
+
+            //console.log(currentMouseChunk.tiles[mouseYInChunk * currentMouseChunk.width + mouseXInChunk])
+            currentMouseChunk.tiles[mouseYInChunk * currentMouseChunk.width + mouseXInChunk] = 3
+
             if(self.inventory.hasItem("ak", 1)){
                 self.shootBullet(self.mouseAngle)
             }
@@ -105,11 +124,6 @@ Player = function(id, username, socket, progress){
     }
 
     self.shootBullet = function(angle){
-        /*
-        if(Math.random() < 0.1){
-            self.inventory.addItem("medkit", 1)
-        }
-        */
         var b = Bullet(self.id, angle, 8, 32)
         b.x = self.x
         b.y = self.y
@@ -260,6 +274,10 @@ Player.onConnect = function(socket, username, progress){
             player.pressingPrimary = data.state
         else if (data.inputId === "mouseAngle")
             player.mouseAngle = data.state
+        else if (data.inputId === "clientX")
+            player.mouseX = data.state
+        else if (data.inputId === "clientY")
+            player.mouseY = data.state
     })  
 
     socket.on("sendMsgToServer", function(data){
@@ -457,9 +475,11 @@ Floof = function(){
                 // handle collision
                 self.toRemove = true
                 Player.list[b.parent].inventory.addItem("medkit", 1)
+                /*
                 for(var i in SOCKET_LIST){
                     SOCKET_LIST[i].emit("addToChat", "floof " + self.number + " was killed")
-                }      
+                }    
+                */  
             }
         }
 
@@ -476,26 +496,14 @@ Floof = function(){
         let above = colTiles.includes(getTile(xInChunk, yInChunk - 1))
         let under = colTiles.includes(getTile(xInChunk, yInChunk + 1))
 
-        if (right || left){
-            if(Math.random() > 0.5){
-                self.speedX = Math.random() * 5
-                self.speedY = Math.random() * 5
-            } else {
-                self.speedX = Math.random() * -5
-                self.speedY = Math.random() * -5
-            }
-            self.speedX = 0
-        }
-        if (above || under){
-            if(Math.random() > 0.5){
-                self.speedX = Math.random() * 5
-                self.speedY = Math.random() * 5
-            } else {
-                self.speedX = Math.random() * -5
-                self.speedY = Math.random() * -5
-            }
-            self.speedY = 0
-        }
+        if (right)
+            self.speedX = -Math.random()
+        if (left)
+            self.speedX = Math.random()
+        if (above)
+            self.speedY = Math.random()
+        if (under)
+            self.speedY = -Math.random()
 
         if(colTiles.includes(getTile(xInChunk, yInChunk)))
             self.toRemove = true
@@ -528,10 +536,10 @@ Floof.update = function(){
     for(var i in Floof.list){
         floofCount++
     }
-    if (Math.random() < 0.05 && floofCount < 500){
+    if (Math.random() < 0.4 && floofCount < 500){
         Floof()
     }
-
+    
     var pack = []
     for (var i in Floof.list){
         var floof = Floof.list[i]
