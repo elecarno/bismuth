@@ -12,7 +12,7 @@
         <canvas id="ctx" width="1800" height="960" style="position:absolute;width:1800px;height:960px;"></canvas>
         
         <div id="ui" style="position:absolute;width:1800px;height:960px;">
-            <div id="inventory" style="float:right"></div>
+            <div id="inventory" style="overflow-y:scroll;width:150px;height:200px;float:right;background-color:#6b6b6b;"></div>
         </div>
     
     </div>
@@ -288,6 +288,19 @@
                     f.y = pack.y
             }
         }
+    })
+
+    socket.on("tile-change", function(data){
+        let tileToPlace = data.tileToPlace
+        let mouseChunk = data.mouseChunk
+        let chunkX = data.chunkX
+        let chunkY = data.chunkY
+        let tileX = data.tileX
+        let tileY = data.tileY
+        let Chunkidx = (chunkX << 16) | chunkY
+        
+        console.log("beancell?")
+        Player.list[selfId].world.map[Chunkidx].tiles[tileY * mouseChunk.width + tileX] = tileToPlace
     })
     
     // remove

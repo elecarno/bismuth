@@ -108,21 +108,32 @@ Player = function(id, username, socket, progress){
 
         let mouseChunkX = Math.floor((self.mouseCanvasX / 50) / 32)
         let mouseChunkY = Math.floor((self.mouseCanvasY / 50) / 32)
-        const mouseChunkidx = (mouseChunkX << 16) | mouseChunkY
+        let mouseChunkidx = (mouseChunkX << 16) | mouseChunkY
+
+        let tileToPlace = 3
 
         getTile = function(xic, yic){
             return currentMouseChunk.tiles[yic * currentMouseChunk.width + xic]
         }
 
         if(self.pressingPrimary){
-            
-            if(currentChunk = currentMouseChunk)
-                currentMouseChunk.tiles[mouseYInChunk * currentMouseChunk.width + mouseXInChunk] = 3
-            
+            currentMouseChunk.tiles[mouseYInChunk * currentMouseChunk.width + mouseXInChunk] = 3
+
+            socket.broadcast.emit('tile-change',{
+                tileToPlace: tileToPlace,
+                mouseChunk: currentMouseChunk,
+                chunkX: mouseChunkX,
+                chunkY: mouseChunkY,
+                tileX: mouseXInChunk,
+                tileY: mouseYInChunk,
+            })
+
+            /*
             if(self.loadedChunks.includes(mouseChunkidx)){
                 let chunkArrayIndex = self.loadedChunks.indexOf(mouseChunkidx)
                 self.loadedChunks.splice(chunkArrayIndex, 1)
             }
+            */
 
             if(self.inventory.hasItem("ak", 1)){
                 self.shootBullet(self.mouseAngle)

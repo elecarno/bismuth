@@ -32,6 +32,8 @@ body {
     position: absolute;
     z-index: 99 !important; 
 }
+/*
 ::-webkit-scrollbar {
     display: none;
 }
+*/
