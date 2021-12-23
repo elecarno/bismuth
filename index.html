@@ -1,0 +1,563 @@
+<link rel="stylesheet" href="/client/styles.css">
+
+<div id="signDiv" style="position:absolute;">
+    <img id="game-title" src="/client/img/title_logo.png">
+    <input id="signDiv-username" type="text" placeholder="enter a name"></input>
+    <button id="signDiv-signIn">Play</button><br>
+    <input id="signDiv-password" type="password" style="display:none;"></input><br>
+    <button id="signDiv-signUp" style="display:none;">Sign Up</button>
+</div>
+
+<div id="gameDiv" style="position:absolute;display:none;">
+    <div id="game" style="position:absolute;width:1800px;height:960px;">
+        <canvas id="ctx" width="1800" height="960" style="position:absolute;width:1800px;height:960px;"></canvas>
+        
+        <div id="ui" style="position:absolute;width:1800px;height:960px;">
+            <div id="inventory" style="overflow-y:scroll;width:150px;height:200px;float:right;background-color:#6b6b6b;"></div>
+        </div>
+    
+    </div>
+
+    <div id="belowGame" style="margin-left: 10px;">
+        <div id="chat-text" style="width:500px;overflow-y:scroll;height:100px;margin-top:830px;">
+            <div>Welcome to Bismuth!</div>
+        </div>
+
+        <form id="chat-form">
+            <input id="chat-input" type="text" style="width:500px"></input>
+        </form>
+    </div>
+</div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script src="/client/inventory.js"></script>
+<script>
+    var WIDTH = 1800
+    var HEIGHT = 960
+    var socket = io()
+
+    World = function () {
+    var self = {
+        map:{}
+    }
+
+    self.getChunkOnly = function(x, y) {
+        const idx = (x << 16) | y
+        if (idx in self.map)
+            return self.map[idx]
+        else
+            return null
+    }
+
+    self.addChunk = function(chunk){
+        const idx = (chunk.x << 16) | chunk.y
+        self.map[idx] = chunk
+    }
+
+    return self
+}
+
+    // Sign in ======================================================================
+    var signDiv = document.getElementById("signDiv")
+    var signDivUsername = document.getElementById("signDiv-username")
+    var signDivSignIn = document.getElementById("signDiv-signIn")
+    var signDivSignUp = document.getElementById("signDiv-signUp")
+    var signDivPassword = document.getElementById("signDiv-password")
+    var gameDiv = document.getElementById("gameDiv")
+
+    signDivSignIn.onclick = function(){
+        socket.emit("signIn",{username:signDivUsername.value,password:signDivPassword.value})
+    }
+
+    signDivSignUp.onclick = function(){
+        socket.emit("signUp",{username:signDivUsername.value,password:signDivPassword.value})
+    }
+
+    socket.on("signInResponse", function(data){
+        if(data.success){
+            signDiv.style.display = "none"
+            gameDiv.style.display = "inline-block"
+        } else
+            alert("sign in unsuccessful")
+    })
+
+    socket.on("signUpResponse", function(data){
+        if(data.success){
+            alert("sign up successful, you may now sign in")
+        } else
+            alert("sign up unsuccessful")
+    })
+
+    // Game  ========================================================================
+    var chatText = document.getElementById("chat-text")
+    var chatInput = document.getElementById("chat-input")
+    var chatForm = document.getElementById("chat-form")
+    
+    var ctx = document.getElementById("ctx").getContext("2d")
+    ctx.imageSmoothingEnabled = false
+    ctx.font = "15px Arial"
+
+    // UI
+    var inventory = new Inventory("", socket, false);
+    socket.on("updateInvetory", function(items){
+        inventory.items = items
+        inventory.refreshRender()
+    })
+
+    // images
+    {
+    var Img = {}
+    Img.player = new Image()
+    Img.player.src = '/client/img/player/player_left.png'
+    Img.ak = new Image()
+    Img.ak.src = '/client/img/ak/ak_left.png'
+    Img.hatchet = new Image()
+    Img.hatchet.src = '/client/img/hatchet/hatchet_left.png'
+    Img.bullet = new Image()
+    Img.bullet.src = '/client/img/bullet.png'
+    Img.floof = new Image()
+    Img.floof.src = '/client/img/floof.png'
+    Img.map = new Image()
+    Img.map.src = '/client/img/map.png'
+
+    Img.toad_shroom = new Image()
+    Img.toad_shroom.src = '/client/img/tiles/toad_shroom.png'
+    Img.pollen_shroom = new Image()
+    Img.pollen_shroom.src = '/client/img/tiles/pollen_shroom.png'
+    Img.cave_flower = new Image()
+    Img.cave_flower.src = '/client/img/tiles/cave_flower.png'
+
+    Img.overlay = new Image()
+    Img.overlay.src = '/client/img/overlay.png'
+    Img.hover_tile = new Image()
+    Img.hover_tile.src = '/client/img/hover_tile.png'
+    }
+
+
+    // init
+    var Player = function(initPack){
+        var self = {}
+        self.id = initPack.id
+        self.number = initPack.number
+        self.username = initPack.username
+        self.x = initPack.x
+        self.y = initPack.y
+        self.hp = initPack.hp
+        self.hpMax = initPack.hpMax
+        self.score = initPack.score
+        self.effects = initPack.effects
+        self.world = new World()
+
+        self.draw = function(){
+            var width = 100
+            var height = 100
+
+            var x = self.x - Player.list[selfId].x + WIDTH/2
+            var y = self.y - Player.list[selfId].y + HEIGHT/2
+
+            ctx.drawImage(Img.player, 
+                0, 0, Img.player.width, Img.player.height,
+                x-width/2, y-height/2, width, height)
+            ctx.drawImage(Img.ak, 
+                0, 0, Img.ak.width, Img.ak.height,
+                x-width/2, y-height/2, width, height)
+
+            ctx.textAlign = "center"
+            ctx.fillStyle = "#b3b3b3"
+            //ctx.fillRect(self.x, self.y, 20, 20)
+            ctx.fillText(self.username + ": " + self.score, x, y - height*0.65)
+            ctx.fillStyle = "#7ecf8b"
+            var hpWidth = 45 * self.hp / self.hpMax
+            ctx.fillRect(x - hpWidth/2, y - height*0.55, hpWidth, 4)
+            ctx.textAlign = "left"
+            ctx.fillStyle = "#b3b3b3"
+        }
+
+        Player.list[self.id] = self
+        return self
+    }
+    Player.list = {}
+
+    var Bullet = function(initPack){
+        var self = {}
+        self.id = initPack.id
+        self.x = initPack.x
+        self.y = initPack.y
+
+        self.draw = function(){
+            var width = Img.player.width/4
+            var height = Img.player.height/4
+
+            var x = self.x - Player.list[selfId].x + WIDTH/2
+            var y = self.y - Player.list[selfId].y + HEIGHT/2
+
+            ctx.drawImage(Img.bullet, 
+                0, 0, Img.bullet.width, Img.bullet.height,
+                x-width/2, y-height/2, width, height)
+            
+            //ctx.fillStyle = "#121212"
+            //ctx.fillRect(self.x-3, self.y-3, 6, 6)
+        }
+
+        Bullet.list[self.id] = self
+        return self
+    }
+    Bullet.list = {}
+
+    var Floof = function(initPack){
+        var self = {}
+        self.id = initPack.id
+        self.number = initPack.number
+        self.username = initPack.username
+        self.x = initPack.x
+        self.y = initPack.y
+
+        self.draw = function(){
+            var width = Img.floof.width*2.5
+            var height = Img.floof.height*2.5
+
+            var x = self.x - Player.list[selfId].x + WIDTH/2
+            var y = self.y - Player.list[selfId].y + HEIGHT/2
+
+            ctx.drawImage(Img.floof, 
+                0, 0, Img.floof.width, Img.floof.height,
+                x-width/2, y-height/2, width, height)
+
+            ctx.fillStyle = "#b3b3b3"
+            //ctx.fillRect(self.x-7, self.y-7, 14, 14)
+            //ctx.fillText("floof " + self.number, x - 15, y - 25)
+        }
+
+        Floof.list[self.id] = self
+        return self
+    }
+    Floof.list = {}
+
+    var selfId = null
+
+    socket.on("init",function(data){
+        if(data.selfId)
+            selfId = data.selfId
+        for (var i = 0; i < data.player.length; i++){
+            new Player(data.player[i])
+        }
+        for (var i = 0; i < data.bullet.length; i++){
+            new Bullet(data.bullet[i])
+        }
+        for (var i = 0; i < data.floof.length; i++){
+            new Floof(data.floof[i])
+        }
+    })
+
+    // update
+    socket.on("update",function(data){
+        for(var i = 0; i < data.player.length; i++){
+            var pack = data.player[i]
+            var p = Player.list[pack.id]
+            if(p){
+                if(pack.x !== undefined)
+                    p.x = pack.x
+                if(pack.x !== undefined)
+                    p.y = pack.y
+                if(pack.hp !== undefined)
+                    p.hp = pack.hp
+                if(pack.hpMax !== undefined)
+                    p.hpMax = pack.hpMax
+                if(pack.score !== undefined)
+                    p.score = pack.score
+                if(pack.effects !== undefined)
+                    p.effects = pack.effects
+                if(pack.chunk !== undefined && pack.chunk !== null)
+                    for(let i = 0; i < pack.chunk.length; i++)
+                        p.world.addChunk(pack.chunk[i])
+            }
+        }
+        for(var i = 0; i < data.bullet.length; i++){
+            var pack = data.bullet[i]
+            var b = Bullet.list[pack.id]
+            if(b){
+                if(pack.x !== undefined)
+                    b.x = pack.x
+                if(pack.x !== undefined)
+                    b.y = pack.y
+            }
+        }
+        for(var i = 0; i < data.floof.length; i++){
+            var pack = data.floof[i]
+            var f = Floof.list[pack.id]
+            if(f){
+                if(pack.x !== undefined)
+                    f.x = pack.x
+                if(pack.x !== undefined)
+                    f.y = pack.y
+            }
+        }
+    })
+
+    socket.on("tile-change", function(data){
+        let tileToPlace = data.tileToPlace
+        let mouseChunk = data.mouseChunk
+        let chunkX = data.chunkX
+        let chunkY = data.chunkY
+        let tileX = data.tileX
+        let tileY = data.tileY
+        let Chunkidx = (chunkX << 16) | chunkY
+        Player.list[selfId].world.map[Chunkidx].tiles[tileY * mouseChunk.width + tileX] = tileToPlace
+    })
+
+    let selectedTileX = 0
+    let selectedTileY = 0
+
+    socket.on("hover-tile", function(data){
+        let chunkX = data.chunkX
+        let chunkY = data.chunkY
+        let tileX = data.tileX
+        let tileY = data.tileY
+        selectedTileX = (tileX * 50) + (chunkX * 32 * 50)
+        selectedTileY = (tileY * 50) + (chunkY * 32 * 50)
+        //console.log(selectedTileX, selectedTileY)
+    })
+    
+    // remove
+    socket.on("remove",function(data){
+        for(var i = 0; i < data.player.length; i++){
+            delete Player.list[data.player[i]]
+        }
+        for(var i = 0; i < data.bullet.length; i++){
+            delete Bullet.list[data.bullet[i]]
+        }
+        for(var i = 0; i < data.floof.length; i++){
+            delete Floof.list[data.floof[i]]
+        }
+    })
+
+    // Game Rendering Loop
+    setInterval(function(){
+        // bg Colour
+        ctx.clearRect(0, 0, WIDTH, HEIGHT)
+        ctx.fillStyle = "#324536"
+        ctx.fillRect(0, 0, WIDTH, HEIGHT)
+
+        if(!Player.list[selfId]){
+            return
+        }
+
+        // Draw Map
+        drawMap()   
+
+        // Draw Entities
+        var renderDistance = 1800 // render distance in pixels
+
+        getDistance = function(pt){
+            return Math.sqrt(Math.pow(Player.list[selfId].x-pt.x, 2) + Math.pow(Player.list[selfId].y-pt.y, 2))
+        }   
+
+        for(var i in Floof.list){
+            if(getDistance(Floof.list[i]) < renderDistance)
+                Floof.list[i].draw()
+        }        
+        // below player /\ | above player \/
+        for(var i in Player.list){
+            if(getDistance(Player.list[i]) < renderDistance)
+                Player.list[i].draw()
+        }
+        for(var i in Bullet.list){
+            if(getDistance(Bullet.list[i]) < renderDistance)
+                Bullet.list[i].draw()
+        }
+
+        // Draw Collidable Tiles
+        drawMapCollisions()
+        
+        // Draw UI & HUD
+        //ctx.drawImage(Img.overlay, 0, 0, 1800, 810)
+        drawScore()
+
+        // Draw Hover Tile
+        ctx.drawImage(Img.hover_tile ,selectedTileX - Player.list[selfId].x + WIDTH/2, selectedTileY - Player.list[selfId].y + HEIGHT/2 - 40, 50, 90)
+    },1000/144)
+
+    var drawMap = function(){
+        /*
+        var x = WIDTH/2 - Player.list[selfId].x
+        var y = HEIGHT/2 - Player.list[selfId].y
+        ctx.drawImage(Img.map, x, y, Img.map.width * 50, Img.map.height * 50)
+        */
+       
+        //let chunk = Player.list[selfId].world.map
+        for (let [idx, chunk] of Object.entries(Player.list[selfId].world.map)){
+            for(let i = 0; i < chunk.height; i++){
+                for(let j = 0; j < chunk.width; j++){
+                    let col = chunk.tiles[i * chunk.width + j]
+                    // world tiles
+                    if (col === 1)
+                        ctx.fillStyle = "#829174"
+                    else if (col === 2)
+                        ctx.fillStyle = "#6a7560"
+                    else if (col === 3)
+                        ctx.fillStyle = "#787878"
+
+                    let tilex = (chunk.x * 50 * chunk.width) + (j * 50) - Player.list[selfId].x + WIDTH/2
+                    let tiley = (chunk.y * 50 * chunk.height) + (i * 50) - Player.list[selfId].y + HEIGHT/2
+                    ctx.fillRect(tilex, tiley, 50, 50)
+                
+                    // other tiles
+                    if (col > 3){
+                        ctx.fillStyle = "#829174"
+                        ctx.fillRect(tilex, tiley, 50, 50)
+
+                        if (col === 4)
+                            ctx.drawImage(Img.toad_shroom, tilex, tiley, 50, 50)
+                        if (col === 5)
+                            ctx.drawImage(Img.pollen_shroom, tilex, tiley, 50, 50)
+                        if (col === 6)
+                            ctx.drawImage(Img.cave_flower, tilex, tiley, 50, 50)
+                    }
+                }
+            }
+        }
+
+        // Spawn Plate
+        ctx.fillStyle = "#787878"
+        ctx.fillRect(25500 - Player.list[selfId].x + WIDTH/2, 25500 - Player.list[selfId].y + HEIGHT/2, 200, 200)
+        ctx.fillStyle = "#919191"
+        ctx.font = "20px Arial"
+        ctx.fillStyle = "#dbdbdb"
+        ctx.fillText("Welcome to the Caves", 25500 - Player.list[selfId].x + WIDTH/2, 25500 - Player.list[selfId].y + HEIGHT/2 + 50)
+        ctx.font = "15px Arial"
+    }
+
+    var drawMapCollisions = function(){
+        for (let [idx, chunk] of Object.entries(Player.list[selfId].world.map)){
+            for(let i = 0; i < chunk.height; i++){
+                for(let j = 0; j < chunk.width; j++){
+                    let col = chunk.tiles[i * chunk.width + j]
+                    if(col === 3){
+                        let tilex = (chunk.x * 50 * chunk.width) + (j * 50) - Player.list[selfId].x + WIDTH/2
+                        let tiley = (chunk.y * 50 * chunk.height) + (i * 50) - Player.list[selfId].y + HEIGHT/2
+                        ctx.fillStyle = "#4e524b"
+                        ctx.fillRect(tilex, tiley - 40, 50, 50)
+                    }     
+                }
+            }
+        }
+    }
+
+    var drawScore = function(){
+        ctx.fillStyle = "#b3b3b3"
+        ctx.font = "30px Arial"
+        ctx.fillText("Effects: " + Player.list[selfId].effects, 30, 40)
+        ctx.fillText("Score: " + Player.list[selfId].score, 30, 80)
+        ctx.fillText("HP: " + Player.list[selfId].hp, 30, 120)
+
+        ctx.fillText("x: " + Player.list[selfId].x / 50, 30, 250)
+        ctx.fillText("y: " + Player.list[selfId].y / 50, 30, 290)
+        ctx.font = "10px Arial"
+    }
+
+    // Chat  -------------------------------------------------------------------
+    socket.on("addToChat", function(data){
+        chatText.innerHTML += '<div>' + data + '</div>'
+    })
+    socket.on("evalAnswer", function(data){
+        console.log(data)
+    })
+    
+    chatForm.onsubmit = function(e){
+        e.preventDefault()
+        if(chatInput.value[0] === '/')
+            socket.emit("evalServer", chatInput.value.slice(1))
+        else
+            socket.emit("sendMsgToServer", chatInput.value)
+        chatInput.value = ''
+    }
+    // Chat  -------------------------------------------------------------------
+
+    // Key-press Detection -----------------------------------------------------
+    document.onkeydown = function(event){
+        if(event.keyCode === 68) // d
+            socket.emit("keyPress", {inputId:"right", state:true})
+        else if(event.keyCode === 83) // s
+            socket.emit("keyPress", {inputId:"down", state:true})
+        else if(event.keyCode === 65) // a
+            socket.emit("keyPress", {inputId:"left", state:true})
+        else if(event.keyCode === 87) // w
+            socket.emit("keyPress", {inputId:"up", state:true})
+    }
+
+    document.onkeyup = function(event){
+        if(event.keyCode === 68) // d
+            socket.emit("keyPress", {inputId:"right", state:false})
+        else if(event.keyCode === 83) // s
+            socket.emit("keyPress", {inputId:"down", state:false})
+        else if(event.keyCode === 65) // a
+            socket.emit("keyPress", {inputId:"left", state:false})
+        else if(event.keyCode === 87) // w
+            socket.emit("keyPress", {inputId:"up", state:false})
+    }
+
+    document.onmousedown = function(event){
+        switch (event.which) {
+            case 1:
+                socket.emit('keyPress',{inputId:'hold_left', state:true})
+                break;
+            case 2:
+                //console.log("mid")
+                break;
+            case 3:
+                socket.emit('keyPress',{inputId:'hold_right', state:true})
+                break;
+            default:
+                console.log("else")
+        }
+    }
+
+    document.onmouseup = function(event){
+        socket.emit('keyPress',{inputId:'hold_left', state:false})
+        socket.emit('keyPress',{inputId:'hold_right', state:false})
+        switch (event.which) {
+            case 1:
+                socket.emit('keyPress',{inputId:'left_click', state:true})
+                setTimeout(function(){
+                    socket.emit('keyPress',{inputId:'left_click', state:false})
+                }, 1000/144)
+                break;
+            case 2:
+                //console.log("mid")
+                break;
+            case 3:
+                socket.emit('keyPress',{inputId:'right_click', state:true})
+                setTimeout(function(){
+                    socket.emit('keyPress',{inputId:'right_click', state:false})
+                }, 1000/144)
+                break;
+            default:
+                console.log("else")
+        }
+    }
+
+    document.leftmouse = function (evt) {
+        evt = evt || window.event;
+        if ("buttons" in evt) {
+            return evt.buttons == 1;
+        }
+        var button = evt.which || evt.button;
+        return button == 1;
+    }   
+
+    document.onmousemove = function(event){
+        var x = -720 + event.clientX - 8
+        var y = -405 + event.clientY - 8
+        var angle = Math.atan2(y, x) / Math.PI * 180
+        //console.log(event.clientX, event.clientY)
+        var rect = document.getElementById("ctx")
+        socket.emit('keyPress',{inputId:'mouseAngle', state:angle})
+        socket.emit('keyPress',{inputId:'clientX', state:(event.clientX - rect.offsetLeft)})
+        socket.emit('keyPress',{inputId:'clientY', state:(event.clientY - rect.offsetTop)})
+    }
+
+    document.oncontextmenu = function(event){
+        event.preventDefault()
+    }
+    // Key-press Detection -----------------------------------------------------
+</script>
