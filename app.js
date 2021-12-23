@@ -3,6 +3,7 @@ const { timeEnd } = require("console")
 
 require('./entity')
 require('./database')
+require('./world')
 require('./client/inventory')
 
 var express = require("express")
@@ -70,7 +71,6 @@ io.sockets.on("connection", function(socket){
 })
 
 // Game Loop
-
 setInterval(function(){
     var packs = Entity.getFrameUpdateData()
     for (var i in SOCKET_LIST){

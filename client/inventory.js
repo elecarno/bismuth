@@ -120,6 +120,27 @@ Item("adrenaline","Adrenaline",function(player){
     }, 5000)
 })
 
+Item("almond_water","Almond Water",function(player){
+    for(var i = 0; i < player.effects.length; i++)
+        if(player.effects[i] === "Almonised")
+            return
+
+    player.hp *= 1.5
+    if(player.hp > 100)
+        player.hp = 100
+    player.maxSpeed /= 2
+    player.effects.push("Almonised")
+    player.inventory.removeItem("almond_water", 1)
+    setTimeout(function(){
+        player.maxSpeed *= 2
+        removeItemAll(player.effects, "Almonised")
+    }, 5000)
+})
+
+Item("cave_beef","Cave Beef",function(player){
+    player.inventory.removeItem("cave_beef", 1)
+})
+
 Item("hatchet","Hatchet",function(player){
     
 })
