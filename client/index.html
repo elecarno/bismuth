@@ -1,10 +1,11 @@
 <link rel="stylesheet" href="/client/styles.css">
 
-<div id="signDiv" style="position:absolute;left: 500px">
-    Username: <input id="signDiv-username" type="text"></input><br>
-    Password: <input id="signDiv-password" type="password"></input><br>
-    <button id="signDiv-signIn">Sign In</button>
-    <button id="signDiv-signUp">Sign Up</button>
+<div id="signDiv" style="position:absolute;">
+    <img id="game-title" src="/client/img/title_logo.png">
+    <input id="signDiv-username" type="text" placeholder="enter a name"></input>
+    <button id="signDiv-signIn">Play</button><br>
+    <input id="signDiv-password" type="password" style="display:none;"></input><br>
+    <button id="signDiv-signUp" style="display:none;">Sign Up</button>
 </div>
 
 <div id="gameDiv" style="position:absolute;display:none;">
@@ -94,7 +95,7 @@
     
     var ctx = document.getElementById("ctx").getContext("2d")
     ctx.imageSmoothingEnabled = false
-    ctx.font = "10px Arial"
+    ctx.font = "15px Arial"
 
     // UI
     var inventory = new Inventory("", socket, false);
@@ -125,6 +126,8 @@
     Img.pollen_shroom.src = '/client/img/tiles/pollen_shroom.png'
     Img.cave_flower = new Image()
     Img.cave_flower.src = '/client/img/tiles/cave_flower.png'
+    Img.old_altar = new Image()
+    Img.old_altar.src = 'client/img/tiles/old_altar.png'
 
     Img.overlay = new Image()
     Img.overlay.src = '/client/img/overlay.png'
@@ -146,6 +149,9 @@
         self.score = initPack.score
         self.effects = initPack.effects
         self.world = new World()
+        self.currentChunks = []
+        self.hotbar = initPack.hotbar
+        self.activeSlot = initPack.activeSlot
 
         self.draw = function(){
             var width = 100
@@ -161,13 +167,14 @@
                 0, 0, Img.ak.width, Img.ak.height,
                 x-width/2, y-height/2, width, height)
 
+            ctx.textAlign = "center"
             ctx.fillStyle = "#b3b3b3"
             //ctx.fillRect(self.x, self.y, 20, 20)
-            ctx.fillText(self.username, x - 10, y - height*0.8)
-            ctx.fillText(self.score, x - 10, y - height*0.6)
+            ctx.fillText(self.username + ": " + self.score, x, y - height*0.65)
             ctx.fillStyle = "#7ecf8b"
-            var hpWidth = 30 * self.hp / self.hpMax
+            var hpWidth = 45 * self.hp / self.hpMax
             ctx.fillRect(x - hpWidth/2, y - height*0.55, hpWidth, 4)
+            ctx.textAlign = "left"
             ctx.fillStyle = "#b3b3b3"
         }
 
@@ -265,9 +272,25 @@
                     p.score = pack.score
                 if(pack.effects !== undefined)
                     p.effects = pack.effects
-                if(pack.chunk !== undefined && pack.chunk !== null)
-                    for(let i = 0; i < pack.chunk.length; i++)
+                if(pack.chunk !== undefined && pack.chunk !== null && pack.chunk.length !== 0){
+                    for(let i = 0; i < pack.chunk.length; i++){
                         p.world.addChunk(pack.chunk[i])
+                    }
+                    for (let [idx, chunk] of Object.entries(p.world.map)){
+                        let chunkX = idx >> 16
+                        let chunkY = idx & 0xffff
+                        let playerChunkX = Math.floor((p.x / 50) / 32)
+                        let playerChunkY = Math.floor((p.y / 50) / 32)
+
+                        if (Math.abs(chunkX - playerChunkX) > 1 || Math.abs(chunkY - playerChunkY) > 1){
+                            delete p.world.map[idx]
+                        }
+                    }
+                }
+                if(pack.hotbar !== undefined)
+                    p.hotbar = pack.hotbar
+                if(pack.activeSlot !== undefined)
+                    p.activeSlot = pack.activeSlot
             }
         }
         for(var i = 0; i < data.bullet.length; i++){
@@ -313,7 +336,7 @@
         let tileY = data.tileY
         selectedTileX = (tileX * 50) + (chunkX * 32 * 50)
         selectedTileY = (tileY * 50) + (chunkY * 32 * 50)
-        console.log(selectedTileX, selectedTileY)
+        //console.log(selectedTileX, selectedTileY)
     })
     
     // remove
@@ -410,6 +433,8 @@
                             ctx.drawImage(Img.pollen_shroom, tilex, tiley, 50, 50)
                         if (col === 6)
                             ctx.drawImage(Img.cave_flower, tilex, tiley, 50, 50)
+                        if (col === 7)
+                            ctx.drawImage(Img.old_altar, tilex, tiley, 50, 50)
                     }
                 }
             }
@@ -422,7 +447,7 @@
         ctx.font = "20px Arial"
         ctx.fillStyle = "#dbdbdb"
         ctx.fillText("Welcome to the Caves", 25500 - Player.list[selfId].x + WIDTH/2, 25500 - Player.list[selfId].y + HEIGHT/2 + 50)
-        ctx.font = "10px Arial"
+        ctx.font = "15px Arial"
     }
 
     var drawMapCollisions = function(){
@@ -444,12 +469,24 @@
     var drawScore = function(){
         ctx.fillStyle = "#b3b3b3"
         ctx.font = "30px Arial"
+        ctx.textAlign = "left"
         ctx.fillText("Effects: " + Player.list[selfId].effects, 30, 40)
         ctx.fillText("Score: " + Player.list[selfId].score, 30, 80)
         ctx.fillText("HP: " + Player.list[selfId].hp, 30, 120)
 
-        ctx.fillText("x: " + Player.list[selfId].x / 50, 30, 250)
-        ctx.fillText("y: " + Player.list[selfId].y / 50, 30, 290)
+        ctx.font = "20px Arial"
+        for(var i = 0; i < 5; i++){
+            if(i === Player.list[selfId].activeSlot)
+                ctx.fillText((i + 1) + " - [ " + Player.list[selfId].hotbar[i] + " ]", 30, 160 + (i*30))
+            else
+                ctx.fillText((i + 1) + " -   " + Player.list[selfId].hotbar[i], 30, 160 + (i*30))
+        }
+        ctx.font = "30px Arial"
+
+        ctx.textAlign = "right"
+        ctx.fillText(Player.list[selfId].x / 50 + " - x", 1780, 900)
+        ctx.fillText(Player.list[selfId].y / 50 + " - y", 1780, 940)
+        ctx.textAlign = "left"
         ctx.font = "10px Arial"
     }
 
@@ -481,6 +518,16 @@
             socket.emit("keyPress", {inputId:"left", state:true})
         else if(event.keyCode === 87) // w
             socket.emit("keyPress", {inputId:"up", state:true})
+        else if(event.keyCode === 49) // 1
+            socket.emit("keyPress", {inputId:"one", state:true})
+        else if(event.keyCode === 50) // 2
+            socket.emit("keyPress", {inputId:"two", state:true})
+        else if(event.keyCode === 51) // 3
+            socket.emit("keyPress", {inputId:"three", state:true})
+        else if(event.keyCode === 52) // 4
+            socket.emit("keyPress", {inputId:"four", state:true})
+        else if(event.keyCode === 53) // 5
+            socket.emit("keyPress", {inputId:"five", state:true})
     }
 
     document.onkeyup = function(event){
@@ -492,6 +539,16 @@
             socket.emit("keyPress", {inputId:"left", state:false})
         else if(event.keyCode === 87) // w
             socket.emit("keyPress", {inputId:"up", state:false})
+        else if(event.keyCode === 49) // 1
+            socket.emit("keyPress", {inputId:"one", state:false})
+        else if(event.keyCode === 50) // 2
+            socket.emit("keyPress", {inputId:"two", state:false})
+        else if(event.keyCode === 51) // 3
+            socket.emit("keyPress", {inputId:"three", state:false})
+        else if(event.keyCode === 52) // 4
+            socket.emit("keyPress", {inputId:"four", state:false})
+        else if(event.keyCode === 53) // 5
+            socket.emit("keyPress", {inputId:"five", state:false})
     }
 
     document.onmousedown = function(event){
@@ -518,7 +575,7 @@
                 socket.emit('keyPress',{inputId:'left_click', state:true})
                 setTimeout(function(){
                     socket.emit('keyPress',{inputId:'left_click', state:false})
-                }, 1000/144)
+                }, 1)
                 break;
             case 2:
                 //console.log("mid")
@@ -527,21 +584,12 @@
                 socket.emit('keyPress',{inputId:'right_click', state:true})
                 setTimeout(function(){
                     socket.emit('keyPress',{inputId:'right_click', state:false})
-                }, 1000/144)
+                }, 1/2)
                 break;
             default:
                 console.log("else")
         }
     }
-
-    document.leftmouse = function (evt) {
-        evt = evt || window.event;
-        if ("buttons" in evt) {
-            return evt.buttons == 1;
-        }
-        var button = evt.which || evt.button;
-        return button == 1;
-    }   
 
     document.onmousemove = function(event){
         var x = -720 + event.clientX - 8

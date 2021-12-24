@@ -142,9 +142,13 @@ Item("cave_beef","Cave Beef",function(player){
 })
 
 Item("hatchet","Hatchet",function(player){
-    
+    let idx = player.hotbar.indexOf("hatchet")
+    player.hotbar[idx] = "Nothing"
+    player.hotbar.splice(player.activeSlot, 1, "hatchet")
 })
 
 Item("ak","AK Rifle",function(player){
-    
+    let idx = player.hotbar.indexOf("ak")
+    player.hotbar[idx] = "Nothing"
+    player.hotbar.splice(player.activeSlot, 1, "ak")
 })

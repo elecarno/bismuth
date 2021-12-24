@@ -1,7 +1,7 @@
 // Initialisation or Something --------------------------------------------------
 const { timeEnd } = require("console")
 
-require('./entity')
+require('./entities/entity')
 require('./database')
 require('./world')
 require('./client/inventory')
