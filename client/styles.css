@@ -8,6 +8,11 @@ button {
     display: inline-block;
     font-size: 14px;
     font: "Arial";
+    transition-duration: 0.4s;
+}
+button:hover{
+    background-color: #97a69b; /* Green */
+    color: white;
 }
 p{
     font-family: "Arial";
@@ -28,7 +33,85 @@ body {
     top: 0;
     bottom: 0;
 }
+#signDiv {
+    width: 750px;
+    height: 500px;
+    position: absolute;
+    margin: auto;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    /* background-color: #969696; */
+}
+#signDiv-username {
+    width: 350px;
+    height: 50px;
+    position: absolute;
+    margin: auto;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    color: white;
+    border-radius: 10px;
+    border-color: #687866;
+    border-style: none;
+    text-align: center;
+    font-size: large;
+    background-color: #687866;
+}
+#signDiv-signIn {
+    width: 120px;
+    height: 50px;
+    position: absolute;
+    margin: auto;
+    left: 0;
+    right: 0;
+    top: 115px;
+    bottom: 0;
+    color: white;
+    border-radius: 10px;
+    border-color: #666666;
+    border-style: none;
+    text-align: center;
+    font-size: large;
+    background-color: #666666;
+}
+#game-title {
+    width: 488px;
+    height: 88px;
+    position: absolute;
+    margin: auto;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 145px;
+    image-rendering: pixelated;
+}
 #belowGame { 
     position: absolute;
     z-index: 99 !important; 
+}
+::placeholder { /* Chrome, Firefox, Opera, Safari 10.1+ */
+    color: ghostwhite;
+    opacity: 1; /* Firefox */
+}
+:-ms-input-placeholder { /* Internet Explorer 10-11 */
+    color: ghostwhite;
+}
+::-ms-input-placeholder { /* Microsoft Edge */
+    color: ghostwhite;
+}
+::-webkit-scrollbar {
+    display: none;
+}
+::selection {
+    color: none;
+    background: none;
+}
+/* For Mozilla Firefox */
+::-moz-selection {
+    color: none;
+    background: none;
 }

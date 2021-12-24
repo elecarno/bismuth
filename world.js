@@ -31,6 +31,9 @@ Chunk = function (x, y) {
             else if(Math.random() > 0.995 && value2d < 0){
                 self.tiles.push(6) // cave_flower
             }
+            else if(Math.random() > 0.997 && value2d < 0){
+                self.tiles.push(7) // old_altar
+            }
             else if (value2d < 0)
                 self.tiles.push(1) // floor
             else if (value2d < 0.2)
