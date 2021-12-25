@@ -8,6 +8,11 @@ button {
     display: inline-block;
     font-size: 14px;
     font: "Arial";
+    transition-duration: 0.4s;
+}
+button:hover{
+    background-color: #97a69b; /* Green */
+    color: white;
 }
 p{
     font-family: "Arial";
@@ -84,6 +89,19 @@ body {
     bottom: 145px;
     image-rendering: pixelated;
 }
+#credits {
+    width: 250x;
+    height: 30px;
+    position: absolute;
+    margin: auto;
+    left: 0;
+    right: 0;
+    top: 930px;
+    bottom: 0;
+    font-size: medium;
+    text-align: center;
+    color: #8c8c8c;
+}
 #belowGame { 
     position: absolute;
     z-index: 99 !important; 
@@ -100,4 +118,13 @@ body {
 }
 ::-webkit-scrollbar {
     display: none;
+}
+::selection {
+    color: none;
+    background: none;
+}
+/* For Mozilla Firefox */
+::-moz-selection {
+    color: none;
+    background: none;
 }

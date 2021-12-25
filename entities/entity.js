@@ -3,7 +3,8 @@ require('../world')
 world = new World()
 var colTiles = [3]
 var intTiles = [7]
-var rangedWeapons = ["ak"]
+var autoGuns = ["ak"]
+var singleGuns = ["hunting_rifle"]
 var meleeWeapons = ["hatchet"]
 
 var initPack = {player:[],bullet:[],floof:[]}
@@ -96,7 +97,8 @@ Player = function(id, username, socket, progress){
     self.loadedChunks = []
 
     self.inventory.addItem("hatchet", 1)
-    self.inventory.addItem("ak", 1)
+    self.inventory.addItem("shroom_k", 1)
+    self.inventory.addItem("hunting_rifle", 1)
     self.inventory.addItem("almond_water", 15)
     self.inventory.addItem("cave_beef", 32)
 
@@ -156,11 +158,15 @@ Player = function(id, username, socket, progress){
                 //currentMouseChunk.tiles[mouseYInChunk * currentMouseChunk.width + mouseXInChunk] = 1
                 console.log("interactable tile")
             }      
+
+            if(singleGuns.includes(self.hotbar[self.activeSlot])){
+                self.shootBullet(self.mouseAngle, 50)
+            }
         }
 
         if(self.holdingMouseLeft){
-            if(rangedWeapons.includes(self.hotbar[self.activeSlot])){
-                self.shootBullet(self.mouseAngle)
+            if(autoGuns.includes(self.hotbar[self.activeSlot])){
+                self.shootBullet(self.mouseAngle, 8)
             }
 
             if(meleeWeapons.includes(self.hotbar[self.activeSlot])){
@@ -169,8 +175,8 @@ Player = function(id, username, socket, progress){
         }
     }
 
-    self.shootBullet = function(angle){
-        var b = Bullet(self.id, angle, 8, 32)
+    self.shootBullet = function(angle, lifetime){
+        var b = Bullet(self.id, angle, lifetime, 32)
         b.x = self.x
         b.y = self.y
     }

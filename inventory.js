@@ -142,9 +142,19 @@ Item("cave_beef","Cave Beef",function(player){
 })
 
 Item("hatchet","Hatchet",function(player){
-    
+    let idx = player.hotbar.indexOf("hatchet")
+    player.hotbar[idx] = "Nothing"
+    player.hotbar.splice(player.activeSlot, 1, "hatchet")
 })
 
-Item("ak","AK Rifle",function(player){
-    
+Item("shroom_k","Shroom-K Rifle",function(player){
+    let idx = player.hotbar.indexOf("ak")
+    player.hotbar[idx] = "Nothing"
+    player.hotbar.splice(player.activeSlot, 1, "ak")
+})
+
+Item("hunting_rifle","Hunting Rifle",function(player){
+    let idx = player.hotbar.indexOf("hunting_rifle")
+    player.hotbar[idx] = "Nothing"
+    player.hotbar.splice(player.activeSlot, 1, "hunting_rifle")
 })
