@@ -46,6 +46,14 @@ Inventory = function(items, socket, server){
         }
         return false
     }
+    self.getItemSpriteId = function(id){
+        for(var i = 0; i < self.items.length; i++){
+            if(self.items[i].id === id){
+                //console.log(spriteIds[self.items[i].id])
+                return spriteIds[self.items[i].id]
+            }
+        }
+    }
     self.refreshRender = function(){
         // server
         if(self.server){
@@ -96,7 +104,7 @@ Item = function(id, name, event){
 }
 Item.list = {}
 
-Item("medkit","Medkit",function(player){
+Item("medkit","Medkit", function(player){
     if(player.hp <= 90)
         player.hp += 10
     else
@@ -105,7 +113,7 @@ Item("medkit","Medkit",function(player){
     player.inventory.addItem("adrenaline", 1)
 })
 
-Item("adrenaline","Adrenaline",function(player){
+Item("adrenaline","Adrenaline", function(player){
     for(var i = 0; i < player.effects.length; i++)
         if(player.effects[i] === "Adrenaline")
             return
@@ -120,7 +128,7 @@ Item("adrenaline","Adrenaline",function(player){
     }, 5000)
 })
 
-Item("almond_water","Almond Water",function(player){
+Item("almond_water","Almond Water", function(player){
     for(var i = 0; i < player.effects.length; i++)
         if(player.effects[i] === "Almonised")
             return
@@ -137,18 +145,31 @@ Item("almond_water","Almond Water",function(player){
     }, 5000)
 })
 
-Item("cave_beef","Cave Beef",function(player){
+Item("cave_beef","Cave Beef", function(player){
     player.inventory.removeItem("cave_beef", 1)
 })
 
-Item("hatchet","Hatchet",function(player){
-    let idx = player.hotbar.indexOf("hatchet")
+// tools
+let spriteIds = {
+    "shroom_k": 1,
+    "hunting_rifle": 2,
+    "hunting_knife": 3,
+}
+
+Item("hunting_knife","Hunting Knife", function(player){
+    let idx = player.hotbar.indexOf("hunting_knife")
     player.hotbar[idx] = "Nothing"
-    player.hotbar.splice(player.activeSlot, 1, "hatchet")
+    player.hotbar.splice(player.activeSlot, 1, "hunting_knife")
 })
 
-Item("ak","AK Rifle",function(player){
-    let idx = player.hotbar.indexOf("ak")
+Item("shroom_k","Shroom-K Rifle", function(player){
+    let idx = player.hotbar.indexOf("shroom_k")
     player.hotbar[idx] = "Nothing"
-    player.hotbar.splice(player.activeSlot, 1, "ak")
+    player.hotbar.splice(player.activeSlot, 1, "shroom_k")
+})
+
+Item("hunting_rifle","Hunting Rifle", function(player){
+    let idx = player.hotbar.indexOf("hunting_rifle")
+    player.hotbar[idx] = "Nothing"
+    player.hotbar.splice(player.activeSlot, 1, "hunting_rifle")
 })

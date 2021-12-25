@@ -89,6 +89,19 @@ body {
     bottom: 145px;
     image-rendering: pixelated;
 }
+#credits {
+    width: 250x;
+    height: 30px;
+    position: absolute;
+    margin: auto;
+    left: 0;
+    right: 0;
+    top: 930px;
+    bottom: 0;
+    font-size: medium;
+    text-align: center;
+    color: #8c8c8c;
+}
 #belowGame { 
     position: absolute;
     z-index: 99 !important; 

@@ -3,9 +3,9 @@ require('../world')
 world = new World()
 var colTiles = [3]
 var intTiles = [7]
-var autoGuns = ["ak"]
+var autoGuns = ["shroom_k"]
 var singleGuns = ["hunting_rifle"]
-var meleeWeapons = ["hatchet"]
+var meleeWeapons = ["hunting_knife"]
 
 var initPack = {player:[],bullet:[],floof:[]}
 var removePack = {player:[],bullet:[],floof:[]}
@@ -95,8 +95,10 @@ Player = function(id, username, socket, progress){
     self.activeSlot = 0
     self.hotbar = ["Nothing", "Nothing", "Nothing", "Nothing", "Nothing"]
     self.loadedChunks = []
+    self.lookingRight = false
+    self.spriteId = undefined
 
-    self.inventory.addItem("hatchet", 1)
+    self.inventory.addItem("hunting_knife", 1)
     self.inventory.addItem("shroom_k", 1)
     self.inventory.addItem("hunting_rifle", 1)
     self.inventory.addItem("almond_water", 15)
@@ -121,6 +123,12 @@ Player = function(id, username, socket, progress){
         let mouseChunkidx = (mouseChunkX << 16) | mouseChunkY
 
         let tileToPlace = 0
+
+        if(self.hotbar[self.activeSlot] !== "Nothing")
+            self.spriteId = self.inventory.getItemSpriteId(self.hotbar[self.activeSlot])
+        else
+            self.spriteId = 0
+        //console.log(self.inventory.hasItem(self.hotbar[self.activeSlot], 1))
 
         getTile = function(xic, yic){
             return currentMouseChunk.tiles[yic * currentMouseChunk.width + xic]
@@ -261,6 +269,8 @@ Player = function(id, username, socket, progress){
             chunk:world.getChunk(Math.floor((self.x / 50) / 32), Math.floor((self.y / 50) / 32)),
             hotbar:self.hotbar,
             activeSlot:self.activeSlot,
+            lookingRight:self.lookingRight,
+            spriteId:self.spriteId,
         }
     }
     self.getUpdatePack = function(){
@@ -301,6 +311,8 @@ Player = function(id, username, socket, progress){
             chunk:chunkToSend,
             hotbar:self.hotbar,
             activeSlot:self.activeSlot,
+            lookingRight:self.lookingRight,
+            spriteId:self.spriteId,
         }
     }
 
@@ -324,10 +336,14 @@ Player.onConnect = function(socket, username, progress){
     var player = Player(socket.id, username, socket, progress)
     player.inventory.refreshRender()
     socket.on("keyPress", function(data){
-        if(data.inputId === 'left')
-			player.pressingLeft = data.state
-		else if(data.inputId === 'right')
-			player.pressingRight = data.state
+        if(data.inputId === 'left'){
+            player.pressingLeft = data.state
+            player.lookingRight = false
+        }
+		else if(data.inputId === 'right'){
+            player.pressingRight = data.state
+            player.lookingRight = true
+        }
 		else if(data.inputId === 'up')
 			player.pressingUp = data.state
 		else if(data.inputId === 'down')

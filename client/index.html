@@ -4,6 +4,7 @@
     <img id="game-title" src="/client/img/title_logo.png">
     <input id="signDiv-username" type="text" placeholder="enter a name"></input>
     <button id="signDiv-signIn">Play</button><br>
+    <h1 id="credits">Alpha 1.0 - Developed by Elecarno and KingJellyfishII</h1>
     <input id="signDiv-password" type="password" style="display:none;"></input><br>
     <button id="signDiv-signUp" style="display:none;">Sign Up</button>
 </div>
@@ -13,7 +14,7 @@
         <canvas id="ctx" width="1800" height="960" style="position:absolute;width:1800px;height:960px;"></canvas>
         
         <div id="ui" style="position:absolute;width:1800px;height:960px;">
-            <div id="inventory" style="overflow-y:scroll;width:150px;height:200px;float:right;background-color:#6b6b6b;"></div>
+            <div id="inventory" style="overflow-y:scroll;width:150px;height:200px;float:right;background-color:#878787;border-radius:10px;"></div>
         </div>
     
     </div>
@@ -55,7 +56,7 @@
     }
 
     return self
-}
+    }
 
     // Sign in ======================================================================
     var signDiv = document.getElementById("signDiv")
@@ -107,18 +108,20 @@
     // images
     {
     var Img = {}
-    Img.player = new Image()
-    Img.player.src = '/client/img/player/player_left.png'
-    Img.ak = new Image()
-    Img.ak.src = '/client/img/ak/ak_left.png'
-    Img.hatchet = new Image()
-    Img.hatchet.src = '/client/img/hatchet/hatchet_left.png'
+    Img.player_left = new Image()
+    Img.player_left.src = '/client/img/player/player_left.png'
+    Img.player_right = new Image()
+    Img.player_right.src = '/client/img/player/player_right.png'
+
+    Img.tools_left = new Image()
+    Img.tools_left.src = '/client/img/tools/tools_left.png'
+    Img.tools_right = new Image()
+    Img.tools_right.src = '/client/img/tools/tools_right.png'
+
     Img.bullet = new Image()
     Img.bullet.src = '/client/img/bullet.png'
     Img.floof = new Image()
     Img.floof.src = '/client/img/floof.png'
-    Img.map = new Image()
-    Img.map.src = '/client/img/map.png'
 
     Img.toad_shroom = new Image()
     Img.toad_shroom.src = '/client/img/tiles/toad_shroom.png'
@@ -129,12 +132,14 @@
     Img.old_altar = new Image()
     Img.old_altar.src = 'client/img/tiles/old_altar.png'
 
+    
+    Img.map = new Image()
+    Img.map.src = '/client/img/map.png'
     Img.overlay = new Image()
     Img.overlay.src = '/client/img/overlay.png'
     Img.hover_tile = new Image()
     Img.hover_tile.src = '/client/img/hover_tile.png'
     }
-
 
     // init
     var Player = function(initPack){
@@ -152,6 +157,8 @@
         self.currentChunks = []
         self.hotbar = initPack.hotbar
         self.activeSlot = initPack.activeSlot
+        self.lookingRight = initPack.lookingRight
+        self.spriteId = initPack.spriteId
 
         self.draw = function(){
             var width = 100
@@ -160,12 +167,15 @@
             var x = self.x - Player.list[selfId].x + WIDTH/2
             var y = self.y - Player.list[selfId].y + HEIGHT/2
 
-            ctx.drawImage(Img.player, 
-                0, 0, Img.player.width, Img.player.height,
-                x-width/2, y-height/2, width, height)
-            ctx.drawImage(Img.ak, 
-                0, 0, Img.ak.width, Img.ak.height,
-                x-width/2, y-height/2, width, height)
+            if(!self.lookingRight){
+                ctx.drawImage(Img.player_left, 0, 0, Img.player_left.width, Img.player_left.height, x-width/2, y-height/2, width, height)
+                ctx.drawImage(Img.tools_left, self.spriteId * 32, 0, Img.player_left.width, Img.player_left.height, x-width/2, y-height/2, width, height)
+            }
+            else{
+                ctx.drawImage(Img.player_right, 0, 0, Img.player_right.width, Img.player_right.height, x-width/2, y-height/2, width, height)
+                ctx.drawImage(Img.tools_right, self.spriteId * 32, 0, Img.player_left.width, Img.player_left.height, x-width/2, y-height/2, width, height)
+            }
+                
 
             ctx.textAlign = "center"
             ctx.fillStyle = "#b3b3b3"
@@ -190,8 +200,8 @@
         self.y = initPack.y
 
         self.draw = function(){
-            var width = Img.player.width/4
-            var height = Img.player.height/4
+            var width = Img.player_left.width/4
+            var height = Img.player_left.height/4
 
             var x = self.x - Player.list[selfId].x + WIDTH/2
             var y = self.y - Player.list[selfId].y + HEIGHT/2
@@ -199,7 +209,7 @@
             ctx.drawImage(Img.bullet, 
                 0, 0, Img.bullet.width, Img.bullet.height,
                 x-width/2, y-height/2, width, height)
-            
+
             //ctx.fillStyle = "#121212"
             //ctx.fillRect(self.x-3, self.y-3, 6, 6)
         }
@@ -291,6 +301,10 @@
                     p.hotbar = pack.hotbar
                 if(pack.activeSlot !== undefined)
                     p.activeSlot = pack.activeSlot
+                if(pack.lookingRight !== undefined)
+                    p.lookingRight = pack.lookingRight
+                if(pack.spriteId !== undefined)
+                    p.spriteId = pack.spriteId
             }
         }
         for(var i = 0; i < data.bullet.length; i++){
@@ -402,7 +416,7 @@
         /*
         var x = WIDTH/2 - Player.list[selfId].x
         var y = HEIGHT/2 - Player.list[selfId].y
-        ctx.drawImage(Img.map, x, y, Img.map.width * 50, Img.map.height * 50)
+        ctx.drawImage(Img.map, x, y, 1600, 1600)
         */
        
         //let chunk = Player.list[selfId].world.map
@@ -514,7 +528,7 @@
             socket.emit("keyPress", {inputId:"right", state:true})
         else if(event.keyCode === 83) // s
             socket.emit("keyPress", {inputId:"down", state:true})
-        else if(event.keyCode === 65) // a
+        else if(event.keyCode === 65)// a
             socket.emit("keyPress", {inputId:"left", state:true})
         else if(event.keyCode === 87) // w
             socket.emit("keyPress", {inputId:"up", state:true})
