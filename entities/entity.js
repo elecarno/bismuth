@@ -192,7 +192,7 @@ Player = function(id, username, socket, progress){
         if(self.holdingMouseLeft){
             if(miningTools.includes(self.hotbar[self.activeSlot])){
                 if(inverse(placeIds)[getTile(mouseXInChunk, mouseYInChunk)] !== undefined)
-                self.inventory.addItem(inverse(placeIds)[getTile(mouseXInChunk, mouseYInChunk)], 1)
+                    self.inventory.addItem(inverse(placeIds)[getTile(mouseXInChunk, mouseYInChunk)], 1)
 
                 currentMouseChunk.tiles[mouseYInChunk * currentMouseChunk.width + mouseXInChunk] = 1
                 tileToPlace = 1
@@ -222,8 +222,11 @@ Player = function(id, username, socket, progress){
             }
 
             if(placeableItems.includes(self.hotbar[self.activeSlot]) && !priorityTiles.includes(getTile(mouseXInChunk, mouseYInChunk))){
-                if(currentMouseChunk.tiles[mouseYInChunk * currentMouseChunk.width + mouseXInChunk] !== placeIds[self.hotbar[self.activeSlot]])
+                if(currentMouseChunk.tiles[mouseYInChunk * currentMouseChunk.width + mouseXInChunk] !== placeIds[self.hotbar[self.activeSlot]]){
                     self.inventory.removeItem(self.hotbar[self.activeSlot], 1)
+                    if(inverse(placeIds)[getTile(mouseXInChunk, mouseYInChunk)] !== undefined)
+                        self.inventory.addItem(inverse(placeIds)[getTile(mouseXInChunk, mouseYInChunk)], 1)
+                }
 
                 currentMouseChunk.tiles[mouseYInChunk * currentMouseChunk.width + mouseXInChunk] = placeIds[self.hotbar[self.activeSlot]]
                 tileToPlace = placeIds[self.hotbar[self.activeSlot]]
