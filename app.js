@@ -16,6 +16,8 @@ app.get("/", function(req, res){
 })
 app.use("/client", express.static(__dirname + "/client"))
 
+process.setMaxListeners(0)
+
 serv.listen(8080)
 console.log("Bismuth started")
 
@@ -79,5 +81,5 @@ setInterval(function(){
         socket.emit("update", packs.updatePack)
         socket.emit("remove", packs.removePack)
     }
-}, 1000/144) // 144 updates per second (so people with 144Hz monitors won't complain)
+}, 1000/75) // 144 updates per second (so people with 144Hz monitors won't complain)
 // Connections & Server Stuff ---------------------------------------------------

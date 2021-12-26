@@ -1,11 +1,19 @@
 require('../world')
 
 world = new World()
+
 var colTiles = [3]
 var intTiles = [7]
 var autoGuns = ["shroom_k"]
 var singleGuns = ["hunting_rifle"]
-var meleeWeapons = ["hunting_knife"]
+var meleeWeapons = ["survival_knife"]
+var miningTools = ["bronze_pickaxe"]
+var placeableItems = ["stone", "rocky_floor"]
+var priorityTiles = [7]
+var placeIds = {
+    "stone" : 3,
+    "rocky_floor" : 2,
+}
 
 var initPack = {player:[],bullet:[],floof:[]}
 var removePack = {player:[],bullet:[],floof:[]}
@@ -13,6 +21,14 @@ var removePack = {player:[],bullet:[],floof:[]}
 function randomRange(min, max) {  
     return Math.floor(Math.random() * (max - min) + min); 
 }  
+
+function inverse(obj){
+    var retobj = {};
+    for(var key in obj){
+      retobj[obj[key]] = key;
+    }
+    return retobj;
+  }
 
 // Entity -----------------------------------------------------------------------
 Entity = function(){
@@ -81,8 +97,6 @@ Player = function(id, username, socket, progress){
     self.pressingDown = false
     self.holdingMouseLeft = false
     self.holdingMouseRight = false
-    self.pressingLeftClick = false
-    self.pressingRightClick = false
     self.mouseX = 0
     self.mouseY = 0
     self.mouseCanvasX = 0
@@ -97,8 +111,14 @@ Player = function(id, username, socket, progress){
     self.loadedChunks = []
     self.lookingRight = false
     self.spriteId = undefined
+    self.currentRightClick = 0
+    self.lastRightClick = 0
+    self.currentLeftClick = 0
+    self.lastLeftClick = 0
 
-    self.inventory.addItem("hunting_knife", 1)
+    self.inventory.addItem("survival_knife", 1)
+    self.inventory.addItem("bronze_pickaxe", 1)
+    self.inventory.addItem("stone", 32)
     self.inventory.addItem("shroom_k", 1)
     self.inventory.addItem("hunting_rifle", 1)
     self.inventory.addItem("almond_water", 15)
@@ -108,6 +128,10 @@ Player = function(id, username, socket, progress){
     self.update = function(){
         self.updateSpeed()
         superUpdate()
+
+        for(var i = 0; i < self.hotbar.length; i++)
+            if(!self.inventory.hasItem(self.hotbar[i], 1) && self.hotbar[i] !== "Nothing")
+                self.hotbar[i] = "Nothing"
 
         self.mouseCanvasX = self.mouseX + self.x - 900 // 900 = 1800/2
         self.mouseCanvasY = self.mouseY + self.y - 480 // 480 = 960/2
@@ -141,7 +165,8 @@ Player = function(id, username, socket, progress){
             tileY: mouseYInChunk,
         })
 
-        if(self.pressingRightClick){
+        if(self.currentRightClick > self.lastRightClick){
+            /*
             if(colTiles.includes(getTile(mouseXInChunk, mouseYInChunk))){
                 currentMouseChunk.tiles[mouseYInChunk * currentMouseChunk.width + mouseXInChunk] = 1
                 tileToPlace = 1
@@ -149,19 +174,9 @@ Player = function(id, username, socket, progress){
             else{
                 currentMouseChunk.tiles[mouseYInChunk * currentMouseChunk.width + mouseXInChunk] = 3
                 tileToPlace = 3
-            }             
+            }           
+            */  
 
-            socket.broadcast.emit('tile-change',{
-                tileToPlace: tileToPlace,
-                mouseChunk: currentMouseChunk,
-                chunkX: mouseChunkX,
-                chunkY: mouseChunkY,
-                tileX: mouseXInChunk,
-                tileY: mouseYInChunk,
-            })
-        }
-
-        if(self.pressingLeftClick){
             if(intTiles.includes(getTile(mouseXInChunk, mouseYInChunk))){
                 //currentMouseChunk.tiles[mouseYInChunk * currentMouseChunk.width + mouseXInChunk] = 1
                 console.log("interactable tile")
@@ -170,15 +185,57 @@ Player = function(id, username, socket, progress){
             if(singleGuns.includes(self.hotbar[self.activeSlot])){
                 self.shootBullet(self.mouseAngle, 50)
             }
+
+            self.lastRightClick = self.currentRightClick
         }
 
         if(self.holdingMouseLeft){
+            if(miningTools.includes(self.hotbar[self.activeSlot])){
+                if(inverse(placeIds)[getTile(mouseXInChunk, mouseYInChunk)] !== undefined)
+                self.inventory.addItem(inverse(placeIds)[getTile(mouseXInChunk, mouseYInChunk)], 1)
+
+                currentMouseChunk.tiles[mouseYInChunk * currentMouseChunk.width + mouseXInChunk] = 1
+                tileToPlace = 1
+
+                socket.broadcast.emit('tile-change',{
+                    tileToPlace: tileToPlace,
+                    mouseChunk: currentMouseChunk,
+                    chunkX: mouseChunkX,
+                    chunkY: mouseChunkY,
+                    tileX: mouseXInChunk,
+                    tileY: mouseYInChunk,
+                })
+            }   
+        }
+
+        if(self.currentLeftClick > self.lastLeftClick){
+            self.lastLeftClick = self.currentLeftClick
+        }
+
+        if(self.holdingMouseRight){
             if(autoGuns.includes(self.hotbar[self.activeSlot])){
                 self.shootBullet(self.mouseAngle, 8)
             }
 
             if(meleeWeapons.includes(self.hotbar[self.activeSlot])){
                 self.meleeAttack(self.mouseAngle)
+            }
+
+            if(placeableItems.includes(self.hotbar[self.activeSlot]) && !priorityTiles.includes(getTile(mouseXInChunk, mouseYInChunk))){
+                if(currentMouseChunk.tiles[mouseYInChunk * currentMouseChunk.width + mouseXInChunk] !== placeIds[self.hotbar[self.activeSlot]])
+                    self.inventory.removeItem(self.hotbar[self.activeSlot], 1)
+
+                currentMouseChunk.tiles[mouseYInChunk * currentMouseChunk.width + mouseXInChunk] = placeIds[self.hotbar[self.activeSlot]]
+                tileToPlace = placeIds[self.hotbar[self.activeSlot]]
+
+                socket.broadcast.emit('tile-change',{
+                    tileToPlace: tileToPlace,
+                    mouseChunk: currentMouseChunk,
+                    chunkX: mouseChunkX,
+                    chunkY: mouseChunkY,
+                    tileX: mouseXInChunk,
+                    tileY: mouseYInChunk,
+                })
             }
         }
     }
@@ -359,9 +416,9 @@ Player.onConnect = function(socket, username, progress){
         else if (data.inputId === "clientY")
             player.mouseY = data.state
         else if (data.inputId === "left_click")
-            player.pressingLeftClick = data.state
+            player.currentLeftClick += 1
         else if (data.inputId === "right_click")
-            player.pressingRightClick = data.state
+            player.currentRightClick += 1
         else if (data.inputId === "one")
             player.activeSlot = 0
         else if (data.inputId === "two")
@@ -521,11 +578,11 @@ Bullet.getAllInitPack = function(){
 {
 Floof = function(){
     var self = Entity()
-    self.x = randomRange(300 * 50, 700 * 50)
-    self.y = randomRange(300 * 50, 700 * 50)
+    self.x = randomRange(480 * 50, 520 * 50)
+    self.y = randomRange(480 * 50, 520 * 50)
     self.id = Math.random()
     self.number = "" + Math.floor(Math.random() * 100)
-    self.speedX = 0
+    self.speedX = 0 
     self.speedY = 0
     self.timer = 0
     self.toRemove = false
@@ -610,7 +667,7 @@ Floof.update = function(){
     for(var i in Floof.list){
         floofCount++
     }
-    if (Math.random() < 0.4 && floofCount < 500){
+    if (Math.random() < 0.4 && floofCount < 20){
         Floof()
     }
     

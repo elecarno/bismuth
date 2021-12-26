@@ -149,17 +149,32 @@ Item("cave_beef","Cave Beef", function(player){
     player.inventory.removeItem("cave_beef", 1)
 })
 
-// tools
+// tools & placeables
 let spriteIds = {
     "shroom_k": 1,
     "hunting_rifle": 2,
-    "hunting_knife": 3,
+    "survival_knife": 3,
+    "bronze_pickaxe": 5,
+    "stone": 4, // all tiles will be 4
+    "rocky_floor": 4,
 }
 
-Item("hunting_knife","Hunting Knife", function(player){
-    let idx = player.hotbar.indexOf("hunting_knife")
+Item("stone","Stone", function(player){
+    let idx = player.hotbar.indexOf("stone")
     player.hotbar[idx] = "Nothing"
-    player.hotbar.splice(player.activeSlot, 1, "hunting_knife")
+    player.hotbar.splice(player.activeSlot, 1, "stone")
+})
+
+Item("rocky_floor","Rocky Floor", function(player){
+    let idx = player.hotbar.indexOf("rocky_floor")
+    player.hotbar[idx] = "Nothing"
+    player.hotbar.splice(player.activeSlot, 1, "rocky_floor")
+})
+
+Item("survival_knife","Survival Knife", function(player){
+    let idx = player.hotbar.indexOf("survival_knife")
+    player.hotbar[idx] = "Nothing"
+    player.hotbar.splice(player.activeSlot, 1, "survival_knife")
 })
 
 Item("shroom_k","Shroom-K Rifle", function(player){
@@ -172,4 +187,10 @@ Item("hunting_rifle","Hunting Rifle", function(player){
     let idx = player.hotbar.indexOf("hunting_rifle")
     player.hotbar[idx] = "Nothing"
     player.hotbar.splice(player.activeSlot, 1, "hunting_rifle")
+})
+
+Item("bronze_pickaxe","Bronze Pickaxe", function(player){
+    let idx = player.hotbar.indexOf("bronze_pickaxe")
+    player.hotbar[idx] = "Nothing"
+    player.hotbar.splice(player.activeSlot, 1, "bronze_pickaxe")
 })

@@ -4,7 +4,7 @@
     <img id="game-title" src="/client/img/title_logo.png">
     <input id="signDiv-username" type="text" placeholder="enter a name"></input>
     <button id="signDiv-signIn">Play</button><br>
-    <h1 id="credits">Alpha 1.0 - Developed by Elecarno and KingJellyfishII</h1>
+    <h1 id="credits">Alpha 1.0.5 - Developed by Elecarno and KingJellyfishII</h1>
     <input id="signDiv-password" type="password" style="display:none;"></input><br>
     <button id="signDiv-signUp" style="display:none;">Sign Up</button>
 </div>
@@ -410,7 +410,7 @@
 
         // Draw Hover Tile
         ctx.drawImage(Img.hover_tile ,selectedTileX - Player.list[selfId].x + WIDTH/2, selectedTileY - Player.list[selfId].y + HEIGHT/2 - 40, 50, 90)
-    },1000/144)
+    },1000/75)
 
     var drawMap = function(){
         /*
@@ -587,18 +587,22 @@
         switch (event.which) {
             case 1:
                 socket.emit('keyPress',{inputId:'left_click', state:true})
+                /*
                 setTimeout(function(){
                     socket.emit('keyPress',{inputId:'left_click', state:false})
                 }, 1)
+                */
                 break;
             case 2:
                 //console.log("mid")
                 break;
             case 3:
                 socket.emit('keyPress',{inputId:'right_click', state:true})
+                /*
                 setTimeout(function(){
                     socket.emit('keyPress',{inputId:'right_click', state:false})
                 }, 1/2)
+                */
                 break;
             default:
                 console.log("else")
