@@ -8,11 +8,12 @@ function removeItemAll(arr, value) {
        }
     }
     return arr;
- }
+}
 
 Inventory = function(items, socket, server){
     var self = {
         items:items, //{id:"itemId",amount:1}
+        recipes:[],
         socket:socket,
         server:server,
     }
@@ -57,14 +58,17 @@ Inventory = function(items, socket, server){
     self.refreshRender = function(){
         // server
         if(self.server){
-            self.socket.emit("updateInvetory", self.items)
+            self.socket.emit("updateInventory", {
+                items:self.items,
+                recipes:self.recipes,
+            })
             return
         }   
 
         // client only
         var inventory = document.getElementById("inventory")
         inventory.innerHTML = ""
-        var addButton = function(data){
+        var addInventoryButton = function(data){
             let item = Item.list[data.id]
             let button = document.createElement('button')
             button.onclick = function(){
@@ -75,7 +79,29 @@ Inventory = function(items, socket, server){
         }
         
         for(var i = 0; i < self.items.length; i++)
-            addButton(self.items[i])  
+            addInventoryButton(self.items[i])
+
+        var crafting = document.getElementById("crafting")
+        crafting.innerHTML = ""
+        var addCraftingButton = function(data){
+            console.log(data)
+            let button = document.createElement('button')
+            button.onclick = function(){
+                self.socket.emit("craft", data)
+            }
+            button.innerText = data + " (" + Recipe.list[data].requiredItems + ")"
+            crafting.appendChild(button)
+        }
+
+        for(var i = 0; i < self.recipes.length; i++)
+            addCraftingButton(self.recipes[i])
+    }
+    self.addRecipes = function(sentRecipes){
+        self.recipes = []
+        for(var i = 0; i < sentRecipes.length; i++){
+            self.recipes.push(sentRecipes[i])
+        }
+        self.refreshRender()
     }
 
     // server
@@ -88,10 +114,20 @@ Inventory = function(items, socket, server){
             let item = Item.list[itemId]
             item.event(Player.list[self.socket.id])
         })
+
+        self.socket.on("craft", function(data){
+            self.addItem(data, 1)
+
+            let recipe = Recipe.list[data]
+            for(var i = 0; i < recipe.requiredItems.length; i++)   
+                self.removeItem(recipe.requiredItems[i], 1)
+        })
     }
 
     return self
 }
+
+// ---------------------------------------------------------------------------
 
 Item = function(id, name, event){
     var self = {
@@ -155,6 +191,7 @@ let spriteIds = {
     "hunting_rifle": 2,
     "survival_knife": 3,
     "bronze_pickaxe": 5,
+    "iron_pickaxe": 6,
     "rock": 4, // all tiles will be 4
     "rocky_floor": 4,
 }
@@ -194,3 +231,24 @@ Item("bronze_pickaxe","Bronze Pickaxe", function(player){
     player.hotbar[idx] = "Nothing"
     player.hotbar.splice(player.activeSlot, 1, "bronze_pickaxe")
 })
+
+Item("iron_pickaxe","Iron Pickaxe", function(player){
+    let idx = player.hotbar.indexOf("iron_pickaxe")
+    player.hotbar[idx] = "Nothing"
+    player.hotbar.splice(player.activeSlot, 1, "iron_pickaxe")
+})
+
+// ---------------------------------------------------------------------------
+
+Recipe = function(resultItem, requiredItems){
+    var self = {
+        resultItem:resultItem,
+        requiredItems:requiredItems,
+    }
+    Recipe.list[self.resultItem] = self
+    return self
+}
+Recipe.list = {}
+
+Recipe("cave_beef", ["medkit", "adrenaline"])
+Recipe("almond_water", ["rock", "rocky_floor"])
