@@ -2,18 +2,66 @@ require('../world')
 
 world = new World()
 
-var colTiles = [3]
+var colTiles = [3, 7, 8, 11, 14, 17]
 var intTiles = [7]
 var autoGuns = ["shroom_k"]
 var singleGuns = ["hunting_rifle"]
 var meleeWeapons = ["survival_knife"]
-var miningTools = ["bronze_pickaxe"]
-var placeableItems = ["stone", "rocky_floor"]
+var miningTools = ["bronze_pickaxe", "iron_pickaxe", "iron_drill"]
+var harvestTools = ["survival_knife", "bronze_sickle"]
+var workTools = ["bronze_chisel"]
+var placeableItems = [
+"rock", "rocky_floor", "granite", "earth", "beq_rock", 
+"stone", "organic_floor", "dirt_floor", "cave_flower", "toad_shroom", 
+"pollen_shroom", "bronze_berry"
+]
 var priorityTiles = [7]
 var placeIds = {
-    "stone" : 3,
+    "rock" : 3,
     "rocky_floor" : 2,
+    "granite": 8,
+    "organic_floor": 13,
+    "beq_rock": 14,
+    "dirt_floor": 10,
+    "earth": 11,
+    "stone": 15,
+    "cave_flower": 6,
+    "toad_shroom": 4,
+    "pollen_shroom": 5,
+    "bronze_berry": 16,
 }
+var miningToolStrengths = {
+    "bronze_pickaxe": 1.5,
+    "iron_pickaxe": 2,
+    "iron_drill": 7,
+}
+var harvestToolStrengths = {
+    "survival_knife": 0.5,
+    "bronze_sickle": 1,
+}
+var workToolStrengths = {
+    "bronze_chisel": 1,
+}
+var tileStrengths = {
+    2: 20, 3: 40, 4: 5, 5: 5, 6: 5, 7: 100,
+    8: 55, 10: 20, 11: 30, 13: 20, 14: 50, 15: 5,
+    16: 10, 17: 50
+}
+var mineTiles = [2, 3, 8, 13, 14, 10, 11, 17]
+var harvestTiles = [4, 5, 6, 15, 16]
+var workTiles = [7]
+
+var floor1Tiles = [1,2,3,4,5,6,7,8,17]
+var floor2Tiles = [12,13,14,16]
+var floor3Tiles = [9,10,11,15]
+
+craftingRecipes = [
+    ["toad_shroom", "stone", "shroom_wood"],
+    ["pollen_shroom", "cave_flower", "fibres"],
+    ["bronze_berry","fibres","shroom_wood","bronze_pickaxe"],
+    ["bronze_berry","fibres","shroom_wood","bronze_sickle"],
+    ["stone","bronze_berry","fibres","shroom_wood","bronze_chisel"],
+]
 
 var initPack = {player:[],bullet:[],floof:[]}
 var removePack = {player:[],bullet:[],floof:[]}
@@ -110,19 +158,19 @@ Player = function(id, username, socket, progress){
     self.hotbar = ["Nothing", "Nothing", "Nothing", "Nothing", "Nothing"]
     self.loadedChunks = []
     self.lookingRight = false
-    self.spriteId = undefined
+    self.spriteId = [0, 0]
     self.currentRightClick = 0
     self.lastRightClick = 0
     self.currentLeftClick = 0
     self.lastLeftClick = 0
+    self.tileDestroyState = 0
+    self.currentTileStrength = 100
 
-    self.inventory.addItem("survival_knife", 1)
-    self.inventory.addItem("bronze_pickaxe", 1)
-    self.inventory.addItem("stone", 32)
+    self.inventory.addItem("iron_drill", 1)
+    self.inventory.addItem("bronze_chisel", 1)
+    self.inventory.addItem("bronze_sickle", 1)
     self.inventory.addItem("shroom_k", 1)
     self.inventory.addItem("hunting_rifle", 1)
-    self.inventory.addItem("almond_water", 15)
-    self.inventory.addItem("cave_beef", 32)
 
     var superUpdate = self.update;
     self.update = function(){
@@ -151,7 +199,7 @@ Player = function(id, username, socket, progress){
         if(self.hotbar[self.activeSlot] !== "Nothing")
             self.spriteId = self.inventory.getItemSpriteId(self.hotbar[self.activeSlot])
         else
-            self.spriteId = 0
+            self.spriteId = [0, 0]
         //console.log(self.inventory.hasItem(self.hotbar[self.activeSlot], 1))
 
         getTile = function(xic, yic){
@@ -190,25 +238,64 @@ Player = function(id, username, socket, progress){
         }
 
         if(self.holdingMouseLeft){
-            if(miningTools.includes(self.hotbar[self.activeSlot])){
-                if(inverse(placeIds)[getTile(mouseXInChunk, mouseYInChunk)] !== undefined)
-                    self.inventory.addItem(inverse(placeIds)[getTile(mouseXInChunk, mouseYInChunk)], 1)
+            let toolType = "none"
+            let selectedTile = getTile(mouseXInChunk, mouseYInChunk)
+            if(mineTiles.includes(selectedTile))
+                toolType = [miningToolStrengths, miningTools]
+            else if(harvestTiles.includes(selectedTile))
+                toolType = [harvestToolStrengths, harvestTools]
+            else if(workTiles.includes(selectedTile))
+                toolType = [workToolStrengths, workTools]
 
-                currentMouseChunk.tiles[mouseYInChunk * currentMouseChunk.width + mouseXInChunk] = 1
-                tileToPlace = 1
+            self.currentTileStrength = tileStrengths[selectedTile]
 
-                socket.broadcast.emit('tile-change',{
-                    tileToPlace: tileToPlace,
-                    mouseChunk: currentMouseChunk,
-                    chunkX: mouseChunkX,
-                    chunkY: mouseChunkY,
-                    tileX: mouseXInChunk,
-                    tileY: mouseYInChunk,
-                })
-            }   
+            if(toolType[1].includes(self.hotbar[self.activeSlot]) && selectedTile !== 1){
+                self.tileDestroyState += 1 * toolType[0][self.hotbar[self.activeSlot]]
+                if(self.tileDestroyState >= tileStrengths[selectedTile]){
+                    if(inverse(placeIds)[selectedTile] !== undefined)
+                        self.inventory.addItem(inverse(placeIds)[selectedTile], 1)
+
+                    currentMouseChunk.tiles[mouseYInChunk * currentMouseChunk.width + mouseXInChunk] = 1
+                    if (floor1Tiles.includes(selectedTile))
+                        tileToPlace = 1
+                    else if (floor2Tiles.includes(selectedTile))
+                        tileToPlace = 12
+                    else if (floor3Tiles.includes(selectedTile))
+                        tileToPlace = 9
+                    else
+                        tileToPlace = 1
+
+                    socket.broadcast.emit('tile-change',{
+                        tileToPlace: tileToPlace,
+                        mouseChunk: currentMouseChunk,
+                        chunkX: mouseChunkX,
+                        chunkY: mouseChunkY,
+                        tileX: mouseXInChunk,
+                        tileY: mouseYInChunk,
+                    })
+                    self.tileDestroyState = 0
+                }
+            } 
         }
 
         if(self.currentLeftClick > self.lastLeftClick){
+            let recipesToSend = []
+            for(var i = 0; i < craftingRecipes.length; i++){
+                let hasNeededItems = 0
+                for(var j = 0; j < craftingRecipes[i].length-1; j++){
+                    if(self.inventory.hasItem(craftingRecipes[i][j], 1)){
+                        hasNeededItems += 1
+                    }
+                }
+                if(hasNeededItems == craftingRecipes[i].length-1){
+                    //console.log(craftingRecipes[i][craftingRecipes[i].length-1])
+                    recipesToSend.push(craftingRecipes[i][craftingRecipes[i].length-1])
+                }
+            }
+
+            self.inventory.addRecipes(recipesToSend)
+
+            self.tileDestroyState = 0
             self.lastLeftClick = self.currentLeftClick
         }
 
@@ -331,6 +418,8 @@ Player = function(id, username, socket, progress){
             activeSlot:self.activeSlot,
             lookingRight:self.lookingRight,
             spriteId:self.spriteId,
+            tileDestroyState:self.tileDestroyState,
+            currentTileStrength:self.currentTileStrength,
         }
     }
     self.getUpdatePack = function(){
@@ -373,6 +462,8 @@ Player = function(id, username, socket, progress){
             activeSlot:self.activeSlot,
             lookingRight:self.lookingRight,
             spriteId:self.spriteId,
+            tileDestroyState:self.tileDestroyState,
+            currentTileStrength:self.currentTileStrength,
         }
     }
 
@@ -507,8 +598,10 @@ Bullet = function(parent, angle, lifetime, size){
                 p.hp -= 1
                 if(p.hp <= 0){
                     var shooter = Player.list[self.parent]
-                    if(shooter)
-                        shooter.score += 10
+                    if(shooter){
+                        shooter.score += Math.round(p.score / 2 + 5)
+                        p.score = Math.round(p.score / 2)
+                    }
                 }
                 self.toRemove = true
             }
@@ -584,7 +677,6 @@ Floof = function(){
     self.x = randomRange(480 * 50, 520 * 50)
     self.y = randomRange(480 * 50, 520 * 50)
     self.id = Math.random()
-    self.number = "" + Math.floor(Math.random() * 100)
     self.speedX = 0 
     self.speedY = 0
     self.timer = 0
@@ -648,7 +740,6 @@ Floof = function(){
             id:self.id,
             x:self.x,
             y:self.y,
-            number:self.number
         }
     }
     self.getUpdatePack = function(){

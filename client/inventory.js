@@ -8,11 +8,12 @@ function removeItemAll(arr, value) {
        }
     }
     return arr;
- }
+}
 
 Inventory = function(items, socket, server){
     var self = {
         items:items, //{id:"itemId",amount:1}
+        recipes:[],
         socket:socket,
         server:server,
     }
@@ -57,14 +58,17 @@ Inventory = function(items, socket, server){
     self.refreshRender = function(){
         // server
         if(self.server){
-            self.socket.emit("updateInvetory", self.items)
+            self.socket.emit("updateInventory", {
+                items:self.items,
+                recipes:self.recipes,
+            })
             return
         }   
 
         // client only
         var inventory = document.getElementById("inventory")
         inventory.innerHTML = ""
-        var addButton = function(data){
+        var addInventoryButton = function(data){
             let item = Item.list[data.id]
             let button = document.createElement('button')
             button.onclick = function(){
@@ -75,7 +79,29 @@ Inventory = function(items, socket, server){
         }
         
         for(var i = 0; i < self.items.length; i++)
-            addButton(self.items[i])  
+            addInventoryButton(self.items[i])
+
+        var crafting = document.getElementById("crafting")
+        crafting.innerHTML = ""
+        var addCraftingButton = function(data){
+            console.log(data)
+            let button = document.createElement('button')
+            button.onclick = function(){
+                self.socket.emit("craft", data)
+            }
+            button.innerText = data + " (" + Recipe.list[data].requiredItems + ")"
+            crafting.appendChild(button)
+        }
+
+        for(var i = 0; i < self.recipes.length; i++)
+            addCraftingButton(self.recipes[i])
+    }
+    self.addRecipes = function(sentRecipes){
+        self.recipes = []
+        for(var i = 0; i < sentRecipes.length; i++){
+            self.recipes.push(sentRecipes[i])
+        }
+        self.refreshRender()
     }
 
     // server
@@ -88,10 +114,20 @@ Inventory = function(items, socket, server){
             let item = Item.list[itemId]
             item.event(Player.list[self.socket.id])
         })
+
+        self.socket.on("craft", function(data){
+            self.addItem(data, 1)
+
+            let recipe = Recipe.list[data]
+            for(var i = 0; i < recipe.requiredItems.length; i++)   
+                self.removeItem(recipe.requiredItems[i], 1)
+        })
     }
 
     return self
 }
+
+// ---------------------------------------------------------------------------
 
 Item = function(id, name, event){
     var self = {
@@ -149,48 +185,90 @@ Item("cave_beef","Cave Beef", function(player){
     player.inventory.removeItem("cave_beef", 1)
 })
 
+// materials
+
+Item("floof_wool","Floof Wool", function(player){})
+Item("fibres","Fibres", function(player){})
+Item("shroom_wood","Shroom Wood", function(player){})
+
 // tools & placeables
 let spriteIds = {
-    "shroom_k": 1,
-    "hunting_rifle": 2,
-    "survival_knife": 3,
-    "bronze_pickaxe": 5,
-    "stone": 4, // all tiles will be 4
-    "rocky_floor": 4,
+    // guns
+    "shroom_k": [2, 0],
+    "hunting_rifle": [2, 1],
+    // harvest tools
+    "survival_knife": [3, 0],
+    "bronze_sickle": [3, 1],
+    // mining tools
+    "bronze_pickaxe": [4, 0],
+    "iron_pickaxe": [4, 2],
+    "iron_drill": [4, 3],
+    // work tools
+    "bronze_chisel": [5, 0],
+    // tiles & placeables
+    "rock": [1, 0],
+    "rocky_floor": [1, 0],
+    "granite": [1, 0],
+    "earth": [1, 0],
+    "organic_floor": [1, 0],
+    "rocky_floor": [1, 0],
+    "beq_rock": [1, 0],
+    "dirt_floor": [1, 0],
 }
 
-Item("stone","Stone", function(player){
-    let idx = player.hotbar.indexOf("stone")
+itemToHotbar = function(player, item){
+    let idx = player.hotbar.indexOf(item)
     player.hotbar[idx] = "Nothing"
-    player.hotbar.splice(player.activeSlot, 1, "stone")
-})
+    player.hotbar.splice(player.activeSlot, 1, item)
+}
 
-Item("rocky_floor","Rocky Floor", function(player){
-    let idx = player.hotbar.indexOf("rocky_floor")
-    player.hotbar[idx] = "Nothing"
-    player.hotbar.splice(player.activeSlot, 1, "rocky_floor")
-})
+// tiles
+Item("rock","Rock", function(player){itemToHotbar(player, "rock")})
+Item("granite","Granite", function(player){itemToHotbar(player, "granite")})
+Item("rocky_floor","Rocky Floor", function(player){itemToHotbar(player, "rocky_floor")})
+Item("earth","Earth", function(player){itemToHotbar(player, "earth")})
+Item("beq_rock","Beq Rock", function(player){itemToHotbar(player, "beq_rock")})
+Item("organic_floor","Organic Floor", function(player){itemToHotbar(player, "organic_floor")})
+Item("dirt_floor","Dirt Floor", function(player){itemToHotbar(player, "dirt_floor")})
 
-Item("survival_knife","Survival Knife", function(player){
-    let idx = player.hotbar.indexOf("survival_knife")
-    player.hotbar[idx] = "Nothing"
-    player.hotbar.splice(player.activeSlot, 1, "survival_knife")
-})
+// weapons
+Item("shroom_k","Shroom-K Rifle", function(player){itemToHotbar(player, "shroom_k")})
+Item("hunting_rifle","Hunting Rifle", function(player){itemToHotbar(player, "hunting_rifle")})
 
-Item("shroom_k","Shroom-K Rifle", function(player){
-    let idx = player.hotbar.indexOf("shroom_k")
-    player.hotbar[idx] = "Nothing"
-    player.hotbar.splice(player.activeSlot, 1, "shroom_k")
-})
+// harvest tools
+Item("survival_knife","Survival Knife", function(player){itemToHotbar(player, "survival_knife")})
+Item("bronze_sickle","Bronze Sickle", function(player){itemToHotbar(player, "bronze_sickle")})
 
-Item("hunting_rifle","Hunting Rifle", function(player){
-    let idx = player.hotbar.indexOf("hunting_rifle")
-    player.hotbar[idx] = "Nothing"
-    player.hotbar.splice(player.activeSlot, 1, "hunting_rifle")
-})
+// mining tools
+Item("bronze_pickaxe","Bronze Pickaxe", function(player){itemToHotbar(player, "bronze_pickaxe")})
+Item("iron_pickaxe","Iron Pickaxe", function(player){itemToHotbar(player, "iron_pickaxe")})
+Item("iron_drill","Iron Drill", function(player){itemToHotbar(player, "iron_drill")})
 
-Item("bronze_pickaxe","Bronze Pickaxe", function(player){
-    let idx = player.hotbar.indexOf("bronze_pickaxe")
-    player.hotbar[idx] = "Nothing"
-    player.hotbar.splice(player.activeSlot, 1, "bronze_pickaxe")
-})
+// work tools
+Item("bronze_chisel","Bronze Chisel", function(player){itemToHotbar(player, "bronze_chisel")})
+
+// placeables
+Item("stone","Stone", function(player){itemToHotbar(player, "stone")})
+Item("cave_flower","Cave Flower", function(player){itemToHotbar(player, "cave_flower")})
+Item("toad_shroom","Toad Shroom", function(player){itemToHotbar(player, "toad_shroom")})
+Item("pollen_shroom","Pollen Shroom", function(player){itemToHotbar(player, "pollen_shroom")})
+Item("bronze_berry","Bronze Berry", function(player){itemToHotbar(player, "bronze_berry")})
+
+
+// ---------------------------------------------------------------------------
+
+Recipe = function(resultItem, requiredItems){
+    var self = {
+        resultItem:resultItem,
+        requiredItems:requiredItems,
+    }
+    Recipe.list[self.resultItem] = self
+    return self
+}
+Recipe.list = {}
+
+Recipe("shroom_wood", ["toad_shroom", "stone"])
+Recipe("fibres", ["pollen_shroom", "cave_flower"])
+Recipe("bronze_pickaxe", ["bronze_berry", "fibres", "shroom_wood"])
+Recipe("bronze_sickle", ["bronze_berry", "fibres", "shroom_wood"])
+Recipe("bronze_chisel", ["bronze_berry", "fibres", "shroom_wood", "stone"])

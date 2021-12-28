@@ -2,9 +2,9 @@
 
 <div id="signDiv" style="position:absolute;">
     <img id="game-title" src="/client/img/title_logo.png">
-    <input id="signDiv-username" type="text" placeholder="enter a name"></input>
+    <input id="signDiv-username" type="text" placeholder="enter a name" maxlength="20"></input>
     <button id="signDiv-signIn">Play</button><br>
-    <h1 id="credits">Alpha 1.0.5 - Developed by Elecarno and KingJellyfishII</h1>
+    <h1 id="credits">Alpha 1.1 - Developed by Elecarno and KingJellyfishII</h1>
     <input id="signDiv-password" type="password" style="display:none;"></input><br>
     <button id="signDiv-signUp" style="display:none;">Sign Up</button>
 </div>
@@ -14,7 +14,8 @@
         <canvas id="ctx" width="1800" height="960" style="position:absolute;width:1800px;height:960px;"></canvas>
         
         <div id="ui" style="position:absolute;width:1800px;height:960px;">
-            <div id="inventory" style="overflow-y:scroll;width:150px;height:200px;float:right;background-color:#878787;border-radius:10px;"></div>
+            <div id="inventory"></div>
+            <div id="crafting"></div>
         </div>
     
     </div>
@@ -65,6 +66,9 @@
     var signDivSignUp = document.getElementById("signDiv-signUp")
     var signDivPassword = document.getElementById("signDiv-password")
     var gameDiv = document.getElementById("gameDiv")
+    var belowGameDiv = document.getElementById("belowGame")
+    var inventoryDiv = document.getElementById("inventory")
+    var craftingDiv = document.getElementById("crafting")
 
     signDivSignIn.onclick = function(){
         socket.emit("signIn",{username:signDivUsername.value,password:signDivPassword.value})
@@ -73,6 +77,8 @@
     signDivSignUp.onclick = function(){
         socket.emit("signUp",{username:signDivUsername.value,password:signDivPassword.value})
     }
+
+    belowGameDiv.style.display = "none"
 
     socket.on("signInResponse", function(data){
         if(data.success){
@@ -100,8 +106,9 @@
 
     // UI
     var inventory = new Inventory("", socket, false);
-    socket.on("updateInvetory", function(items){
-        inventory.items = items
+    socket.on("updateInventory", function(data){
+        inventory.items = data.items
+        inventory.recipes = data.recipes
         inventory.refreshRender()
     })
 
@@ -129,8 +136,14 @@
     Img.pollen_shroom.src = '/client/img/tiles/pollen_shroom.png'
     Img.cave_flower = new Image()
     Img.cave_flower.src = '/client/img/tiles/cave_flower.png'
-    Img.old_altar = new Image()
-    Img.old_altar.src = 'client/img/tiles/old_altar.png'
+    Img.old_workbench = new Image()
+    Img.old_workbench.src = 'client/img/tiles/old_workbench.png'
+    Img.stone = new Image()
+    Img.stone.src = 'client/img/tiles/stone.png'
+    Img.bronze_berry = new Image()
+    Img.bronze_berry.src = 'client/img/tiles/bronze_berry.png'
+    Img.iron_ore = new Image()
+    Img.iron_ore.src = 'client/img/tiles/iron_ore.png'
 
     
     Img.map = new Image()
@@ -159,6 +172,8 @@
         self.activeSlot = initPack.activeSlot
         self.lookingRight = initPack.lookingRight
         self.spriteId = initPack.spriteId
+        self.tileDestroyState = initPack.tileDestroyState
+        self.currentTileStrength = initPack.currentTileStrength
 
         self.draw = function(){
             var width = 100
@@ -169,11 +184,11 @@
 
             if(!self.lookingRight){
                 ctx.drawImage(Img.player_left, 0, 0, Img.player_left.width, Img.player_left.height, x-width/2, y-height/2, width, height)
-                ctx.drawImage(Img.tools_left, self.spriteId * 32, 0, Img.player_left.width, Img.player_left.height, x-width/2, y-height/2, width, height)
+                ctx.drawImage(Img.tools_left, self.spriteId[0] * 32, self.spriteId[1] * 32, Img.player_left.width, Img.player_left.height, x-width/2, y-height/2, width, height)
             }
             else{
                 ctx.drawImage(Img.player_right, 0, 0, Img.player_right.width, Img.player_right.height, x-width/2, y-height/2, width, height)
-                ctx.drawImage(Img.tools_right, self.spriteId * 32, 0, Img.player_left.width, Img.player_left.height, x-width/2, y-height/2, width, height)
+                ctx.drawImage(Img.tools_right, self.spriteId[0] * 32, self.spriteId[1] * 32, Img.player_left.width, Img.player_left.height, x-width/2, y-height/2, width, height)
             }
                 
 
@@ -222,8 +237,6 @@
     var Floof = function(initPack){
         var self = {}
         self.id = initPack.id
-        self.number = initPack.number
-        self.username = initPack.username
         self.x = initPack.x
         self.y = initPack.y
 
@@ -239,8 +252,6 @@
                 x-width/2, y-height/2, width, height)
 
             ctx.fillStyle = "#b3b3b3"
-            //ctx.fillRect(self.x-7, self.y-7, 14, 14)
-            //ctx.fillText("floof " + self.number, x - 15, y - 25)
         }
 
         Floof.list[self.id] = self
@@ -305,6 +316,10 @@
                     p.lookingRight = pack.lookingRight
                 if(pack.spriteId !== undefined)
                     p.spriteId = pack.spriteId
+                if(pack.tileDestroyState !== undefined)
+                    p.tileDestroyState = pack.tileDestroyState
+                if(pack.currentTileStrength !== undefined)
+                    p.currentTileStrength = pack.currentTileStrength
             }
         }
         for(var i = 0; i < data.bullet.length; i++){
@@ -409,6 +424,8 @@
         drawScore()
 
         // Draw Hover Tile
+        ctx.fillStyle = "rgba(145, 47, 47, " + Player.list[selfId].tileDestroyState/Player.list[selfId].currentTileStrength + ")"
+        ctx.fillRect(selectedTileX - Player.list[selfId].x + WIDTH/2, selectedTileY - Player.list[selfId].y + HEIGHT/2 - 40, 50, 90)
         ctx.drawImage(Img.hover_tile ,selectedTileX - Player.list[selfId].x + WIDTH/2, selectedTileY - Player.list[selfId].y + HEIGHT/2 - 40, 50, 90)
     },1000/75)
 
@@ -424,23 +441,39 @@
             for(let i = 0; i < chunk.height; i++){
                 for(let j = 0; j < chunk.width; j++){
                     let col = chunk.tiles[i * chunk.width + j]
+                    let colourTiles = [1,2,3,8,9,10,11,12,13,14]
+                    let floor1Tiles = [4,5,6,7,17]
+                    let floor2Tiles = [16]
+                    let floor3Tiles = [15]
                     // world tiles
-                    if (col === 1)
+                    if (col === 1 || floor1Tiles.includes(col))
                         ctx.fillStyle = "#829174"
                     else if (col === 2)
                         ctx.fillStyle = "#6a7560"
                     else if (col === 3)
                         ctx.fillStyle = "#787878"
+                    else if (col === 8)
+                        ctx.fillStyle = "#55526b"
+                    else if (col === 9 || floor3Tiles.includes(col))
+                        ctx.fillStyle = "#544d43"
+                    else if (col === 10)
+                        ctx.fillStyle = "#423f3a"
+                    else if (col === 11)
+                        ctx.fillStyle = "#4f4c48"
+                    else if (col === 12 || floor2Tiles.includes(col))
+                        ctx.fillStyle = "#626653"
+                    else if (col === 13)
+                        ctx.fillStyle = "#4f5245"
+                    else if (col === 14)
+                        ctx.fillStyle = "#545945"
 
                     let tilex = (chunk.x * 50 * chunk.width) + (j * 50) - Player.list[selfId].x + WIDTH/2
                     let tiley = (chunk.y * 50 * chunk.height) + (i * 50) - Player.list[selfId].y + HEIGHT/2
                     ctx.fillRect(tilex, tiley, 50, 50)
-                
-                    // other tiles
-                    if (col > 3){
-                        ctx.fillStyle = "#829174"
-                        ctx.fillRect(tilex, tiley, 50, 50)
 
+                    // other tiles
+                    if (!colourTiles.includes(col)){
+                        // floor_1
                         if (col === 4)
                             ctx.drawImage(Img.toad_shroom, tilex, tiley, 50, 50)
                         if (col === 5)
@@ -448,7 +481,15 @@
                         if (col === 6)
                             ctx.drawImage(Img.cave_flower, tilex, tiley, 50, 50)
                         if (col === 7)
-                            ctx.drawImage(Img.old_altar, tilex, tiley, 50, 50)
+                            ctx.drawImage(Img.old_workbench, tilex, tiley - 40, 50, 90)
+                        if(col === 17)
+                            ctx.drawImage(Img.iron_ore, tilex, tiley - 40, 50, 90)
+                        // floor_3
+                        if(col === 15)
+                            ctx.drawImage(Img.stone, tilex, tiley, 50, 50)
+                        // floor_2
+                        if(col === 16)
+                            ctx.drawImage(Img.bronze_berry, tilex, tiley, 50, 50)
                     }
                 }
             }
@@ -469,12 +510,21 @@
             for(let i = 0; i < chunk.height; i++){
                 for(let j = 0; j < chunk.width; j++){
                     let col = chunk.tiles[i * chunk.width + j]
-                    if(col === 3){
+                    let blockTiles = [3,8,11,14]
+                    if(blockTiles.includes(col)){
+                        if(col === 3)
+                            ctx.fillStyle = "#4e524b"
+                        else if(col === 8)
+                            ctx.fillStyle = "#3e3c4f"
+                        else if(col === 11)
+                            ctx.fillStyle = "#33312c"
+                        else if(col === 14)
+                            ctx.fillStyle = "#3c402f"
+
                         let tilex = (chunk.x * 50 * chunk.width) + (j * 50) - Player.list[selfId].x + WIDTH/2
                         let tiley = (chunk.y * 50 * chunk.height) + (i * 50) - Player.list[selfId].y + HEIGHT/2
-                        ctx.fillStyle = "#4e524b"
                         ctx.fillRect(tilex, tiley - 40, 50, 50)
-                    }     
+                    }
                 }
             }
         }
@@ -482,24 +532,25 @@
 
     var drawScore = function(){
         ctx.fillStyle = "#b3b3b3"
-        ctx.font = "30px Arial"
+        ctx.font = "20px Arial"
         ctx.textAlign = "left"
         ctx.fillText("Effects: " + Player.list[selfId].effects, 30, 40)
-        ctx.fillText("Score: " + Player.list[selfId].score, 30, 80)
-        ctx.fillText("HP: " + Player.list[selfId].hp, 30, 120)
 
-        ctx.font = "20px Arial"
         for(var i = 0; i < 5; i++){
             if(i === Player.list[selfId].activeSlot)
-                ctx.fillText((i + 1) + " - [ " + Player.list[selfId].hotbar[i] + " ]", 30, 160 + (i*30))
+                ctx.fillText((i + 1) + " - [ " + Player.list[selfId].hotbar[i] + " ]", 30, 70 + (i*30))
             else
-                ctx.fillText((i + 1) + " -   " + Player.list[selfId].hotbar[i], 30, 160 + (i*30))
+                ctx.fillText((i + 1) + " -   " + Player.list[selfId].hotbar[i], 30, 70 + (i*30))
         }
-        ctx.font = "30px Arial"
+        ctx.font = "20px Arial"
 
         ctx.textAlign = "right"
-        ctx.fillText(Player.list[selfId].x / 50 + " - x", 1780, 900)
+        ctx.fillText(Player.list[selfId].x / 50 + " - x", 1780, 915)
         ctx.fillText(Player.list[selfId].y / 50 + " - y", 1780, 940)
+
+        ctx.fillStyle = "#7ecf8b"
+        var hpWidth = 450 * Player.list[selfId].hp / Player.list[selfId].hpMax
+        ctx.fillRect(WIDTH/2 - hpWidth/2, HEIGHT-25, hpWidth, 20)
         ctx.textAlign = "left"
         ctx.font = "10px Arial"
     }
@@ -563,6 +614,21 @@
             socket.emit("keyPress", {inputId:"four", state:false})
         else if(event.keyCode === 53) // 5
             socket.emit("keyPress", {inputId:"five", state:false})
+        else if(event.keyCode === 69){ // e
+            if(inventoryDiv.style.display === "none"){
+                inventoryDiv.style.display = "inline-block"
+                craftingDiv.style.display = "inline-block"
+            } else {
+                inventoryDiv.style.display = "none"
+                craftingDiv.style.display = "none"
+            }
+        }
+        else if(event.keyCode === 81){ // q
+            if(belowGameDiv.style.display === "none")
+                belowGameDiv.style.display = "inline-block"
+            else
+                belowGameDiv.style.display = "none"
+        }
     }
 
     document.onmousedown = function(event){
@@ -610,8 +676,8 @@
     }
 
     document.onmousemove = function(event){
-        var x = -720 + event.clientX - 8
-        var y = -405 + event.clientY - 8
+        var x = -WIDTH/2 + event.clientX - 8
+        var y = -HEIGHT/2 + event.clientY - 8
         var angle = Math.atan2(y, x) / Math.PI * 180
         //console.log(event.clientX, event.clientY)
         var rect = document.getElementById("ctx")

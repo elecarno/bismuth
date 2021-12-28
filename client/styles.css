@@ -1,6 +1,8 @@
 button {
     background-color: #666666; /* Green */
-    border: none;
+    border-color: #878787;
+    border-width: 3px;
+    border-style: solid;
     color: white;
     padding: 12px 20px;
     text-align: center;
@@ -23,6 +25,34 @@ div{
 }
 body {
     background-color: #303030;
+}
+#inventory{
+    position:absolute;
+    overflow-y:scroll;
+    width:200px;
+    height:300px;
+    float:right;
+    background-color:rgba(135, 135, 135, 0.25);
+    border-color: #303030;
+    border-width: 7px;
+    border-style: solid;
+    right: 10px;
+    top: 10px;
+    text-align: right;
+}
+#crafting{
+    position:absolute;
+    overflow-y:scroll;
+    width:400px;
+    height:200px;
+    float:right;
+    background-color:rgba(135, 135, 135, 0.0);
+    border-color: rgba(135, 135, 135, 0.0);
+    border-width: 7px;
+    border-style: solid;
+    right: 10px;
+    top: 330px;
+    text-align: right;
 }
 #gameDiv {
     width: 1800px;
