@@ -1,4 +1,4 @@
-const { send } = require('express/lib/response')
+const { send, render } = require('express/lib/response')
 
 require('../world')
 
@@ -6,6 +6,7 @@ world = new World()
 
 var tpd = 50 // tile pixel dimension
 var ctd = 32 // chunk tile dimension
+var renderDistance = 925
 
 var colTiles = [3, 7, 8, 11, 14, 17]
 var intTiles = [7]
@@ -82,7 +83,7 @@ function inverse(obj){
       retobj[obj[key]] = key;
     }
     return retobj;
-  }
+}
 
 // Entity -----------------------------------------------------------------------
 Entity = function(){
@@ -132,7 +133,7 @@ Entity.getFrameUpdateData = function(){
     removePack.player = []
     removePack.bullet = []
     removePack.floof = []
-
+    
     return pack
 }
 
@@ -191,15 +192,12 @@ Player = function(id, username, socket, progress){
         self.mouseCanvasX = self.mouseX + self.x - 900 // 900 = 1800/2
         self.mouseCanvasY = self.mouseY + self.y - 480 // 480 = 960/2
 
-        let currentChunk = world.getChunk(Math.floor((self.x / tpd) / ctd), Math.floor((self.y / tpd) / ctd))
-        
         let currentMouseChunk = world.getChunk(Math.floor((self.mouseCanvasX / tpd) / ctd), Math.floor((self.mouseCanvasY / tpd) / ctd))
         let mouseXInChunk = Math.floor(self.mouseCanvasX / tpd - currentMouseChunk.x * ctd)
         let mouseYInChunk = Math.floor(self.mouseCanvasY / tpd - currentMouseChunk.y * ctd)
 
         let mouseChunkX = Math.floor((self.mouseCanvasX / tpd) / ctd)
         let mouseChunkY = Math.floor((self.mouseCanvasY / tpd) / ctd)
-        let mouseChunkidx = (mouseChunkX << 16) | mouseChunkY
 
         let tileToPlace = 0
 
@@ -207,7 +205,6 @@ Player = function(id, username, socket, progress){
             self.spriteId = self.inventory.getItemSpriteId(self.hotbar[self.activeSlot])
         else
             self.spriteId = [0, 0]
-        //console.log(self.inventory.hasItem(self.hotbar[self.activeSlot], 1))
 
         getTile = function(xic, yic){
             return currentMouseChunk.tiles[yic * currentMouseChunk.width + xic]
@@ -221,19 +218,7 @@ Player = function(id, username, socket, progress){
         })
 
         if(self.currentRightClick > self.lastRightClick){
-            /*
-            if(colTiles.includes(getTile(mouseXInChunk, mouseYInChunk))){
-                currentMouseChunk.tiles[mouseYInChunk * currentMouseChunk.width + mouseXInChunk] = 1
-                tileToPlace = 1
-            }
-            else{
-                currentMouseChunk.tiles[mouseYInChunk * currentMouseChunk.width + mouseXInChunk] = 3
-                tileToPlace = 3
-            }           
-            */  
-
             if(intTiles.includes(getTile(mouseXInChunk, mouseYInChunk))){
-                //currentMouseChunk.tiles[mouseYInChunk * currentMouseChunk.width + mouseXInChunk] = 1
                 console.log("interactable tile")
             }      
 
@@ -539,11 +524,19 @@ Player.onConnect = function(socket, username, progress){
         }
     })
 
+    let f = Floof.getAllInitPack()
+    for(var i = 0; i < f.length; i++){
+        if(!Player.list[socket.id].getDistance(f[i]) < renderDistance){
+            let idx = f.indexOf(f[i])
+            f.splice(idx, 1)
+        }
+    }
+
     socket.emit("init",{
         selfId:socket.id,
         player:Player.getAllInitPack(),
         bullet:Bullet.getAllInitPack(),
-        floof:Floof.getAllInitPack(),
+        floof:f,
     })
 }
 
@@ -684,8 +677,8 @@ Bullet.getAllInitPack = function(){
 {
 Floof = function(){
     var self = Entity()
-    self.x = randomRange(24 * tpd, 1024 * tpd)
-    self.y = randomRange(24 * tpd, 1024 * tpd)
+    self.x = randomRange(24 * tpd, 1000 * tpd)
+    self.y = randomRange(24 * tpd, 1000 * tpd)
     self.id = Math.random()
     self.speedX = 0 
     self.speedY = 0
@@ -711,12 +704,7 @@ Floof = function(){
                 // handle collision
                 self.toRemove = true
                 Player.list[b.parent].inventory.addItem("medkit", 1)
-                Player.list[b.parent].inventory.addItem("floof_wool", 1)
-                /*
-                for(var i in SOCKET_LIST){
-                    SOCKET_LIST[i].emit("addToChat", "floof " + self.number + " was killed")
-                }    
-                */  
+                Player.list[b.parent].inventory.addItem("floof_wool", 1)  
             }
         }
 
@@ -772,20 +760,26 @@ Floof.update = function(){
     for(var i in Floof.list){
         floofCount++
     }
-    if (Math.random() < 0.4 && floofCount < 500){
+    if (Math.random() < 0.4 && floofCount < 5000){
         Floof()
     }
-    
+
     var pack = []
     for (var i in Floof.list){
         var floof = Floof.list[i]
         floof.update()
-        if (floof.toRemove) {
-            delete Floof.list[i];
-            removePack.floof.push(floof.id)
-        } else
-            pack.push(floof.getUpdatePack())
+        for(var j in Player.list){
+            if(Player.list[j].getDistance(floof) < renderDistance){
+                if (floof.toRemove) {
+                    delete Floof.list[i];
+                    removePack.floof.push(floof.id)
+                } else
+                    pack.push(floof.getUpdatePack())
+            } else
+                removePack.floof.push(floof.id)
+        }
     }
+
     return pack
 }
 
