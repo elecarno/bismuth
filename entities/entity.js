@@ -1,3 +1,4 @@
+const e = require('express')
 const { send, render } = require('express/lib/response')
 
 require('../world')
@@ -145,6 +146,8 @@ Player = function(id, username, socket, progress){
     self.number = "" + Math.floor(Math.random() * 100)
     self.username = username
     self.inventory = new Inventory(progress.items, socket, true)
+    self.width = 1.6 // in tiles
+    self.height = 1.8 // in tile
     self.effects = []
     self.pressingRight = false
     self.pressingLeft = false
@@ -340,58 +343,52 @@ Player = function(id, username, socket, progress){
         let yInChunk = Math.floor(self.y / tpd - currentChunk.y * ctd)
 
         getTile = function(xic, yic){
-            return currentChunk.tiles[yic * currentChunk.width + xic]
+            return currentChunk.tiles[Math.floor(yic) * currentChunk.width + Math.floor(xic)]
         }
 
-        //console.log(getTile(xInChunk, yInChunk))
+        getDistanceToTile = function(xic, yic, hitbox){
+            let x2 = xic * tpd + currentChunk.x * ctd * tpd
+            let y2 = yic * tpd + currentChunk.y * ctd * tpd
 
-        let topRight = colTiles.includes(getTile(xInChunk + 1, yInChunk + 1))
-        let bottomRight = colTiles.includes(getTile(xInChunk + 1, yInChunk - 1))
-        let topLeft = colTiles.includes(getTile(xInChunk - 1, yInChunk + 1))
-        let bottomLeft = colTiles.includes(getTile(xInChunk - 1, yInChunk - 1))
-        let rightTop = colTiles.includes(getTile(xInChunk + 1, yInChunk - 1))
-        let leftTop = colTiles.includes(getTile(xInChunk - 1, yInChunk - 1))
-        let rightBottom = colTiles.includes(getTile(xInChunk + 1, yInChunk + 1))
-        let leftBottom = colTiles.includes(getTile(xInChunk - 1, yInChunk + 1))
+            let x1 = self.x
+            let y1 = self.y
 
-        let worldsize = 51200 // width and height of world in pixels
-        if(self.pressingRight && self.x < worldsize && !topRight && !bottomRight)
+            if(hitbox === "left")
+                x1 = self.x - self.width * tpd
+            else if(hitbox === "right")
+                x1 = self.x + self.width * tpd
+
+            if(hitbox === "top")
+                y1 = self.y - self.height * tpd
+            else if(hitbox === "bottom")
+                y1 = self.y + self.height * tpd
+
+            if(hitbox === "left" || hitbox === "right")
+                return Math.sqrt(Math.pow(x2-x1, 2))
+
+            if(hitbox === "top" || hitbox === "bottom")
+                return Math.sqrt(Math.pow(y2-y1, 2))
+        }
+
+        let leftHit = colTiles.includes(getTile(xInChunk-self.width/2, yInChunk)) && getDistanceToTile(xInChunk-self.width/2, yInChunk, "left") <= 0
+        let rightHit = colTiles.includes(getTile(xInChunk+self.width, yInChunk)) && getDistanceToTile(xInChunk+self.width, yInChunk, "right") <= 0
+        let topHit = colTiles.includes(getTile(xInChunk, yInChunk-self.height)) && getDistanceToTile(xInChunk, yInChunk-self.height, "top") <= 0
+        let bottomHit = colTiles.includes(getTile(xInChunk, yInChunk+self.height)) && getDistanceToTile(xInChunk, yInChunk+self.height, "bottom") <= 0
+
+        if(self.pressingRight && !rightHit)
             self.speedX = self.maxSpeed
-        else if(self.pressingLeft && self.x > 0 && !topLeft && !bottomLeft)
+        else if(self.pressingLeft && !leftHit)
             self.speedX = -self.maxSpeed
-        else if(topRight && bottomRight){
-            if(xInChunk >= 30)
-                self.speedX = self.maxSpeed
-            else
-                self.speedX = -1
-        }
-        else if(topLeft && bottomLeft){
-            if(xInChunk <= 0)
-                self.speedX = -self.maxSpeed
-            else
-                self.speedX = 1
-        }
         else
             self.speedX = 0
-
-        if(self.pressingUp && self.y > 0 && !rightTop && !leftTop)
-            self.speedY = -self.maxSpeed
-        else if(self.pressingDown && self.y < worldsize && !rightBottom && !leftBottom)
+        
+        if(self.pressingDown && !bottomHit)
             self.speedY = self.maxSpeed
-        else if (rightTop && leftTop){
-            if(yInChunk <= 0)
-                self.speedY = -self.maxSpeed
-            else
-                self.speedY = 1
-        }
-        else if (rightBottom && leftBottom){
-            if(yInChunk >= 30)
-                self.speedY = self.maxSpeed
-            else
-                self.speedY = -1
-        }
+        else if(self.pressingUp && !topHit)
+            self.speedY = -self.maxSpeed
         else
             self.speedY = 0
+
     }
 
     self.getInitPack = function(){
@@ -677,8 +674,8 @@ Bullet.getAllInitPack = function(){
 {
 Floof = function(){
     var self = Entity()
-    self.x = randomRange(24 * tpd, 1000 * tpd)
-    self.y = randomRange(24 * tpd, 1000 * tpd)
+    self.x = randomRange(480 * tpd, 520 * tpd)
+    self.y = randomRange(480 * tpd, 520 * tpd)
     self.id = Math.random()
     self.speedX = 0 
     self.speedY = 0
@@ -760,7 +757,7 @@ Floof.update = function(){
     for(var i in Floof.list){
         floofCount++
     }
-    if (Math.random() < 0.4 && floofCount < 5000){
+    if (Math.random() < 0.4 && floofCount < 50){
         Floof()
     }
 
