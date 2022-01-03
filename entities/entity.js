@@ -1,24 +1,75 @@
+const e = require('express')
+const { send, render } = require('express/lib/response')
+
 require('../world')
 
 world = new World()
 
-var colTiles = [3]
+var tpd = 50 // tile pixel dimension
+var ctd = 32 // chunk tile dimension
+var renderDistance = 925
+
+var colTiles = [3, 7, 8, 11, 14, 17]
 var intTiles = [7]
 var autoGuns = ["shroom_k"]
 var singleGuns = ["hunting_rifle"]
 var meleeWeapons = ["survival_knife"]
-var miningTools = ["bronze_pickaxe"]
-var placeableItems = ["rock", "rocky_floor"]
-var priorityTiles = [7]
+var miningTools = ["bronze_pickaxe", "iron_pickaxe", "iron_drill"]
+var harvestTools = ["survival_knife", "bronze_sickle"]
+var workTools = ["bronze_chisel"]
+var placeableItems = [
+"rock", "rocky_floor", "granite", "earth", "beq_rock", 
+"stone", "organic_floor", "dirt_floor", "cave_flower", "toad_shroom", 
+"pollen_shroom", "bronze_berry", "mound"
+]
+var priorityTiles = [7, 3, 7, 8, 11, 14, 17]
 var placeIds = {
     "rock" : 3,
     "rocky_floor" : 2,
+    "granite": 8,
+    "organic_floor": 13,
+    "beq_rock": 14,
+    "dirt_floor": 10,
+    "earth": 11,
+    "stone": 15,
+    "cave_flower": 6,
+    "toad_shroom": 4,
+    "pollen_shroom": 5,
+    "bronze_berry": 16,
+    "mound":18,
 }
+var miningToolStrengths = {
+    "bronze_pickaxe": 1.5,
+    "iron_pickaxe": 2,
+    "iron_drill": 7,
+}
+var harvestToolStrengths = {
+    "survival_knife": 0.5,
+    "bronze_sickle": 1,
+}
+var workToolStrengths = {
+    "bronze_chisel": 1,
+}
+var tileStrengths = {
+    2: 20, 3: 40, 4: 5, 5: 5, 6: 5, 7: 100,
+    8: 55, 10: 20, 11: 30, 13: 20, 14: 50, 15: 5,
+    16: 10, 17: 50, 18: 55
+}
+var mineTiles = [2, 3, 8, 13, 14, 10, 11, 17, 18]
+var harvestTiles = [4, 5, 6, 15, 16]
+var workTiles = [7]
 
-var craftingRecipes = [
-    ["rock", "rocky_floor", "rock_floor"]
+var floor1Tiles = [1,2,3,4,5,6,7,8,17]
+var floor2Tiles = [12,13,14,16]
+var floor3Tiles = [9,10,11,15,18]
+
+craftingRecipes = [
+    ["toad_shroom", "stone", "shroom_wood"],
+    ["pollen_shroom", "cave_flower", "fibres"],
+    ["bronze_berry","fibres","shroom_wood","bronze_pickaxe"],
+    ["bronze_berry","fibres","shroom_wood","bronze_sickle"],
+    ["stone","bronze_berry","fibres","shroom_wood","bronze_chisel"],
 ]
-
 
 var initPack = {player:[],bullet:[],floof:[]}
 var removePack = {player:[],bullet:[],floof:[]}
@@ -33,7 +84,7 @@ function inverse(obj){
       retobj[obj[key]] = key;
     }
     return retobj;
-  }
+}
 
 // Entity -----------------------------------------------------------------------
 Entity = function(){
@@ -83,7 +134,7 @@ Entity.getFrameUpdateData = function(){
     removePack.player = []
     removePack.bullet = []
     removePack.floof = []
-
+    
     return pack
 }
 
@@ -95,6 +146,8 @@ Player = function(id, username, socket, progress){
     self.number = "" + Math.floor(Math.random() * 100)
     self.username = username
     self.inventory = new Inventory(progress.items, socket, true)
+    self.width = 1.6 // in tiles
+    self.height = 1.8 // in tile
     self.effects = []
     self.pressingRight = false
     self.pressingLeft = false
@@ -115,19 +168,20 @@ Player = function(id, username, socket, progress){
     self.hotbar = ["Nothing", "Nothing", "Nothing", "Nothing", "Nothing"]
     self.loadedChunks = []
     self.lookingRight = false
-    self.spriteId = undefined
+    self.spriteId = [0, 0]
     self.currentRightClick = 0
     self.lastRightClick = 0
     self.currentLeftClick = 0
     self.lastLeftClick = 0
+    self.tileDestroyState = 0
+    self.currentTileStrength = 100
 
-    self.inventory.addItem("survival_knife", 1)
-    self.inventory.addItem("bronze_pickaxe", 1)
-    self.inventory.addItem("rock", 32)
+    self.inventory.addItem("iron_drill", 1)
+    self.inventory.addItem("bronze_chisel", 1)
+    self.inventory.addItem("bronze_sickle", 1)
     self.inventory.addItem("shroom_k", 1)
     self.inventory.addItem("hunting_rifle", 1)
-    self.inventory.addItem("almond_water", 15)
-    self.inventory.addItem("cave_beef", 32)
+    self.inventory.addItem("survival_knife", 1)
 
     var superUpdate = self.update;
     self.update = function(){
@@ -141,23 +195,19 @@ Player = function(id, username, socket, progress){
         self.mouseCanvasX = self.mouseX + self.x - 900 // 900 = 1800/2
         self.mouseCanvasY = self.mouseY + self.y - 480 // 480 = 960/2
 
-        let currentChunk = world.getChunk(Math.floor((self.x / 50) / 32), Math.floor((self.y / 50) / 32))
-        
-        let currentMouseChunk = world.getChunk(Math.floor((self.mouseCanvasX / 50) / 32), Math.floor((self.mouseCanvasY / 50) / 32))
-        let mouseXInChunk = Math.floor(self.mouseCanvasX / 50 - currentMouseChunk.x * 32)
-        let mouseYInChunk = Math.floor(self.mouseCanvasY / 50 - currentMouseChunk.y * 32)
+        let currentMouseChunk = world.getChunk(Math.floor((self.mouseCanvasX / tpd) / ctd), Math.floor((self.mouseCanvasY / tpd) / ctd))
+        let mouseXInChunk = Math.floor(self.mouseCanvasX / tpd - currentMouseChunk.x * ctd)
+        let mouseYInChunk = Math.floor(self.mouseCanvasY / tpd - currentMouseChunk.y * ctd)
 
-        let mouseChunkX = Math.floor((self.mouseCanvasX / 50) / 32)
-        let mouseChunkY = Math.floor((self.mouseCanvasY / 50) / 32)
-        let mouseChunkidx = (mouseChunkX << 16) | mouseChunkY
+        let mouseChunkX = Math.floor((self.mouseCanvasX / tpd) / ctd)
+        let mouseChunkY = Math.floor((self.mouseCanvasY / tpd) / ctd)
 
         let tileToPlace = 0
 
         if(self.hotbar[self.activeSlot] !== "Nothing")
             self.spriteId = self.inventory.getItemSpriteId(self.hotbar[self.activeSlot])
         else
-            self.spriteId = 0
-        //console.log(self.inventory.hasItem(self.hotbar[self.activeSlot], 1))
+            self.spriteId = [0, 0]
 
         getTile = function(xic, yic){
             return currentMouseChunk.tiles[yic * currentMouseChunk.width + xic]
@@ -171,59 +221,86 @@ Player = function(id, username, socket, progress){
         })
 
         if(self.currentRightClick > self.lastRightClick){
-            /*
-            if(colTiles.includes(getTile(mouseXInChunk, mouseYInChunk))){
-                currentMouseChunk.tiles[mouseYInChunk * currentMouseChunk.width + mouseXInChunk] = 1
-                tileToPlace = 1
-            }
-            else{
-                currentMouseChunk.tiles[mouseYInChunk * currentMouseChunk.width + mouseXInChunk] = 3
-                tileToPlace = 3
-            }           
-            */  
-
             if(intTiles.includes(getTile(mouseXInChunk, mouseYInChunk))){
-                //currentMouseChunk.tiles[mouseYInChunk * currentMouseChunk.width + mouseXInChunk] = 1
                 console.log("interactable tile")
             }      
 
             if(singleGuns.includes(self.hotbar[self.activeSlot])){
-                self.shootBullet(self.mouseAngle, 50)
+                self.shootBullet(self.mouseAngle, 50, 5)
             }
 
             self.lastRightClick = self.currentRightClick
         }
 
         if(self.holdingMouseLeft){
-            if(miningTools.includes(self.hotbar[self.activeSlot])){
-                if(inverse(placeIds)[getTile(mouseXInChunk, mouseYInChunk)] !== undefined)
-                    self.inventory.addItem(inverse(placeIds)[getTile(mouseXInChunk, mouseYInChunk)], 1)
+            let toolType = "none"
+            let selectedTile = getTile(mouseXInChunk, mouseYInChunk)
+            if(mineTiles.includes(selectedTile))
+                toolType = [miningToolStrengths, miningTools]
+            else if(harvestTiles.includes(selectedTile))
+                toolType = [harvestToolStrengths, harvestTools]
+            else if(workTiles.includes(selectedTile))
+                toolType = [workToolStrengths, workTools]
 
-                currentMouseChunk.tiles[mouseYInChunk * currentMouseChunk.width + mouseXInChunk] = 1
-                tileToPlace = 1
+            self.currentTileStrength = tileStrengths[selectedTile]
 
-                socket.broadcast.emit('tile-change',{
-                    tileToPlace: tileToPlace,
-                    mouseChunk: currentMouseChunk,
-                    chunkX: mouseChunkX,
-                    chunkY: mouseChunkY,
-                    tileX: mouseXInChunk,
-                    tileY: mouseYInChunk,
-                })
-            }   
+            if(toolType[1].includes(self.hotbar[self.activeSlot]) && selectedTile !== 1){
+                self.tileDestroyState += 1 * toolType[0][self.hotbar[self.activeSlot]]
+                if(self.tileDestroyState >= tileStrengths[selectedTile]){
+                    if(inverse(placeIds)[selectedTile] !== undefined)
+                        self.inventory.addItem(inverse(placeIds)[selectedTile], 1)
+
+                    currentMouseChunk.tiles[mouseYInChunk * currentMouseChunk.width + mouseXInChunk] = 1
+                    if (floor1Tiles.includes(selectedTile))
+                        tileToPlace = 1
+                    else if (floor2Tiles.includes(selectedTile))
+                        tileToPlace = 12
+                    else if (floor3Tiles.includes(selectedTile))
+                        tileToPlace = 9
+                    else
+                        tileToPlace = 1
+
+                    socket.broadcast.emit('tile-change',{
+                        tileToPlace: tileToPlace,
+                        mouseChunk: currentMouseChunk,
+                        chunkX: mouseChunkX,
+                        chunkY: mouseChunkY,
+                        tileX: mouseXInChunk,
+                        tileY: mouseYInChunk,
+                    })
+                    self.tileDestroyState = 0
+                }
+            } 
         }
 
         if(self.currentLeftClick > self.lastLeftClick){
+            let recipesToSend = []
+            for(var i = 0; i < craftingRecipes.length; i++){
+                let hasNeededItems = 0
+                for(var j = 0; j < craftingRecipes[i].length-1; j++){
+                    if(self.inventory.hasItem(craftingRecipes[i][j], 1)){
+                        hasNeededItems += 1
+                    }
+                }
+                if(hasNeededItems == craftingRecipes[i].length-1){
+                    //console.log(craftingRecipes[i][craftingRecipes[i].length-1])
+                    recipesToSend.push(craftingRecipes[i][craftingRecipes[i].length-1])
+                }
+            }
+
+            self.inventory.addRecipes(recipesToSend)
+
+            self.tileDestroyState = 0
             self.lastLeftClick = self.currentLeftClick
         }
 
         if(self.holdingMouseRight){
             if(autoGuns.includes(self.hotbar[self.activeSlot])){
-                self.shootBullet(self.mouseAngle, 8)
+                self.shootBullet(self.mouseAngle, 8, 1)
             }
 
             if(meleeWeapons.includes(self.hotbar[self.activeSlot])){
-                self.meleeAttack(self.mouseAngle)
+                self.meleeAttack(self.mouseAngle, 1, 2)
             }
 
             if(placeableItems.includes(self.hotbar[self.activeSlot]) && !priorityTiles.includes(getTile(mouseXInChunk, mouseYInChunk))){
@@ -248,76 +325,70 @@ Player = function(id, username, socket, progress){
         }
     }
 
-    self.shootBullet = function(angle, lifetime){
-        var b = Bullet(self.id, angle, lifetime, 32)
+    self.shootBullet = function(angle, lifetime, damage){
+        var b = Bullet(self.id, angle, lifetime, 32, damage)
         b.x = self.x
         b.y = self.y
     }
 
-    self.meleeAttack = function(angle){
-        var b = Bullet(self.id, angle, 1, 32)
+    self.meleeAttack = function(angle, damage){
+        var b = Bullet(self.id, angle, 1, 32, damage)
         b.x = self.x
         b.y = self.y
     }
 
     self.updateSpeed = function(){
-        let currentChunk = world.getChunk(Math.floor((self.x / 50) / 32), Math.floor((self.y / 50) / 32))
-        let xInChunk = Math.floor(self.x / 50 - currentChunk.x * 32)
-        let yInChunk = Math.floor(self.y / 50 - currentChunk.y * 32)
+        let currentChunk = world.getChunk(Math.floor((self.x / tpd) / ctd), Math.floor((self.y / tpd) / ctd))
+        let xInChunk = Math.floor(self.x / tpd - currentChunk.x * ctd)
+        let yInChunk = Math.floor(self.y / tpd - currentChunk.y * ctd)
 
         getTile = function(xic, yic){
-            return currentChunk.tiles[yic * currentChunk.width + xic]
+            return currentChunk.tiles[Math.floor(yic) * currentChunk.width + Math.floor(xic)]
         }
 
-        //console.log(getTile(xInChunk, yInChunk))
+        getDistanceToTile = function(xic, yic, hitbox){
+            let x2 = xic * tpd + currentChunk.x * ctd * tpd
+            let y2 = yic * tpd + currentChunk.y * ctd * tpd
 
-        let topRight = colTiles.includes(getTile(xInChunk + 1, yInChunk + 1))
-        let bottomRight = colTiles.includes(getTile(xInChunk + 1, yInChunk - 1))
-        let topLeft = colTiles.includes(getTile(xInChunk - 1, yInChunk + 1))
-        let bottomLeft = colTiles.includes(getTile(xInChunk - 1, yInChunk - 1))
-        let rightTop = colTiles.includes(getTile(xInChunk + 1, yInChunk - 1))
-        let leftTop = colTiles.includes(getTile(xInChunk - 1, yInChunk - 1))
-        let rightBottom = colTiles.includes(getTile(xInChunk + 1, yInChunk + 1))
-        let leftBottom = colTiles.includes(getTile(xInChunk - 1, yInChunk + 1))
+            let x1 = self.x
+            let y1 = self.y
 
-        let worldsize = 51200 // width and height of world in pixels
-        if(self.pressingRight && self.x < worldsize && !topRight && !bottomRight)
+            if(hitbox === "left")
+                x1 = self.x - self.width * tpd
+            else if(hitbox === "right")
+                x1 = self.x + self.width * tpd
+
+            if(hitbox === "top")
+                y1 = self.y - self.height * tpd
+            else if(hitbox === "bottom")
+                y1 = self.y + self.height * tpd
+
+            if(hitbox === "left" || hitbox === "right")
+                return Math.sqrt(Math.pow(x2-x1, 2))
+
+            if(hitbox === "top" || hitbox === "bottom")
+                return Math.sqrt(Math.pow(y2-y1, 2))
+        }
+
+        let leftHit = colTiles.includes(getTile(xInChunk-self.width/2, yInChunk)) && getDistanceToTile(xInChunk-self.width/2, yInChunk, "left") <= 0
+        let rightHit = colTiles.includes(getTile(xInChunk+self.width, yInChunk)) && getDistanceToTile(xInChunk+self.width, yInChunk, "right") <= 0
+        let topHit = colTiles.includes(getTile(xInChunk, yInChunk-self.height)) && getDistanceToTile(xInChunk, yInChunk-self.height, "top") <= 0
+        let bottomHit = colTiles.includes(getTile(xInChunk, yInChunk+self.height)) && getDistanceToTile(xInChunk, yInChunk+self.height, "bottom") <= 0
+
+        if(self.pressingRight && !rightHit)
             self.speedX = self.maxSpeed
-        else if(self.pressingLeft && self.x > 0 && !topLeft && !bottomLeft)
+        else if(self.pressingLeft && !leftHit)
             self.speedX = -self.maxSpeed
-        else if(topRight && bottomRight){
-            if(xInChunk >= 30)
-                self.speedX = self.maxSpeed
-            else
-                self.speedX = -1
-        }
-        else if(topLeft && bottomLeft){
-            if(xInChunk <= 0)
-                self.speedX = -self.maxSpeed
-            else
-                self.speedX = 1
-        }
         else
             self.speedX = 0
-
-        if(self.pressingUp && self.y > 0 && !rightTop && !leftTop)
-            self.speedY = -self.maxSpeed
-        else if(self.pressingDown && self.y < worldsize && !rightBottom && !leftBottom)
+        
+        if(self.pressingDown && !bottomHit)
             self.speedY = self.maxSpeed
-        else if (rightTop && leftTop){
-            if(yInChunk <= 0)
-                self.speedY = -self.maxSpeed
-            else
-                self.speedY = 1
-        }
-        else if (rightBottom && leftBottom){
-            if(yInChunk >= 30)
-                self.speedY = self.maxSpeed
-            else
-                self.speedY = -1
-        }
+        else if(self.pressingUp && !topHit)
+            self.speedY = -self.maxSpeed
         else
             self.speedY = 0
+
     }
 
     self.getInitPack = function(){
@@ -331,16 +402,18 @@ Player = function(id, username, socket, progress){
             hpMax:self.hpMax,
             score:self.score,
             effects:self.effects,
-            chunk:world.getChunk(Math.floor((self.x / 50) / 32), Math.floor((self.y / 50) / 32)),
+            chunk:world.getChunk(Math.floor((self.x / tpd) / ctd), Math.floor((self.y / tpd) / ctd)),
             hotbar:self.hotbar,
             activeSlot:self.activeSlot,
             lookingRight:self.lookingRight,
             spriteId:self.spriteId,
+            tileDestroyState:self.tileDestroyState,
+            currentTileStrength:self.currentTileStrength,
         }
     }
     self.getUpdatePack = function(){
-        let chunkx = Math.floor((self.x / 50) / 32)
-        let chunky = Math.floor((self.y / 50) / 32)
+        let chunkx = Math.floor((self.x / tpd) / ctd)
+        let chunky = Math.floor((self.y / tpd) / ctd)
         let chunkToSend = []
 
         for (let dx = -1; dx < 2; dx++) {
@@ -378,6 +451,8 @@ Player = function(id, username, socket, progress){
             activeSlot:self.activeSlot,
             lookingRight:self.lookingRight,
             spriteId:self.spriteId,
+            tileDestroyState:self.tileDestroyState,
+            currentTileStrength:self.currentTileStrength,
         }
     }
 
@@ -446,11 +521,19 @@ Player.onConnect = function(socket, username, progress){
         }
     })
 
+    let f = Floof.getAllInitPack()
+    for(var i = 0; i < f.length; i++){
+        if(!Player.list[socket.id].getDistance(f[i]) < renderDistance){
+            let idx = f.indexOf(f[i])
+            f.splice(idx, 1)
+        }
+    }
+
     socket.emit("init",{
         selfId:socket.id,
         player:Player.getAllInitPack(),
         bullet:Bullet.getAllInitPack(),
-        floof:Floof.getAllInitPack(),
+        floof:f,
     })
 }
 
@@ -490,7 +573,7 @@ Player.update = function(){
 
 // Bullet -----------------------------------------------------------------------
 {
-Bullet = function(parent, angle, lifetime, size){
+Bullet = function(parent, angle, lifetime, size, damage){
     var self = Entity()
     self.id = Math.random()
     self.speedX = Math.cos(angle/180*Math.PI) * 45
@@ -498,6 +581,7 @@ Bullet = function(parent, angle, lifetime, size){
     self.parent = parent
     self.timer = 0
     self.toRemove = false
+    self.damage = damage
 
     var superUpdate = self.update
     self.update = function(){
@@ -509,19 +593,21 @@ Bullet = function(parent, angle, lifetime, size){
         for (var i in Player.list){
             var p = Player.list[i]
             if(self.getDistance(p) < size && self.parent !== p.id){
-                p.hp -= 1
+                p.hp -= self.damage
                 if(p.hp <= 0){
                     var shooter = Player.list[self.parent]
-                    if(shooter)
-                        shooter.score += 10
+                    if(shooter){
+                        shooter.score += Math.round(p.score / 2 + 5)
+                        p.score = Math.round(p.score / 2)
+                    }
                 }
                 self.toRemove = true
             }
         }
 
-        let currentChunk = world.getChunk(Math.floor((self.x / 50) / 32), Math.floor((self.y / 50) / 32))
-        let xInChunk = Math.floor(self.x / 50 - currentChunk.x * 32)
-        let yInChunk = Math.floor(self.y / 50 - currentChunk.y * 32)
+        let currentChunk = world.getChunk(Math.floor((self.x / tpd) / ctd), Math.floor((self.y / tpd) / ctd))
+        let xInChunk = Math.floor(self.x / tpd - currentChunk.x * ctd)
+        let yInChunk = Math.floor(self.y / tpd - currentChunk.y * ctd)
 
         getTile = function(xic, yic){
             return currentChunk.tiles[yic * currentChunk.width + xic]
@@ -544,6 +630,7 @@ Bullet = function(parent, angle, lifetime, size){
             id:self.id,
             x:self.x,
             y:self.y,
+            angle:angle,
         }
     }
     self.getUpdatePack = function(){
@@ -551,6 +638,7 @@ Bullet = function(parent, angle, lifetime, size){
             id:self.id,
             x:self.x,
             y:self.y,
+            angle:angle,
         }
     }
 
@@ -586,10 +674,9 @@ Bullet.getAllInitPack = function(){
 {
 Floof = function(){
     var self = Entity()
-    self.x = randomRange(480 * 50, 520 * 50)
-    self.y = randomRange(480 * 50, 520 * 50)
+    self.x = randomRange(480 * tpd, 520 * tpd)
+    self.y = randomRange(480 * tpd, 520 * tpd)
     self.id = Math.random()
-    self.number = "" + Math.floor(Math.random() * 100)
     self.speedX = 0 
     self.speedY = 0
     self.timer = 0
@@ -614,17 +701,13 @@ Floof = function(){
                 // handle collision
                 self.toRemove = true
                 Player.list[b.parent].inventory.addItem("medkit", 1)
-                /*
-                for(var i in SOCKET_LIST){
-                    SOCKET_LIST[i].emit("addToChat", "floof " + self.number + " was killed")
-                }    
-                */  
+                Player.list[b.parent].inventory.addItem("floof_wool", 1)  
             }
         }
 
-        let currentChunk = world.getChunk(Math.floor((self.x / 50) / 32), Math.floor((self.y / 50) / 32))
-        let xInChunk = Math.floor(self.x / 50 - currentChunk.x * 32)
-        let yInChunk = Math.floor(self.y / 50 - currentChunk.y * 32)
+        let currentChunk = world.getChunk(Math.floor((self.x / tpd) / ctd), Math.floor((self.y / tpd) / ctd))
+        let xInChunk = Math.floor(self.x / tpd - currentChunk.x * ctd)
+        let yInChunk = Math.floor(self.y / tpd - currentChunk.y * ctd)
 
         getTile = function(xic, yic){
             return currentChunk.tiles[yic * currentChunk.width + xic]
@@ -653,7 +736,6 @@ Floof = function(){
             id:self.id,
             x:self.x,
             y:self.y,
-            number:self.number
         }
     }
     self.getUpdatePack = function(){
@@ -675,20 +757,26 @@ Floof.update = function(){
     for(var i in Floof.list){
         floofCount++
     }
-    if (Math.random() < 0.4 && floofCount < 20){
+    if (Math.random() < 0.4 && floofCount < 50){
         Floof()
     }
-    
+
     var pack = []
     for (var i in Floof.list){
         var floof = Floof.list[i]
         floof.update()
-        if (floof.toRemove) {
-            delete Floof.list[i];
-            removePack.floof.push(floof.id)
-        } else
-            pack.push(floof.getUpdatePack())
+        for(var j in Player.list){
+            if(Player.list[j].getDistance(floof) < renderDistance){
+                if (floof.toRemove) {
+                    delete Floof.list[i];
+                    removePack.floof.push(floof.id)
+                } else
+                    pack.push(floof.getUpdatePack())
+            } else
+                removePack.floof.push(floof.id)
+        }
     }
+
     return pack
 }
 

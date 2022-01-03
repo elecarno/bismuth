@@ -1,9 +1,10 @@
 /*
 Good seeds (i.e: spawn not in a wall):
 0.07089678959081125
+0.010675218994110391
 */
 
-const seed = 0.07089678959081125 //Math.random()
+const seed = 0.010675218994110391 //Math.random()
 //console.log(seed)
 
 const SimplexNoise = require('simplex-noise'),
@@ -20,29 +21,65 @@ Chunk = function (x, y) {
 
     for(let tiley = 0; tiley < self.height; tiley++){
         for(let tilex = 0; tilex < self.width; tilex++){
+            valueBiome = simplex.noise2D((tilex + x*self.width) / 500, (tiley + y*self.height) / 500);
+            valueOre = simplex.noise2D((tilex + x*self.width) / 10, (tiley + y*self.height) / 10);
             let scale = 35
             value2d = simplex.noise2D((tilex + x*self.width) / scale, (tiley + y*self.height) / scale);
-            if (Math.random() > 0.98 && value2d < 0){
-                if (Math.random() < 0.3)
-                    self.tiles.push(4) // toad_shroom
-                else
-                    self.tiles.push(5) // pollen_shroom
+            if(valueBiome < 0){
+                if (Math.random() > 0.97 && value2d < 0){
+                    if (Math.random() < 0.3)
+                        self.tiles.push(4) // toad_shroom
+                    else
+                        self.tiles.push(5) // pollen_shroom
+                }
+                else if(Math.random() > 0.98 && value2d < 0){
+                    self.tiles.push(6) // cave_flower
+                }
+                else if(Math.random() > 0.9995 && value2d < 0){
+                    self.tiles.push(7) // old_workbench
+                }
+                else if (value2d < 0)
+                    self.tiles.push(1) // floor
+                else if (value2d < 0.2)
+                    self.tiles.push(2) // rocky_floor
+                else if (value2d < 0.5){
+                    if(valueOre < 0.6)
+                        self.tiles.push(3) // rock
+                    else
+                        self.tiles.push(17) // iron_ore
+                }
+                else if (value2d > 0.5)
+                    self.tiles.push(8) // granite
             }
-            else if(Math.random() > 0.995 && value2d < 0){
-                self.tiles.push(6) // cave_flower
+            else if (valueBiome < 0.2){
+                if(Math.random() > 0.98 && value2d < 0){
+                    self.tiles.push(16) // bronze_berry
+                }
+                else if (value2d < 0)
+                    self.tiles.push(12) // floor_2
+                else if (value2d < 0.2)
+                    self.tiles.push(13) // organic_floor
+                else if (value2d < 0.5)
+                    self.tiles.push(14) // beq_rock
+                else if (value2d > 0.5)
+                    self.tiles.push(8) // granite
             }
-            else if(Math.random() > 0.997 && value2d < 0){
-                self.tiles.push(7) // old_altar
+            else if (valueBiome > 0.2){
+                if(Math.random() > 0.98 && value2d < 0){
+                    self.tiles.push(15) // stone
+                }
+                else if (value2d < 0)
+                    self.tiles.push(9) // floor_3
+                else if (value2d < 0.6)
+                    self.tiles.push(10) // dirt_floor
+                else if (value2d < 0.8)
+                    self.tiles.push(11) // earth
+                else if (value2d > 0.8)
+                    self.tiles.push(18) // mound
             }
-            else if (value2d < 0)
-                self.tiles.push(1) // floor
-            else if (value2d < 0.2)
-                self.tiles.push(2) // rocky_floor
-            else if (value2d > 0.2)
-                self.tiles.push(3) // rock
         }
     }
- 
+    
     return self
 }
 
