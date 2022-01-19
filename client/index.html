@@ -35,12 +35,27 @@
 
 <script src="/socket.io/socket.io.js"></script>
 <script src="/client/inventory.js"></script>
+<script src="/client/render.js"></script>
 <script>
     var WIDTH = 1800
     var HEIGHT = 960
     var tpd = 50 // tile pixel dimension
     var ctd = 32 // chunk tile dimension
     var socket = io()
+    let gl = null;
+    let renderer = null;
+
+    function main() {
+    	const canvas = document.querySelector("#ctx");
+    	gl = canvas.getContext("webgl");
+
+    	if (gl === null) {
+    		alert("Error initialising webGL");
+    		return;
+    	}
+    	renderer = new ChunkRenderer(gl);
+    }
+    window.onload = main;
 
     World = function () {
         var self = {
@@ -104,9 +119,9 @@
     var chatInput = document.getElementById("chat-input")
     var chatForm = document.getElementById("chat-form")
     
-    var ctx = document.getElementById("ctx").getContext("2d")
-    ctx.imageSmoothingEnabled = false
-    ctx.font = "15px Arial"
+    //var ctx = document.getElementById("ctx").getContext("2d")
+    //ctx.imageSmoothingEnabled = false
+    //ctx.font = "15px Arial"
 
     // UI
     var inventory = new Inventory("", socket, false);
@@ -187,24 +202,24 @@
             var y = self.y - Player.list[selfId].y + HEIGHT/2
 
             if(!self.lookingRight){
-                ctx.drawImage(Img.player_left, 0, 0, Img.player_left.width, Img.player_left.height, x-width/2, y-height/2, width, height)
-                ctx.drawImage(Img.tools_left, self.spriteId[0] * ctd, self.spriteId[1] * ctd, Img.player_left.width, Img.player_left.height, x-width/2, y-height/2, width, height)
+                //ctx.drawImage(Img.player_left, 0, 0, Img.player_left.width, Img.player_left.height, x-width/2, y-height/2, width, height)
+                //ctx.drawImage(Img.tools_left, self.spriteId[0] * ctd, self.spriteId[1] * ctd, Img.player_left.width, Img.player_left.height, x-width/2, y-height/2, width, height)
             }
             else{
-                ctx.drawImage(Img.player_right, 0, 0, Img.player_right.width, Img.player_right.height, x-width/2, y-height/2, width, height)
-                ctx.drawImage(Img.tools_right, self.spriteId[0] * ctd, self.spriteId[1] * ctd, Img.player_left.width, Img.player_left.height, x-width/2, y-height/2, width, height)
+                //ctx.drawImage(Img.player_right, 0, 0, Img.player_right.width, Img.player_right.height, x-width/2, y-height/2, width, height)
+                //ctx.drawImage(Img.tools_right, self.spriteId[0] * ctd, self.spriteId[1] * ctd, Img.player_left.width, Img.player_left.height, x-width/2, y-height/2, width, height)
             }
                 
 
-            ctx.textAlign = "center"
-            ctx.fillStyle = "#b3b3b3"
-            //ctx.fillRect(self.x, self.y, 20, 20)
-            ctx.fillText(self.username + ": " + self.score, x, y - height*0.65)
-            ctx.fillStyle = "#7ecf8b"
-            var hpWidth = 45 * self.hp / self.hpMax
-            ctx.fillRect(x - hpWidth/2, y - height*0.55, hpWidth, 4)
-            ctx.textAlign = "left"
-            ctx.fillStyle = "#b3b3b3"
+            //ctx.textAlign = "center"
+            //ctx.fillStyle = "#b3b3b3"
+            ////ctx.fillRect(self.x, self.y, 20, 20)
+            //ctx.fillText(self.username + ": " + self.score, x, y - height*0.65)
+            //ctx.fillStyle = "#7ecf8b"
+            //var hpWidth = 45 * self.hp / self.hpMax
+            //ctx.fillRect(x - hpWidth/2, y - height*0.55, hpWidth, 4)
+            //ctx.textAlign = "left"
+            //ctx.fillStyle = "#b3b3b3"
         }
 
         Player.list[self.id] = self
@@ -229,21 +244,21 @@
             x2 = x + Math.cos(Math.PI * self.angle / 180) * 32;
             y2 = y + Math.sin(Math.PI * self.angle / 180) * 32;
 
-            ctx.filter = "blur(4px)"
-            ctx.beginPath()
-            ctx.moveTo(x, y)
-            ctx.lineTo(x2, y2)
-            ctx.strokeStyle = "#f5c182"
-            ctx.lineWidth = 5
-            ctx.stroke()
-            ctx.filter = "none"
-            
-            ctx.beginPath()
-            ctx.moveTo(x, y)
-            ctx.lineTo(x2, y2)
-            ctx.strokeStyle = "#fff1e0"
-            ctx.lineWidth = 3
-            ctx.stroke()
+            //ctx.filter = "blur(4px)"
+            //ctx.beginPath()
+            //ctx.moveTo(x, y)
+            //ctx.lineTo(x2, y2)
+            //ctx.strokeStyle = "#f5c182"
+            //ctx.lineWidth = 5
+            //ctx.stroke()
+            //ctx.filter = "none"
+            //
+            //ctx.beginPath()
+            //ctx.moveTo(x, y)
+            //ctx.lineTo(x2, y2)
+            //ctx.strokeStyle = "#fff1e0"
+            //ctx.lineWidth = 3
+            //ctx.stroke()
         }
 
         Bullet.list[self.id] = self
@@ -264,11 +279,11 @@
             var x = self.x - Player.list[selfId].x + WIDTH/2
             var y = self.y - Player.list[selfId].y + HEIGHT/2
 
-            ctx.drawImage(Img.floof, 
-                0, 0, Img.floof.width, Img.floof.height,
-                x-width/2, y-height/2, width, height)
-
-            ctx.fillStyle = "#b3b3b3"
+            //ctx.drawImage(Img.floof, 
+            //    0, 0, Img.floof.width, Img.floof.height,
+//                x-width/2, y-height/2, width, height)
+//
+//            ctx.fillStyle = "#b3b3b3"
         }
 
         Floof.list[self.id] = self
@@ -324,6 +339,7 @@
                             delete p.world.map[idx]
                         }
                     }
+                    renderer.makeTexture(Object.values(p.world.map));
                 }
                 if(pack.hotbar !== undefined)
                     p.hotbar = pack.hotbar
@@ -402,10 +418,16 @@
 
     // Game Rendering Loop
     setInterval(function(){
+        if (gl === null || renderer === null) {
+            return;
+        }
         // bg Colour
-        ctx.clearRect(0, 0, WIDTH, HEIGHT)
-        ctx.fillStyle = "#324536"
-        ctx.fillRect(0, 0, WIDTH, HEIGHT)
+        //ctx.clearRect(0, 0, WIDTH, HEIGHT)
+        //ctx.fillStyle = "#324536"
+        //ctx.fillRect(0, 0, WIDTH, HEIGHT)
+
+		gl.clearColor(1.0, 0.0, 0.0, 1.0);
+		gl.clear(gl.COLOR_BUFFER_BIT);        
 
         if(!Player.list[selfId]){
             return
@@ -442,14 +464,15 @@
         drawScore()
 
         // Draw Hover Tile
-        ctx.fillStyle = "rgba(145, 47, 47, " + Player.list[selfId].tileDestroyState/Player.list[selfId].currentTileStrength + ")"
-        ctx.fillRect(selectedTileX - Player.list[selfId].x + WIDTH/2, selectedTileY - Player.list[selfId].y + HEIGHT/2 - 40, tpd, 90)
-        ctx.drawImage(Img.hover_tile ,selectedTileX - Player.list[selfId].x + WIDTH/2, selectedTileY - Player.list[selfId].y + HEIGHT/2 - 40, tpd, 90)
+        //ctx.fillStyle = "rgba(145, 47, 47, " + Player.list[selfId].tileDestroyState/Player.list[selfId].currentTileStrength + ")"
+        //ctx.fillRect(selectedTileX - Player.list[selfId].x + WIDTH/2, selectedTileY - Player.list[selfId].y + HEIGHT/2 - 40, tpd, 90)
+        //ctx.drawImage(Img.hover_tile ,selectedTileX - Player.list[selfId].x + WIDTH/2, selectedTileY - Player.list[selfId].y + HEIGHT/2 - 40, tpd, 90)
     },1000/75)
 
     var drawMap = function(){
-        for (let [idx, chunk] of Object.entries(Player.list[selfId].world.map)){
-            for(let i = 0; i < chunk.height; i++){
+        renderer.render(Player.list[selfId].x, Player.list[selfId].y);
+        //for (let [idx, chunk] of Object.entries(Player.list[selfId].world.map)) {
+            /*for(let i = 0; i < chunk.height; i++){
                 for(let j = 0; j < chunk.width; j++){
                     let col = chunk.tiles[i * chunk.width + j]
                     let colourTiles = [1,2,3,8,9,10,11,12,13,14,18]
@@ -505,17 +528,17 @@
                             ctx.drawImage(Img.bronze_berry, tilex, tiley, tpd, tpd)
                     }
                 }
-            }
-        }
+            }*/
+        //}
 
         // Spawn Plate
-        ctx.fillStyle = "#787878"
-        ctx.fillRect(25500 - Player.list[selfId].x + WIDTH/2, 25500 - Player.list[selfId].y + HEIGHT/2, 200, 200)
-        ctx.fillStyle = "#919191"
-        ctx.font = "20px Arial"
-        ctx.fillStyle = "#dbdbdb"
-        ctx.fillText("Welcome to the Caves", 25500 - Player.list[selfId].x + WIDTH/2, 25500 - Player.list[selfId].y + HEIGHT/2 + 50)
-        ctx.font = "15px Arial"
+        //ctx.fillStyle = "#787878"
+        //ctx.fillRect(25500 - Player.list[selfId].x + WIDTH/2, 25500 - Player.list[selfId].y + HEIGHT/2, 200, 200)
+        //ctx.fillStyle = "#919191"
+        //ctx.font = "20px Arial"
+        //ctx.fillStyle = "#dbdbdb"
+        //ctx.fillText("Welcome to the Caves", 25500 - Player.list[selfId].x + WIDTH/2, 25500 - Player.list[selfId].y + HEIGHT/2 + 50)
+        //ctx.font = "15px Arial"
     }
 
     var drawMapCollisions = function(){
@@ -526,26 +549,26 @@
                     let blockTiles = [3,8,11,14,18]
                     let heightOffset = 40
                     if(blockTiles.includes(col)){
-                        if(col === 3)
-                            ctx.fillStyle = "#4e524b"
-                        else if(col === 8)
-                            ctx.fillStyle = "#3e3c4f"
-                        else if(col === 11){
-                            ctx.fillStyle = "#33312c"
+                        if(col === 3) {
+                            //ctx.fillStyle = "#4e524b"
+                        } else if(col === 8) {
+                            //ctx.fillStyle = "#3e3c4f"
+                        } else if(col === 11){
+                            //ctx.fillStyle = "#33312c"
                             heightOffset = 20
                         }
                         else if(col === 14){
-                            ctx.fillStyle = "#3c402f"
+                            //ctx.fillStyle = "#3c402f"
                             heightOffset = 30
                         }
                         else if(col === 18){
-                            ctx.fillStyle = "#242320"
+                            //ctx.fillStyle = "#242320"
                             heightOffset = 35
                         }
 
                         let tilex = (chunk.x * tpd * chunk.width) + (j * tpd) - Player.list[selfId].x + WIDTH/2
                         let tiley = (chunk.y * tpd * chunk.height) + (i * tpd) - Player.list[selfId].y + HEIGHT/2
-                        ctx.fillRect(tilex, tiley - heightOffset, tpd, tpd)
+                        //ctx.fillRect(tilex, tiley - heightOffset, tpd, tpd)
                     }
                 }
             }
@@ -553,29 +576,30 @@
     }
 
     var drawScore = function(){
-        ctx.fillStyle = "#b3b3b3"
-        ctx.font = "20px Arial"
-        ctx.textAlign = "left"
-        ctx.fillText("Effects: " + Player.list[selfId].effects, 30, 40)
+        //ctx.fillStyle = "#b3b3b3"
+        //ctx.font = "20px Arial"
+        //ctx.textAlign = "left"
+        //ctx.fillText("Effects: " + Player.list[selfId].effects, 30, 40)
 
         for(var i = 0; i < 5; i++){
             if(i === Player.list[selfId].activeSlot){
-                ctx.fillText((i + 1) + " - [ " + Player.list[selfId].hotbar[i] + " ]", 30, 70 + (i*30))
+                //ctx.fillText((i + 1) + " - [ " + Player.list[selfId].hotbar[i] + " ]", 30, 70 + (i*30))
             }
-            else
-                ctx.fillText((i + 1) + " -   " + Player.list[selfId].hotbar[i], 30, 70 + (i*30))
+            else {
+                //ctx.fillText((i + 1) + " -   " + Player.list[selfId].hotbar[i], 30, 70 + (i*30))
+            }
         }
-        ctx.font = "20px Arial"
+        //ctx.font = "20px Arial"
 
-        ctx.textAlign = "right"
-        ctx.fillText(Player.list[selfId].x / tpd + " - x", 1780, 915)
-        ctx.fillText(Player.list[selfId].y / tpd + " - y", 1780, 940)
+        //ctx.textAlign = "right"
+        //ctx.fillText(Player.list[selfId].x / tpd + " - x", 1780, 915)
+        //ctx.fillText(Player.list[selfId].y / tpd + " - y", 1780, 940)
 
-        ctx.fillStyle = "#7ecf8b"
-        var hpWidth = 450 * Player.list[selfId].hp / Player.list[selfId].hpMax
-        ctx.fillRect(WIDTH/2 - hpWidth/2, HEIGHT-25, hpWidth, 20)
-        ctx.textAlign = "left"
-        ctx.font = "10px Arial"
+        //ctx.fillStyle = "#7ecf8b"
+        //var hpWidth = 450 * Player.list[selfId].hp / Player.list[selfId].hpMax
+        //ctx.fillRect(WIDTH/2 - hpWidth/2, HEIGHT-25, hpWidth, 20)
+        //ctx.textAlign = "left"
+        //ctx.font = "10px Arial"
     }
 
     // Chat  -------------------------------------------------------------------

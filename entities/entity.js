@@ -370,10 +370,10 @@ Player = function(id, username, socket, progress){
                 return Math.sqrt(Math.pow(y2-y1, 2))
         }
 
-        let leftHit = colTiles.includes(getTile(xInChunk-self.width/2, yInChunk)) && getDistanceToTile(xInChunk-self.width/2, yInChunk, "left") <= 0
-        let rightHit = colTiles.includes(getTile(xInChunk+self.width, yInChunk)) && getDistanceToTile(xInChunk+self.width, yInChunk, "right") <= 0
-        let topHit = colTiles.includes(getTile(xInChunk, yInChunk-self.height)) && getDistanceToTile(xInChunk, yInChunk-self.height, "top") <= 0
-        let bottomHit = colTiles.includes(getTile(xInChunk, yInChunk+self.height)) && getDistanceToTile(xInChunk, yInChunk+self.height, "bottom") <= 0
+        let leftHit = false;// = colTiles.includes(getTile(xInChunk-self.width/2, yInChunk)) && getDistanceToTile(xInChunk-self.width/2, yInChunk, "left") <= 0
+        let rightHit = false;// = colTiles.includes(getTile(xInChunk+self.width, yInChunk)) && getDistanceToTile(xInChunk+self.width, yInChunk, "right") <= 0
+        let topHit = false;// = colTiles.includes(getTile(xInChunk, yInChunk-self.height)) && getDistanceToTile(xInChunk, yInChunk-self.height, "top") <= 0
+        let bottomHit = false;// = colTiles.includes(getTile(xInChunk, yInChunk+self.height)) && getDistanceToTile(xInChunk, yInChunk+self.height, "bottom") <= 0
 
         if(self.pressingRight && !rightHit)
             self.speedX = self.maxSpeed
