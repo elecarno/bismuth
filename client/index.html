@@ -220,6 +220,8 @@
             //ctx.fillRect(x - hpWidth/2, y - height*0.55, hpWidth, 4)
             //ctx.textAlign = "left"
             //ctx.fillStyle = "#b3b3b3"
+
+            //gl.f
         }
 
         Player.list[self.id] = self
@@ -462,6 +464,7 @@
         
         // Draw UI & HUD
         drawScore()
+        renderer.renderQuad();
 
         // Draw Hover Tile
         //ctx.fillStyle = "rgba(145, 47, 47, " + Player.list[selfId].tileDestroyState/Player.list[selfId].currentTileStrength + ")"
@@ -470,7 +473,7 @@
     },1000/75)
 
     var drawMap = function(){
-        renderer.render(Player.list[selfId].x, Player.list[selfId].y);
+        renderer.renderChunk(Player.list[selfId].x, Player.list[selfId].y);
         //for (let [idx, chunk] of Object.entries(Player.list[selfId].world.map)) {
             /*for(let i = 0; i < chunk.height; i++){
                 for(let j = 0; j < chunk.width; j++){

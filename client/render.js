@@ -35,52 +35,64 @@ const tileHeights = {
     16: 0,
     17: 0,
     18: 0,
-    19: 0,
-    20: 0,
-    21: 0,
-    22: 0,
-    23: 0,
-    24: 0,
-    25: 0,
-    26: 0,
-    27: 0
 };
 
+const tileBehind = {
+    1: 0,
+    2: 0,
+    3: 0,
+    4: 1,
+    5: 1,
+    6: 1,
+    7: 1,
+    8: 0,
+    9: 0,
+    10: 0,
+    11: 0,
+    12: 0,
+    13: 0,
+    14: 0,
+    15: 1,
+    16: 1,
+    17: 0,
+    18: 0,
+}
+
 function initShaderProg(gl, vsource, fsource) {
-	const vshader = loadShader(gl, gl.VERTEX_SHADER, vsource);
-	const fshader = loadShader(gl, gl.FRAGMENT_SHADER, fsource);
-	if (vshader === null || fshader === null) return null;
+    const vshader = loadShader(gl, gl.VERTEX_SHADER, vsource);
+    const fshader = loadShader(gl, gl.FRAGMENT_SHADER, fsource);
+    if (vshader === null || fshader === null) return null;
 
-	const shaderProg = gl.createProgram();
-	gl.attachShader(shaderProg, vshader);
-	gl.attachShader(shaderProg, fshader);
-	gl.linkProgram(shaderProg);
+    const shaderProg = gl.createProgram();
+    gl.attachShader(shaderProg, vshader);
+    gl.attachShader(shaderProg, fshader);
+    gl.linkProgram(shaderProg);
 
-	if (!gl.getProgramParameter(shaderProg, gl.LINK_STATUS)) {
-		alert("Unable to init shader program: " + gl.getProgramInfoLog(shaderProg));
-		return null;
-	}
+    if (!gl.getProgramParameter(shaderProg, gl.LINK_STATUS)) {
+        alert("Unable to init shader program: " + gl.getProgramInfoLog(shaderProg));
+        return null;
+    }
 
-	return shaderProg;
+    return shaderProg;
 }
 
 function loadShader(gl, type, source) {
-	const shader = gl.createShader(type);
-	gl.shaderSource(shader, source);
-	gl.compileShader(shader);
+    const shader = gl.createShader(type);
+    gl.shaderSource(shader, source);
+    gl.compileShader(shader);
 
-	if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-		alert("Shader compile error: " + gl.getShaderInfoLog(shader));
-		gl.deleteShader(shader);
-		return null;
-	}
+    if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+        alert("Shader compile error: " + gl.getShaderInfoLog(shader));
+        gl.deleteShader(shader);
+        return null;
+    }
 
-	return shader;
+    return shader;
 }
 
 function loadTexture(gl, url, texunit) {
     const texture = gl.createTexture();
-	gl.activeTexture(gl.TEXTURE0 + texunit);
+    gl.activeTexture(gl.TEXTURE0 + texunit);
     gl.bindTexture(gl.TEXTURE_2D, texture);
 
     const pixel = new Uint8Array([255, 0, 255, 255, 0, 0, 0, 255, 0, 0, 0, 255, 255, 0, 255, 255]);
@@ -89,7 +101,7 @@ function loadTexture(gl, url, texunit) {
 
     const image = new Image();
     image.onload = function() {
-    	gl.activeTexture(gl.TEXTURE0 + texunit);
+        gl.activeTexture(gl.TEXTURE0 + texunit);
         gl.bindTexture(gl.TEXTURE_2D, texture);
         gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
         setTexParams(gl);
@@ -137,7 +149,7 @@ class ShaderProg {
         request.shaderprog = this;
         request.onreadystatechange = function() {
             if (request.readyState === 4 && request.status !== 404) { 
-    	        this.shaderprog.onReadShader(request.responseText, shader); 
+                this.shaderprog.onReadShader(request.responseText, shader); 
             }
         }
         request.open('GET', fileName, true);
@@ -159,55 +171,64 @@ function setTexParams() {
 
 class ChunkRenderer {
     constructor(gl) {
-    	this.gl = gl;
+        this.gl = gl;
 
         //what
-    	let test_this = this;
+        let test_this = this;
 
         this.tileShader = new ShaderProg(gl, "client/shaders/tilevert.glsl", "client/shaders/tilefrag.glsl",
-            function() { /*oh*/ test_this.postShaderInit() });
+            function() { /*oh*/ test_this.postTileShaderInit() });
+
+        this.quadShader = new ShaderProg(gl, "client/shaders/quadvert.glsl", "client/shaders/quadfrag.glsl",
+            function() { /*oh*/ test_this.postQuadShaderInit() });
     }
 
-    postShaderInit() {
+    postTileShaderInit() {
         this.tileShader.use();
         const vertexPos   = gl.getAttribLocation(this.tileShader.prog, "position");
-    	const texCoordPos = gl.getAttribLocation(this.tileShader.prog, "texture");
+        const texCoordPos = gl.getAttribLocation(this.tileShader.prog, "texture");
 
-    	const posBuffer = gl.createBuffer();
-    	const texBuffer = gl.createBuffer();
-    	gl.bindBuffer(gl.ARRAY_BUFFER, posBuffer);
-    	
-    	gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(quadCoords), gl.STATIC_DRAW);
+        const posBuffer = gl.createBuffer();
+        const texBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, posBuffer);
+        
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(quadCoords), gl.STATIC_DRAW);
 
-    	gl.bindBuffer(gl.ARRAY_BUFFER, texBuffer);
-    	gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(quadTexCoords), gl.STATIC_DRAW);
+        gl.bindBuffer(gl.ARRAY_BUFFER, texBuffer);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(quadTexCoords), gl.STATIC_DRAW);
 
-		gl.bindBuffer(gl.ARRAY_BUFFER, posBuffer);
-		gl.vertexAttribPointer(vertexPos, 2, gl.FLOAT, false, 0, 0);
-		gl.enableVertexAttribArray(vertexPos);
+        gl.bindBuffer(gl.ARRAY_BUFFER, posBuffer);
+        gl.vertexAttribPointer(vertexPos, 2, gl.FLOAT, false, 0, 0);
+        gl.enableVertexAttribArray(vertexPos);
 
-		gl.bindBuffer(gl.ARRAY_BUFFER, texBuffer);
+        gl.bindBuffer(gl.ARRAY_BUFFER, texBuffer);
         gl.vertexAttribPointer(texCoordPos, 2, gl.FLOAT, false, 0, 0);
         gl.enableVertexAttribArray(texCoordPos);
 
-    	const tilemap = loadTexture(gl, "/client/img/tilemap.png", 0);
+        const tilemap = loadTexture(gl, "/client/img/tilemap.png", 0);
         gl.uniform1i(gl.getUniformLocation(this.tileShader.prog, "sprites"), 0);
 
         gl.uniform2f(gl.getUniformLocation(this.tileShader.prog, "inverseSpriteTextureSize"), 1.0/(tileSize * sheetWidth), 1.0/(tileSize * sheetWidth));
         gl.uniform1f(gl.getUniformLocation(this.tileShader.prog, "tileSize"), tileSize);
         gl.uniform1f(gl.getUniformLocation(this.tileShader.prog, "inverseTileSize"), 1.0/tileSize);
 
-    	gl.uniform1i(gl.getUniformLocation(this.tileShader.prog, "tiles"), 1);
+        gl.uniform1i(gl.getUniformLocation(this.tileShader.prog, "tiles"), 1);
 
-    	this.lx = 0;
-    	this.ly = 0;
-    	this.mapwidth = 0;
-    	this.mapheight = 0;
-    	
-    	this.map = gl.createTexture();
-	    gl.activeTexture(gl.TEXTURE1);
+        this.lx = 0;
+        this.ly = 0;
+        this.mapwidth = 0;
+        this.mapheight = 0;
+        
+        this.map = gl.createTexture();
+        gl.activeTexture(gl.TEXTURE1);
         gl.bindTexture(gl.TEXTURE_2D, this.map);
         console.log("postInit ran!");
+    }
+
+    postQuadShaderInit() {
+        this.quadShader.use();
+        const sheet = loadTexture(gl, "/client/img/player.png", 2);
+        gl.uniform1i(gl.getUniformLocation(this.quadShader.prog, "sheet"), 2);
     }
 
     makeTexture(chunks) {
@@ -239,16 +260,14 @@ class ChunkRenderer {
         for (const chunk of chunks) {
             let tileidx = 0;
             for (const val of chunk.tiles) {
-                const sheetx = val % sheetWidth;
-                const sheety = Math.floor(val / sheetWidth);
-                
                 const tilex = tileidx % chunk.width;
                 const tiley = Math.floor(tileidx / chunk.width);
                 const idx = (tiley + (chunk.y - ly) * chunk.height) * width * 4 + (tilex + (chunk.x - lx) * chunk.width) * 4;
                 //console.log(tiley + (chunk.y - ly) * chunk.height, (tilex + (chunk.x - lx) * chunk.width));
-                data[idx] = sheetx;
-                data[idx + 1] = sheety;
+                data[idx] = val;
+                data[idx + 1] = 0;
                 data[idx + 2] = tileHeights[val];
+                data[idx + 3] = tileBehind[val];
                 tileidx += 1;
             }
             console.log(chunk.y - ly)
@@ -266,11 +285,20 @@ class ChunkRenderer {
         console.log(width, height, lx, ly);
     }
 
-    render(dx, dy) {
+    renderChunk(dx, dy) {
         this.tileShader.use();
         this.gl.uniform2f(this.gl.getUniformLocation(this.tileShader.prog, "inverseTileTextureSize"), 1.0/this.mapwidth, 1.0/this.mapheight);
         this.gl.uniform2f(this.gl.getUniformLocation(this.tileShader.prog, "viewportSize"), ctx.width / tileScale, ctx.height / tileScale);
         this.gl.uniform2f(this.gl.getUniformLocation(this.tileShader.prog, "viewOffset"), (dx - this.lx * 32 * 50) / tileScale,  (dy - this.ly * 32 * 50) / tileScale);	
         this.gl.drawArrays(this.gl.TRIANGLE_STRIP, 0, 4);
-	};    
+    }
+
+    renderQuad() {
+        this.quadShader.use();
+        this.gl.uniform2f(this.gl.getUniformLocation(this.quadShader.prog, "screenPos"), 0.2, 0.2);
+        this.gl.uniform2f(this.gl.getUniformLocation(this.quadShader.prog, "screenSize"), 0.2, 0.2);
+        this.gl.uniform2f(this.gl.getUniformLocation(this.quadShader.prog, "sheetPos"), 0.0, 0.0);
+        this.gl.uniform2f(this.gl.getUniformLocation(this.quadShader.prog, "sheetSize"), 1.0, 1.0);
+        this.gl.drawArrays(this.gl.TRIANGLE_STRIP, 0, 4);
+    }
 }
