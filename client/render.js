@@ -58,39 +58,7 @@ const tileBehind = {
     18: 0,
 }
 
-function initShaderProg(gl, vsource, fsource) {
-    const vshader = loadShader(gl, gl.VERTEX_SHADER, vsource);
-    const fshader = loadShader(gl, gl.FRAGMENT_SHADER, fsource);
-    if (vshader === null || fshader === null) return null;
-
-    const shaderProg = gl.createProgram();
-    gl.attachShader(shaderProg, vshader);
-    gl.attachShader(shaderProg, fshader);
-    gl.linkProgram(shaderProg);
-
-    if (!gl.getProgramParameter(shaderProg, gl.LINK_STATUS)) {
-        alert("Unable to init shader program: " + gl.getProgramInfoLog(shaderProg));
-        return null;
-    }
-
-    return shaderProg;
-}
-
-function loadShader(gl, type, source) {
-    const shader = gl.createShader(type);
-    gl.shaderSource(shader, source);
-    gl.compileShader(shader);
-
-    if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-        alert("Shader compile error: " + gl.getShaderInfoLog(shader));
-        gl.deleteShader(shader);
-        return null;
-    }
-
-    return shader;
-}
-
-function loadTexture(gl, url, texunit) {
+function loadTexture(gl, url, texunit, callback) {
     const texture = gl.createTexture();
     gl.activeTexture(gl.TEXTURE0 + texunit);
     gl.bindTexture(gl.TEXTURE_2D, texture);
@@ -105,61 +73,11 @@ function loadTexture(gl, url, texunit) {
         gl.bindTexture(gl.TEXTURE_2D, texture);
         gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
         setTexParams(gl);
+        callback(image);
     };
     image.src = url;
-    
+    texture.imageObject = image;
     return texture;
-}
-
-
-class ShaderProg {
-
-    constructor(gl, vertFile, fragFile, postInit) {
-        this.vert_source = null;
-        this.frag_source = null;
-        this.gl = gl;
-        this.prog = null;
-        this.postInit = postInit;
-        this.readShaderFile(vertFile, 'v');
-        this.readShaderFile(fragFile, 'f');
-    }
-
-    onReadShader(fileString, shader) {
-        if (shader == 'v') { // Vertex shader
-            this.vert_source = fileString;
-        } else if (shader == 'f') { // Fragment shader
-            this.frag_source = fileString;
-        }
-
-        console.log(fileString);
-        // When both are available, call start().
-        if (this.vert_source && this.frag_source) {
-            this.shaderInit();
-        }
-    }
-
-    shaderInit() {
-        console.log("shaderInit ran!");
-        this.prog = initShaderProg(this.gl, this.vert_source, this.frag_source);
-        this.postInit();
-    }
-
-    readShaderFile(fileName, shader) {
-        var request = new XMLHttpRequest();
-        request.shaderprog = this;
-        request.onreadystatechange = function() {
-            if (request.readyState === 4 && request.status !== 404) { 
-                this.shaderprog.onReadShader(request.responseText, shader); 
-            }
-        }
-        request.open('GET', fileName, true);
-        request.send();
-    }
-
-    use() {
-        gl.useProgram(this.prog);
-    }
-
 }
 
 function setTexParams() {
@@ -169,7 +87,7 @@ function setTexParams() {
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
 }
 
-class ChunkRenderer {
+class Renderer {
     constructor(gl) {
         this.gl = gl;
 
@@ -205,7 +123,7 @@ class ChunkRenderer {
         gl.vertexAttribPointer(texCoordPos, 2, gl.FLOAT, false, 0, 0);
         gl.enableVertexAttribArray(texCoordPos);
 
-        const tilemap = loadTexture(gl, "/client/img/tilemap.png", 0);
+        const tilemap = loadTexture(gl, "/client/img/tilemap.png", 0, function(image) {});
         gl.uniform1i(gl.getUniformLocation(this.tileShader.prog, "sprites"), 0);
 
         gl.uniform2f(gl.getUniformLocation(this.tileShader.prog, "inverseSpriteTextureSize"), 1.0/(tileSize * sheetWidth), 1.0/(tileSize * sheetWidth));
@@ -227,7 +145,9 @@ class ChunkRenderer {
 
     postQuadShaderInit() {
         this.quadShader.use();
-        const sheet = loadTexture(gl, "/client/img/player.png", 2);
+        let test_this = this; //weird fucking hacky shit
+        const sheet = loadTexture(gl, "/client/img/spritesheet.png", 2, function(image) { test_this.sheetWidth = image.width; test_this.sheetHeight = image.height; });
+        this.sheet = sheet;
         gl.uniform1i(gl.getUniformLocation(this.quadShader.prog, "sheet"), 2);
     }
 
@@ -270,7 +190,6 @@ class ChunkRenderer {
                 data[idx + 3] = tileBehind[val];
                 tileidx += 1;
             }
-            console.log(chunk.y - ly)
             //console.log(tileidx);
         }
         //console.log(data.length, width * height * 4);
@@ -282,23 +201,42 @@ class ChunkRenderer {
         this.ly = ly;
         this.mapwidth = width;
         this.mapheight = height;
-        console.log(width, height, lx, ly);
     }
 
     renderChunk(dx, dy) {
         this.tileShader.use();
         this.gl.uniform2f(this.gl.getUniformLocation(this.tileShader.prog, "inverseTileTextureSize"), 1.0/this.mapwidth, 1.0/this.mapheight);
         this.gl.uniform2f(this.gl.getUniformLocation(this.tileShader.prog, "viewportSize"), ctx.width / tileScale, ctx.height / tileScale);
-        this.gl.uniform2f(this.gl.getUniformLocation(this.tileShader.prog, "viewOffset"), (dx - this.lx * 32 * 50) / tileScale,  (dy - this.ly * 32 * 50) / tileScale);	
+        this.gl.uniform2f(this.gl.getUniformLocation(this.tileShader.prog, "viewOffset"), (dx - this.lx * 32 * 50 - ctx.width / 2) / tileScale,  (dy - this.ly * 32 * 50 - ctx.height / 2) / tileScale);
         this.gl.drawArrays(this.gl.TRIANGLE_STRIP, 0, 4);
     }
 
-    renderQuad() {
+    renderQuad(quad) {
+        this.renderQuadAt(quad, quad.screenPosX  / ctx.width,  quad.screenPosY  / ctx.height);
+    }
+
+    renderQuadAt(quad, x, y) {
         this.quadShader.use();
-        this.gl.uniform2f(this.gl.getUniformLocation(this.quadShader.prog, "screenPos"), 0.2, 0.2);
-        this.gl.uniform2f(this.gl.getUniformLocation(this.quadShader.prog, "screenSize"), 0.2, 0.2);
-        this.gl.uniform2f(this.gl.getUniformLocation(this.quadShader.prog, "sheetPos"), 0.0, 0.0);
-        this.gl.uniform2f(this.gl.getUniformLocation(this.quadShader.prog, "sheetSize"), 1.0, 1.0);
+        this.gl.uniform2f(this.gl.getUniformLocation(this.quadShader.prog, "screenPos"),  x, y);
+        this.gl.uniform2f(this.gl.getUniformLocation(this.quadShader.prog, "screenSize"), quad.screenSizeX / ctx.width,  quad.screenSizeY / ctx.height);
+        this.gl.uniform2f(this.gl.getUniformLocation(this.quadShader.prog, "sheetPos"),   quad.sheetPosX   / this.sheetWidth, quad.sheetPosY  / this.sheetHeight);
+        this.gl.uniform2f(this.gl.getUniformLocation(this.quadShader.prog, "sheetSize"),  quad.sheetSizeX  / this.sheetWidth, quad.sheetSizeY / this.sheetHeight);
         this.gl.drawArrays(this.gl.TRIANGLE_STRIP, 0, 4);
+    }
+}
+
+class Quad {
+    constructor(scpX, scpY, scsX, scsY, shpX, shpY, shsX, shsY) {
+        this.screenPosX = scpX;
+        this.screenPosY = scpY;
+
+        this.screenSizeX = scsX;
+        this.screenSizeY = scsY;
+
+        this.sheetPosX = shpX;
+        this.sheetPosY = shpY;
+
+        this.sheetSizeX = shsX;
+        this.sheetSizeY = shsY;
     }
 }

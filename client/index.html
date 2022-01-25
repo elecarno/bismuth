@@ -18,6 +18,7 @@
         <div id="ui" style="position:absolute;width:1800px;height:960px;">
             <div id="inventory"></div>
             <div id="crafting"></div>
+            <div id="score" style="position: absolute;"></div>
         </div>
     
     </div>
@@ -36,9 +37,8 @@
 <script src="/socket.io/socket.io.js"></script>
 <script src="/client/inventory.js"></script>
 <script src="/client/render.js"></script>
+<script src="/client/shaders.js"></script>
 <script>
-    var WIDTH = 1800
-    var HEIGHT = 960
     var tpd = 50 // tile pixel dimension
     var ctd = 32 // chunk tile dimension
     var socket = io()
@@ -53,7 +53,7 @@
     		alert("Error initialising webGL");
     		return;
     	}
-    	renderer = new ChunkRenderer(gl);
+    	renderer = new Renderer(gl);
     }
     window.onload = main;
 
@@ -173,6 +173,12 @@
     Img.hover_tile.src = '/client/img/hover_tile.png'
     }
 
+    let quads = {
+        player_left:  new Quad(0, 0, 100, 100, 0, 0, 32, 32),
+        player_right: new Quad(0, 0, 100, 100, 32, 0, 32, 32),
+        floof:        new Quad(0, 0, 48,  48,  64, 0, 16, 16),
+    }
+    
     // init
     var Player = function(initPack){
         var self = {}
@@ -198,19 +204,23 @@
             var width = tpd*2
             var height = tpd*2
 
-            var x = self.x - Player.list[selfId].x + WIDTH/2
-            var y = self.y - Player.list[selfId].y + HEIGHT/2
+            var x = self.x - Player.list[selfId].x + ctx.width/2
+            var y = self.y - Player.list[selfId].y + ctx.height/2
 
             if(!self.lookingRight){
+                renderer.renderQuad(quads.player_left);
                 //ctx.drawImage(Img.player_left, 0, 0, Img.player_left.width, Img.player_left.height, x-width/2, y-height/2, width, height)
                 //ctx.drawImage(Img.tools_left, self.spriteId[0] * ctd, self.spriteId[1] * ctd, Img.player_left.width, Img.player_left.height, x-width/2, y-height/2, width, height)
             }
             else{
+                renderer.renderQuad(quads.player_right);
                 //ctx.drawImage(Img.player_right, 0, 0, Img.player_right.width, Img.player_right.height, x-width/2, y-height/2, width, height)
                 //ctx.drawImage(Img.tools_right, self.spriteId[0] * ctd, self.spriteId[1] * ctd, Img.player_left.width, Img.player_left.height, x-width/2, y-height/2, width, height)
             }
-                
-
+            element = document.getElementById("score")
+            element.innerHTML = self.username + ": " + self.score;
+            element.style.left = x + "px";
+            element.style.top = y - height*0.65 + "px";
             //ctx.textAlign = "center"
             //ctx.fillStyle = "#b3b3b3"
             ////ctx.fillRect(self.x, self.y, 20, 20)
@@ -220,8 +230,6 @@
             //ctx.fillRect(x - hpWidth/2, y - height*0.55, hpWidth, 4)
             //ctx.textAlign = "left"
             //ctx.fillStyle = "#b3b3b3"
-
-            //gl.f
         }
 
         Player.list[self.id] = self
@@ -240,8 +248,8 @@
             var width = Img.player_left.width/4
             var height = Img.player_left.height/4
 
-            var x = self.x - Player.list[selfId].x + WIDTH/2
-            var y = self.y - Player.list[selfId].y + HEIGHT/2
+            var x = self.x - Player.list[selfId].x + ctx.width/2
+            var y = self.y - Player.list[selfId].y + ctx.height/2
 
             x2 = x + Math.cos(Math.PI * self.angle / 180) * 32;
             y2 = y + Math.sin(Math.PI * self.angle / 180) * 32;
@@ -275,17 +283,18 @@
         self.y = initPack.y
 
         self.draw = function(){
-            var width = Img.floof.width*2.5
-            var height = Img.floof.height*2.5
+            //var width = Img.floof.width*2.5
+            //var height = Img.floof.height*2.5
 
-            var x = self.x - Player.list[selfId].x + WIDTH/2
-            var y = self.y - Player.list[selfId].y + HEIGHT/2
+            var x = self.x - Player.list[selfId].x + ctx.width/2
+            var y = self.y - Player.list[selfId].y + ctx.height/2
 
             //ctx.drawImage(Img.floof, 
             //    0, 0, Img.floof.width, Img.floof.height,
 //                x-width/2, y-height/2, width, height)
 //
 //            ctx.fillStyle = "#b3b3b3"
+            renderer.renderQuadAt(quads.floof, x, y);
         }
 
         Floof.list[self.id] = self
@@ -424,9 +433,9 @@
             return;
         }
         // bg Colour
-        //ctx.clearRect(0, 0, WIDTH, HEIGHT)
+        //ctx.clearRect(0, 0, ctx.width, ctx.height)
         //ctx.fillStyle = "#324536"
-        //ctx.fillRect(0, 0, WIDTH, HEIGHT)
+        //ctx.fillRect(0, 0, ctx.width, ctx.height)
 
 		gl.clearColor(1.0, 0.0, 0.0, 1.0);
 		gl.clear(gl.COLOR_BUFFER_BIT);        
@@ -439,7 +448,7 @@
         drawMap()   
 
         // Draw Entities
-        var renderDistance = WIDTH + tpd // render distance in pixels
+        var renderDistance = ctx.width + tpd // render distance in pixels
 
         getDistance = function(pt){
             return Math.sqrt(Math.pow(Player.list[selfId].x-pt.x, 2) + Math.pow(Player.list[selfId].y-pt.y, 2))
@@ -464,12 +473,12 @@
         
         // Draw UI & HUD
         drawScore()
-        renderer.renderQuad();
+        //renderer.renderQuad();
 
         // Draw Hover Tile
         //ctx.fillStyle = "rgba(145, 47, 47, " + Player.list[selfId].tileDestroyState/Player.list[selfId].currentTileStrength + ")"
-        //ctx.fillRect(selectedTileX - Player.list[selfId].x + WIDTH/2, selectedTileY - Player.list[selfId].y + HEIGHT/2 - 40, tpd, 90)
-        //ctx.drawImage(Img.hover_tile ,selectedTileX - Player.list[selfId].x + WIDTH/2, selectedTileY - Player.list[selfId].y + HEIGHT/2 - 40, tpd, 90)
+        //ctx.fillRect(selectedTileX - Player.list[selfId].x + ctx.width/2, selectedTileY - Player.list[selfId].y + ctx.height/2 - 40, tpd, 90)
+        //ctx.drawImage(Img.hover_tile ,selectedTileX - Player.list[selfId].x + ctx.width/2, selectedTileY - Player.list[selfId].y + ctx.height/2 - 40, tpd, 90)
     },1000/75)
 
     var drawMap = function(){
@@ -506,8 +515,8 @@
                     else if (col === 18)
                         ctx.fillStyle = "#363431"
 
-                    let tilex = (chunk.x * tpd * chunk.width) + (j * tpd) - Player.list[selfId].x + WIDTH/2
-                    let tiley = (chunk.y * tpd * chunk.height) + (i * tpd) - Player.list[selfId].y + HEIGHT/2
+                    let tilex = (chunk.x * tpd * chunk.width) + (j * tpd) - Player.list[selfId].x + ctx.width/2
+                    let tiley = (chunk.y * tpd * chunk.height) + (i * tpd) - Player.list[selfId].y + ctx.height/2
                     ctx.fillRect(tilex, tiley, tpd, tpd)
 
                     // other tiles
@@ -536,11 +545,11 @@
 
         // Spawn Plate
         //ctx.fillStyle = "#787878"
-        //ctx.fillRect(25500 - Player.list[selfId].x + WIDTH/2, 25500 - Player.list[selfId].y + HEIGHT/2, 200, 200)
+        //ctx.fillRect(25500 - Player.list[selfId].x + ctx.width/2, 25500 - Player.list[selfId].y + ctx.height/2, 200, 200)
         //ctx.fillStyle = "#919191"
         //ctx.font = "20px Arial"
         //ctx.fillStyle = "#dbdbdb"
-        //ctx.fillText("Welcome to the Caves", 25500 - Player.list[selfId].x + WIDTH/2, 25500 - Player.list[selfId].y + HEIGHT/2 + 50)
+        //ctx.fillText("Welcome to the Caves", 25500 - Player.list[selfId].x + ctx.width/2, 25500 - Player.list[selfId].y + ctx.height/2 + 50)
         //ctx.font = "15px Arial"
     }
 
@@ -569,8 +578,8 @@
                             heightOffset = 35
                         }
 
-                        let tilex = (chunk.x * tpd * chunk.width) + (j * tpd) - Player.list[selfId].x + WIDTH/2
-                        let tiley = (chunk.y * tpd * chunk.height) + (i * tpd) - Player.list[selfId].y + HEIGHT/2
+                        let tilex = (chunk.x * tpd * chunk.width) + (j * tpd) - Player.list[selfId].x + ctx.width/2
+                        let tiley = (chunk.y * tpd * chunk.height) + (i * tpd) - Player.list[selfId].y + ctx.height/2
                         //ctx.fillRect(tilex, tiley - heightOffset, tpd, tpd)
                     }
                 }
@@ -600,7 +609,7 @@
 
         //ctx.fillStyle = "#7ecf8b"
         //var hpWidth = 450 * Player.list[selfId].hp / Player.list[selfId].hpMax
-        //ctx.fillRect(WIDTH/2 - hpWidth/2, HEIGHT-25, hpWidth, 20)
+        //ctx.fillRect(ctx.width/2 - hpWidth/2, ctx.height-25, hpWidth, 20)
         //ctx.textAlign = "left"
         //ctx.font = "10px Arial"
     }
@@ -726,8 +735,8 @@
     }
 
     document.onmousemove = function(event){
-        var x = -WIDTH/2 + event.clientX - 8
-        var y = -HEIGHT/2 + event.clientY - 8
+        var x = -ctx.width/2 + event.clientX - 8
+        var y = -ctx.height/2 + event.clientY - 8
         var angle = Math.atan2(y, x) / Math.PI * 180
         //console.log(event.clientX, event.clientY)
         var rect = document.getElementById("ctx")

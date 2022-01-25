@@ -10,5 +10,7 @@ uniform vec2 sheetSize;
 uniform sampler2D sheet;
 
 void main(void) {
-    gl_FragColor = texture2D(sheet, texCoord);
+    vec4 tex = texture2D(sheet, texCoord);
+    if (tex.w < 0.1) discard;
+    gl_FragColor = tex;
 } 
