@@ -203,6 +203,17 @@ class Renderer {
         this.mapheight = height;
     }
 
+    tileChange(chunkX, chunkY, tileX, tileY, tileType) {
+        const data = new Uint8Array([tileType, 0, tileHeights[tileType], tileBehind[tileType]]);
+
+        const xoff = chunkX - this.lx + tileX;
+        const yoff = chunkY - this.ly + tileY;
+        
+        this.gl.activeTexture(this.gl.TEXTURE1);
+        this.gl.bindTexture(this.gl.TEXTURE_2D, this.map);
+        this.gl.texSubImage2D(this.gl.TEXTURE_2D, 0, xoff, yoff, 1, 1, this.gl.RGBA, this.gl.UNSIGNED_BYTE, data);
+    }
+
     renderChunk(dx, dy) {
         this.tileShader.use();
         this.gl.uniform2f(this.gl.getUniformLocation(this.tileShader.prog, "inverseTileTextureSize"), 1.0/this.mapwidth, 1.0/this.mapheight);

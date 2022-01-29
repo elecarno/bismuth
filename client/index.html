@@ -361,6 +361,7 @@
         let tileY = data.tileY
         let Chunkidx = (chunkX << 16) | chunkY
         Player.list[selfId].world.map[Chunkidx].tiles[tileY * mouseChunk.width + tileX] = tileToPlace
+        renderer.tileChange(chunkX, chunkY, tileX, tileY, tileToPlace);
     })
 
     let selectedTileX = 0
