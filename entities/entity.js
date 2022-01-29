@@ -512,7 +512,7 @@ Player.onConnect = function(socket, username, progress){
             player.activeSlot = 3
         else if (data.inputId === "five")
             player.activeSlot = 4
-    })  
+    })
 
     socket.on("sendMsgToServer", function(data){
         var playerName = ("" + socket.id).slice(2,7)
@@ -520,21 +520,14 @@ Player.onConnect = function(socket, username, progress){
             SOCKET_LIST[i].emit("addToChat", player.username + " (" + player.number + ")" +": " + data)
         }
     })
-
-    let f = Floof.getAllInitPack()
-    for(var i = 0; i < f.length; i++){
-        if(!Player.list[socket.id].getDistance(f[i]) < renderDistance){
-            let idx = f.indexOf(f[i])
-            f.splice(idx, 1)
-        }
-    }
-
     socket.emit("init",{
         selfId:socket.id,
         player:Player.getAllInitPack(),
         bullet:Bullet.getAllInitPack(),
-        floof:f,
+        floof:Floof.getAllInitPack(),
     })
+
+    return player;
 }
 
 Player.getAllInitPack = function(){
@@ -757,7 +750,7 @@ Floof.update = function(){
     for(var i in Floof.list){
         floofCount++
     }
-    if (Math.random() < 0.4 && floofCount < 50){
+    if (Math.random() < 0.9 && floofCount < 100){
         Floof()
     }
 
@@ -765,16 +758,11 @@ Floof.update = function(){
     for (var i in Floof.list){
         var floof = Floof.list[i]
         floof.update()
-        for(var j in Player.list){
-            if(Player.list[j].getDistance(floof) < renderDistance){
-                if (floof.toRemove) {
-                    delete Floof.list[i];
-                    removePack.floof.push(floof.id)
-                } else
-                    pack.push(floof.getUpdatePack())
-            } else
-                removePack.floof.push(floof.id)
-        }
+        if (floof.toRemove) {
+            delete Floof.list[i];
+            removePack.floof.push(floof.id)
+        } else
+            pack.push(floof.getUpdatePack())
     }
 
     return pack

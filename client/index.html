@@ -137,7 +137,7 @@
     let quads = {
         player_left:  new Quad(0, 0, 100, 100, 0, 0, 32, 32),
         player_right: new Quad(0, 0, 100, 100, 32, 0, 32, 32),
-        floof:        new Quad(0, 0, 48,  48,  64, 0, 16, 16),
+        floof:        new Quad(0, 0, 40,  40,  64, 0, 16, 16),
         hover_tile:   new Quad(0, 0, 50,  90,  80, 0, 50, 90),
     };
     
@@ -397,6 +397,8 @@
     // Game Rendering Loop
     const fpsElem = document.querySelector("#fps");
     const avgElem = document.querySelector("#avg");
+    const coordElem = document.querySelector("#coords");
+    const hotbarElem = document.querySelector("#hotbar");
     
     const frameTimes = [];
     let   frameCursor = 0;
@@ -470,7 +472,7 @@
         //ctx.fillRect(selectedTileX - Player.list[selfId].x + ctx.width/2, selectedTileY - Player.list[selfId].y + ctx.height/2 - 40, tpd, 90)
         //ctx.drawImage(Img.hover_tile ,selectedTileX - Player.list[selfId].x + ctx.width/2, selectedTileY - Player.list[selfId].y + ctx.height/2 - 40, tpd, 90)
         renderer.renderQuadAt(quads.hover_tile,
-            selectedTileX - Player.list[selfId].x + ctx.width / 2,
+            selectedTileX - Player.list[selfId].x + ctx.width / 2 - quads.hover_tile.screenSizeX / 2,
             selectedTileY - Player.list[selfId].y + ctx.height / 2 - 40);
         //    mouseX,
         //    mouseY);

@@ -19,22 +19,22 @@ const sheetWidth = 10;
 const tileHeights = {
     1: 0,
     2: 0,
-    3: 6,
+    3: 14,
     4: 0,
     5: 0,
     6: 0,
-    7: 0,
-    8: 0,
+    7: 14,
+    8: 14,
     9: 0,
     10: 0,
-    11: 0,
+    11: 11,
     12: 0,
     13: 0,
-    14: 0,
+    14: 13,
     15: 0,
     16: 0,
-    17: 0,
-    18: 0,
+    17: 14,
+    18: 13,
 };
 
 const tileBehind = {
@@ -206,8 +206,8 @@ class Renderer {
     tileChange(chunkX, chunkY, tileX, tileY, tileType) {
         const data = new Uint8Array([tileType, 0, tileHeights[tileType], tileBehind[tileType]]);
 
-        const xoff = chunkX - this.lx + tileX;
-        const yoff = chunkY - this.ly + tileY;
+        const xoff = (chunkX - this.lx) * 32 + tileX;
+        const yoff = (chunkY - this.ly) * 32 + tileY;
         
         this.gl.activeTexture(this.gl.TEXTURE1);
         this.gl.bindTexture(this.gl.TEXTURE_2D, this.map);

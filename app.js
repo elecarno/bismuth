@@ -40,7 +40,8 @@ io.sockets.on("connection", function(socket){
             if(!result)
                 return socket.emit("signInResponse",{success: false})
             Database.getPlayerProgress(data.username, function(progress){
-                Player.onConnect(socket, data.username, progress)
+                let player = Player.onConnect(socket, data.username, progress)
+                SOCKET_LIST[socket.id].player = player;
                 socket.emit("signInResponse",{success: true})
             })
         })  
@@ -74,11 +75,27 @@ io.sockets.on("connection", function(socket){
 
 // Game Loop
 setInterval(function(){
-    var packs = Entity.getFrameUpdateData()
+    let packs = Entity.getFrameUpdateData()
     for (var i in SOCKET_LIST){
-        var socket = SOCKET_LIST[i]
+        let socket = SOCKET_LIST[i]
+        let player = socket.player;
+        if (player === null || player === undefined) continue;
+
+        let updatePack = {
+            floof: [],
+            player: packs.updatePack.player,
+            bullet: packs.updatePack.bullet
+        };
+
+        for (let floof of packs.updatePack.floof) {
+            if (Math.abs(floof.x - player.x) < 400 &&
+                Math.abs(floof.y - player.y) < 400) {
+                    updatePack.floof.push(floof);
+            }
+        }
+        
         socket.emit("init", packs.initPack)
-        socket.emit("update", packs.updatePack)
+        socket.emit("update", updatePack)
         socket.emit("remove", packs.removePack)
     }
 }, 1000/75) // 144 updates per second (so people with 144Hz monitors won't complain)
