@@ -72,8 +72,10 @@ Chunk = function (x, y) {
                     self.tiles.push(9) // floor_3
                 else if (value2d < 0.6)
                     self.tiles.push(10) // dirt_floor
-                else if (value2d > 0.6)
+                else if (value2d < 0.8)
                     self.tiles.push(11) // earth
+                else if (value2d > 0.8)
+                    self.tiles.push(18) // mound
             }
         }
     }

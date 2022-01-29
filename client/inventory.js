@@ -186,10 +186,17 @@ Item("cave_beef","Cave Beef", function(player){
 })
 
 // materials
-
 Item("floof_wool","Floof Wool", function(player){})
 Item("fibres","Fibres", function(player){})
 Item("shroom_wood","Shroom Wood", function(player){})
+
+// ammunition
+Item("bronze_round","Bronze Round", function(player){})
+Item("bronze_round_kit","Bronze Round Kit", function(player){
+    player.inventory.removeItem("bronze_round_kit", 1)
+    player.inventory.addItem("bronze_round", 15)
+})
+Item("iron_round","Iron Round", function(player){})
 
 // tools & placeables
 let spriteIds = {
@@ -230,6 +237,7 @@ Item("earth","Earth", function(player){itemToHotbar(player, "earth")})
 Item("beq_rock","Beq Rock", function(player){itemToHotbar(player, "beq_rock")})
 Item("organic_floor","Organic Floor", function(player){itemToHotbar(player, "organic_floor")})
 Item("dirt_floor","Dirt Floor", function(player){itemToHotbar(player, "dirt_floor")})
+Item("mound","Mound", function(player){itemToHotbar(player, "mound")})
 
 // weapons
 Item("shroom_k","Shroom-K Rifle", function(player){itemToHotbar(player, "shroom_k")})
@@ -254,7 +262,6 @@ Item("toad_shroom","Toad Shroom", function(player){itemToHotbar(player, "toad_sh
 Item("pollen_shroom","Pollen Shroom", function(player){itemToHotbar(player, "pollen_shroom")})
 Item("bronze_berry","Bronze Berry", function(player){itemToHotbar(player, "bronze_berry")})
 
-
 // ---------------------------------------------------------------------------
 
 Recipe = function(resultItem, requiredItems){
@@ -272,3 +279,4 @@ Recipe("fibres", ["pollen_shroom", "cave_flower"])
 Recipe("bronze_pickaxe", ["bronze_berry", "fibres", "shroom_wood"])
 Recipe("bronze_sickle", ["bronze_berry", "fibres", "shroom_wood"])
 Recipe("bronze_chisel", ["bronze_berry", "fibres", "shroom_wood", "stone"])
+Recipe("bronze_round_kit", ["bronze_berry", "stone"])
