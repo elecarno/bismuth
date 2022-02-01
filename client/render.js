@@ -90,6 +90,8 @@ function setTexParams() {
 class Renderer {
     constructor(gl) {
         this.gl = gl;
+        gl.enable(gl.BLEND);
+        gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
 
         //what
         let test_this = this;
@@ -242,7 +244,6 @@ class Renderer {
 
     renderRect(r, g, b, a, x, y, w, h) {
         this.rectShader.use();
-        this.gl.blendFunc(this.gl.ONE, this.gl.ONE_MINUS_SRC_ALPHA);
         this.gl.uniform2f(this.gl.getUniformLocation(this.rectShader.prog, "screenPos"),  x / ctx.width * 2 - 1, -(y / ctx.height * 2 - 1));
         this.gl.uniform2f(this.gl.getUniformLocation(this.rectShader.prog, "screenSize"), w / ctx.width,  h / ctx.height);
         this.gl.uniform4f(this.gl.getUniformLocation(this.rectShader.prog, "colour"), r / 255, g / 255, b / 255, a / 255);

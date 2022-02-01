@@ -62,7 +62,10 @@
 
     function main() {
     	const canvas = document.querySelector("#ctx");
-    	gl = canvas.getContext("webgl");
+    	gl = canvas.getContext("webgl", {
+    	    premultipliedAlpha: true,
+    	});
+    	
 
     	if (gl === null) {
     		alert("Error initialising webGL");
@@ -176,20 +179,30 @@
         self.currentTileStrength = initPack.currentTileStrength
 
         self.draw = function(){
-            let width = tpd*2
-            let height = tpd*2
+            const width  = tpd * 2
+            const height = tpd * 2
 
-            let x = self.x - Player.list[selfId].x + ctx.width/2
-            let y = self.y - Player.list[selfId].y + ctx.height/2
+            const leftToolOffsetX = 130;
+            const leftToolOffsetY = 0;
+
+            const x = self.x - Player.list[selfId].x + ctx.width  / 2
+            const y = self.y - Player.list[selfId].y + ctx.height / 2
 
             if(!self.lookingRight){
                 renderer.renderQuadAt(quads.player_left, x, y);
-                //ctx.drawImage(Img.player_left, 0, 0, Img.player_left.width, Img.player_left.height, x-width/2, y-height/2, width, height)
-                //ctx.drawImage(Img.tools_left, self.spriteId[0] * ctd, self.spriteId[1] * ctd, Img.player_left.width, Img.player_left.height, x-width/2, y-height/2, width, height)
+                const quad = new Quad(
+                                    0, 0, 50, 50,
+                                    self.spriteId[0] * ctd + leftToolOffsetX,
+                                    self.spriteId[1] * ctd + leftToolOffsetY,
+                                    quads.player_left.sheetSizeX,
+                                    quads.player_left.sheetSizeY);
+
+                renderer.renderQuadAt(quad,
+                    x, y);
+                //ctx.drawImage(Img.tools_left, , self.spriteId[1] * ctd, Img.player_left.width, Img.player_left.height, x-width/2, y-height/2, width, height)
             }
             else{
                 renderer.renderQuadAt(quads.player_right, x, y);
-                //ctx.drawImage(Img.player_right, 0, 0, Img.player_right.width, Img.player_right.height, x-width/2, y-height/2, width, height)
                 //ctx.drawImage(Img.tools_right, self.spriteId[0] * ctd, self.spriteId[1] * ctd, Img.player_left.width, Img.player_left.height, x-width/2, y-height/2, width, height)
             }
             element = document.getElementById("score")
@@ -387,7 +400,6 @@
         let tileY = data.tileY
         selectedTileX = (tileX * tpd) + (chunkX * ctd * tpd)
         selectedTileY = (tileY * tpd) + (chunkY * ctd * tpd)
-        //console.log(selectedTileX, selectedTileY)
     })
     
     // remove
@@ -481,17 +493,11 @@
         drawScore()
 
         // Draw Hover Tile
-        //ctx.fillStyle = "rgba(145, 47, 47, " + Player.list[selfId].tileDestroyState/Player.list[selfId].currentTileStrength + ")"
-        //ctx.fillRect(selectedTileX - Player.list[selfId].x + ctx.width/2, selectedTileY - Player.list[selfId].y + ctx.height/2 - 40, tpd, 90)
-        //ctx.drawImage(Img.hover_tile ,selectedTileX - Player.list[selfId].x + ctx.width/2, selectedTileY - Player.list[selfId].y + ctx.height/2 - 40, tpd, 90)
-
-        renderer.renderRect(255, 255, 255, 255, 200, 200, 50, 50);
-        
         renderer.renderRect(
             145, 47, 47,
-            Player.list[selfId].tileDestroyState/Player.list[selfId].currentTileStrength,
-            selectedTileX - Player.list[selfId].x + ctx.width/2,
-            selectedTileY - Player.list[selfId].y + ctx.height/2 - 40,
+            Player.list[selfId].tileDestroyState / Player.list[selfId].currentTileStrength * 255,
+            selectedTileX - Player.list[selfId].x + ctx.width/2 + 50/2,
+            selectedTileY - Player.list[selfId].y + ctx.height/2 + 50/2,
             50, 50);
 
         renderer.renderQuadAt(quads.hover_tile,
