@@ -5,6 +5,7 @@
 
  uniform sampler2D tiles;
  uniform sampler2D sprites;
+ uniform sampler2D sideSprites;
 
  uniform vec2 inverseTileTextureSize;
  uniform vec2 inverseSpriteTextureSize;
@@ -63,7 +64,9 @@
         vec2 downSpriteCoord = mod(pixelCoord, tileSize) - vec2(0, tileSize - down_tile.z * 255.0);
         texColour = texture2D(sprites, (downSpriteOffset + downSpriteCoord) * inverseSpriteTextureSize);
     } else if (from_bottom < tile.z * 255.0) {
-        texColour = vec4(0.2, 0.2, 0.2, 1);
+        vec2 spritePos = floor(vec2(mod(tile.x * 255.0, sheetWidth), tile.x * 255.0 / sheetWidth));
+        vec2 spriteOffset = spritePos * tileSize;
+        texColour = texture2D(sideSprites, (spriteOffset + spriteCoord) * inverseSpriteTextureSize);
     } else {
         vec2 spritePos = floor(vec2(mod(tile.x * 255.0, sheetWidth), tile.x * 255.0 / sheetWidth));
         vec2 spriteOffset = spritePos * tileSize;

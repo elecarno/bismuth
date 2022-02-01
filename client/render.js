@@ -58,7 +58,11 @@ const tileBehind = {
     18: 0,
 }
 
+let using_texture = false;
+
 function loadTexture(gl, url, texunit, callback) {
+    while (using_texture) { console.log("texture contention!"); }
+    using_texture = true;
     const texture = gl.createTexture();
     gl.activeTexture(gl.TEXTURE0 + texunit);
     gl.bindTexture(gl.TEXTURE_2D, texture);
@@ -66,13 +70,17 @@ function loadTexture(gl, url, texunit, callback) {
     const pixel = new Uint8Array([255, 0, 255, 255, 0, 0, 0, 255, 0, 0, 0, 255, 255, 0, 255, 255]);
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 2, 2, 0, gl.RGBA, gl.UNSIGNED_BYTE, pixel);
     setTexParams(gl);
+    using_texture = false;
 
     const image = new Image();
     image.onload = function() {
+        while (using_texture) { console.log("texture contention!"); }
+        using_texture = true;
         gl.activeTexture(gl.TEXTURE0 + texunit);
         gl.bindTexture(gl.TEXTURE_2D, texture);
         gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
         setTexParams(gl);
+        using_texture = false;
         callback(image);
     };
     image.src = url;
@@ -100,10 +108,10 @@ class Renderer {
             function() { /*oh*/ test_this.postTileShaderInit() });
 
         this.quadShader = new ShaderProg(gl, "client/shaders/quadvert.glsl", "client/shaders/quadfrag.glsl",
-            function() { /*oh*/ test_this.postQuadShaderInit() });
+            function() { test_this.postQuadShaderInit() });
 
         this.rectShader = new ShaderProg(gl, "client/shaders/rectvert.glsl", "client/shaders/rectfrag.glsl",
-            function() { /*oh*/ test_this.postRectShaderInit() });
+            function() { test_this.postRectShaderInit() });
     }
 
     postTileShaderInit() {
@@ -129,7 +137,10 @@ class Renderer {
         gl.enableVertexAttribArray(texCoordPos);
 
         const tilemap = loadTexture(gl, "/client/img/tilemap.png", 0, function(image) {});
+        const tilesidemap = loadTexture(gl, "/client/img/tilesidemap.png", 3, function(image) {});
+
         gl.uniform1i(gl.getUniformLocation(this.tileShader.prog, "sprites"), 0);
+        gl.uniform1i(gl.getUniformLocation(this.tileShader.prog, "sideSprites"), 3);
 
         gl.uniform2f(gl.getUniformLocation(this.tileShader.prog, "inverseSpriteTextureSize"), 1.0/(tileSize * sheetWidth), 1.0/(tileSize * sheetWidth));
         gl.uniform1f(gl.getUniformLocation(this.tileShader.prog, "tileSize"), tileSize);
@@ -243,6 +254,8 @@ class Renderer {
     }
 
     renderRect(r, g, b, a, x, y, w, h) {
+        x = x + w/2;
+        y = y + h/2;
         this.rectShader.use();
         this.gl.uniform2f(this.gl.getUniformLocation(this.rectShader.prog, "screenPos"),  x / ctx.width * 2 - 1, -(y / ctx.height * 2 - 1));
         this.gl.uniform2f(this.gl.getUniformLocation(this.rectShader.prog, "screenSize"), w / ctx.width,  h / ctx.height);

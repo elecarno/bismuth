@@ -42,9 +42,15 @@
 
 #hotbar {
     position: absolute;
-    font-family: courier;
-    font-size: 18px;
-    color: #ffffff;
+    font-family: arial;
+    font-size: 20px;
+    color: #b3b3b3;
+}
+
+#score {
+    width: 100;
+    text-align: center;
+    color: #b3b3b3;
 }
 
 </style>
@@ -137,10 +143,6 @@
     let chatText = document.getElementById("chat-text")
     let chatInput = document.getElementById("chat-input")
     let chatForm = document.getElementById("chat-form")
-    
-    //let ctx = document.getElementById("ctx").getContext("2d")
-    //ctx.imageSmoothingEnabled = false
-    //ctx.font = "15px Arial"
 
     // UI
     let inventory = new Inventory("", socket, false);
@@ -183,7 +185,7 @@
             const height = tpd * 2
 
             const leftToolOffsetX = 130;
-            const leftToolOffsetY = 0;
+            const rightToolOffsetY = 128;
 
             const x = self.x - Player.list[selfId].x + ctx.width  / 2
             const y = self.y - Player.list[selfId].y + ctx.height / 2
@@ -191,33 +193,31 @@
             if(!self.lookingRight){
                 renderer.renderQuadAt(quads.player_left, x, y);
                 const quad = new Quad(
-                                    0, 0, 50, 50,
-                                    self.spriteId[0] * ctd + leftToolOffsetX,
-                                    self.spriteId[1] * ctd + leftToolOffsetY,
-                                    quads.player_left.sheetSizeX,
-                                    quads.player_left.sheetSizeY);
+                    0, 0, width, height,
+                    self.spriteId[0] * ctd + leftToolOffsetX,
+                    self.spriteId[1] * ctd,
+                    quads.player_left.sheetSizeX,
+                    quads.player_left.sheetSizeY);
 
-                renderer.renderQuadAt(quad,
-                    x, y);
-                //ctx.drawImage(Img.tools_left, , self.spriteId[1] * ctd, Img.player_left.width, Img.player_left.height, x-width/2, y-height/2, width, height)
+                renderer.renderQuadAt(quad, x, y);
             }
             else{
                 renderer.renderQuadAt(quads.player_right, x, y);
-                //ctx.drawImage(Img.tools_right, self.spriteId[0] * ctd, self.spriteId[1] * ctd, Img.player_left.width, Img.player_left.height, x-width/2, y-height/2, width, height)
+                const quad = new Quad(
+                    x, y, width, height,
+                    self.spriteId[0] * ctd + leftToolOffsetX,
+                    self.spriteId[1] * ctd + rightToolOffsetY,
+                    quads.player_left.sheetSizeX,
+                    quads.player_left.sheetSizeY);
+                renderer.renderQuad(quad);
             }
             element = document.getElementById("score")
             element.innerHTML = self.username + ": " + self.score;
-            element.style.left = x + "px";
-            element.style.top = y - height*0.65 + "px";
-            //ctx.textAlign = "center"
-            //ctx.fillStyle = "#b3b3b3"
-            ////ctx.fillRect(self.x, self.y, 20, 20)
-            //ctx.fillText(self.username + ": " + self.score, x, y - height*0.65)
-            //ctx.fillStyle = "#7ecf8b"
-            //let hpWidth = 45 * self.hp / self.hpMax
-            //ctx.fillRect(x - hpWidth/2, y - height*0.55, hpWidth, 4)
-            //ctx.textAlign = "left"
-            //ctx.fillStyle = "#b3b3b3"
+            element.style.left = x - width/2 + "px";
+            element.style.top = y - height*0.7 + "px";
+
+            const hpWidth = 45 * self.hp / self.hpMax;
+            renderer.renderRect(0x7e, 0xcf, 0x8b, 0xff, x - hpWidth / 2, y - height * 0.50, hpWidth, 4);
         }
 
         Player.list[self.id] = self
@@ -271,17 +271,9 @@
         self.y = initPack.y
 
         self.draw = function(){
-            //let width = Img.floof.width*2.5
-            //let height = Img.floof.height*2.5
-
             let x = self.x - Player.list[selfId].x + ctx.width/2
             let y = self.y - Player.list[selfId].y + ctx.height/2
 
-            //ctx.drawImage(Img.floof, 
-            //    0, 0, Img.floof.width, Img.floof.height,
-//                x-width/2, y-height/2, width, height)
-//
-//            ctx.fillStyle = "#b3b3b3"
             renderer.renderQuadAt(quads.floof, x, y);
         }
 
@@ -496,9 +488,9 @@
         renderer.renderRect(
             145, 47, 47,
             Player.list[selfId].tileDestroyState / Player.list[selfId].currentTileStrength * 255,
-            selectedTileX - Player.list[selfId].x + ctx.width/2 + 50/2,
-            selectedTileY - Player.list[selfId].y + ctx.height/2 + 50/2,
-            50, 50);
+            selectedTileX - Player.list[selfId].x + ctx.width/2,
+            selectedTileY - Player.list[selfId].y + ctx.height/2 - quads.hover_tile.screenSizeY + 50,
+            quads.hover_tile.screenSizeX, quads.hover_tile.screenSizeY);
 
         renderer.renderQuadAt(quads.hover_tile,
             selectedTileX - Player.list[selfId].x + ctx.width / 2 + quads.hover_tile.screenSizeX / 2,
@@ -511,11 +503,7 @@
     }
 
     let drawScore = function(){
-        //ctx.fillStyle = "#b3b3b3"
-        //ctx.font = "20px Arial"
-        //ctx.textAlign = "left"
-        //ctx.fillText("Effects: " + Player.list[selfId].effects, 30, 40)
-        hotbar.innerHTML = "";
+        hotbar.innerHTML = "Effects: " + Player.list[selfId].effects + "<br>\n";
         for(let i = 0; i < 5; i++){
             if(i === Player.list[selfId].activeSlot){
                 hotbar.innerHTML += "" + (i + 1) + " - [ " + Player.list[selfId].hotbar[i] + " ]<br>\n";
@@ -526,17 +514,12 @@
         }
         hotbar.style.left = 8 + "px";
         hotbar.style.top = 48 + "px";
-        //ctx.font = "20px Arial"
 
-        //ctx.textAlign = "right"
         //ctx.fillText(Player.list[selfId].x / tpd + " - x", 1780, 915)
         //ctx.fillText(Player.list[selfId].y / tpd + " - y", 1780, 940)
 
-        //ctx.fillStyle = "#7ecf8b"
-        //let hpWidth = 450 * Player.list[selfId].hp / Player.list[selfId].hpMax
-        //ctx.fillRect(ctx.width/2 - hpWidth/2, ctx.height-25, hpWidth, 20)
-        //ctx.textAlign = "left"
-        //ctx.font = "10px Arial"
+        const hpWidth = 450 * Player.list[selfId].hp / Player.list[selfId].hpMax
+        renderer.renderRect(0x7e, 0xcf, 0x8b, 0xff, ctx.width/2 - hpWidth/2, ctx.height - 25, hpWidth, 20);
     }
 
     // Chat  -------------------------------------------------------------------

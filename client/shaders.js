@@ -48,8 +48,7 @@ class ShaderProg {
             this.frag_source = fileString;
         }
 
-        console.log(fileString);
-        // When both are available, call start().
+        // When both are available
         if (this.vert_source && this.frag_source) {
             this.shaderInit();
         }
