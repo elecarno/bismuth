@@ -19,6 +19,7 @@
             <div id="inventory"></div>
             <div id="crafting"></div>
             <div id="score" style="position: absolute;"></div>
+            <div id="hotbar"></div>
             <div style="color: #ffffff;">        fps: <span id="fps"></span></div>
             <div style="color: #ffffff;">average fps: <span id="avg"></span></div>
         </div>
@@ -37,14 +38,25 @@
     </div>
 </div>
 
+<style type="text/css">
+
+#hotbar {
+    position: absolute;
+    font-family: courier;
+    font-size: 18px;
+    color: #ffffff;
+}
+
+</style>
+
 <script src="/socket.io/socket.io.js"></script>
 <script src="/client/inventory.js"></script>
 <script src="/client/render.js"></script>
 <script src="/client/shaders.js"></script>
 <script>
-    var tpd = 50 // tile pixel dimension
-    var ctd = 32 // chunk tile dimension
-    var socket = io()
+    let tpd = 50 // tile pixel dimension
+    let ctd = 32 // chunk tile dimension
+    let socket = io()
     let gl = null;
     let renderer = null;
 
@@ -61,7 +73,7 @@
     window.onload = main;
 
     World = function () {
-        var self = {
+        let self = {
             map:{}
         }
 
@@ -82,15 +94,16 @@
     }
 
     // Sign in ======================================================================
-    var signDiv = document.getElementById("signDiv")
-    var signDivUsername = document.getElementById("signDiv-username")
-    var signDivSignIn = document.getElementById("signDiv-signIn")
-    var signDivSignUp = document.getElementById("signDiv-signUp")
-    var signDivPassword = document.getElementById("signDiv-password")
-    var gameDiv = document.getElementById("gameDiv")
-    var belowGameDiv = document.getElementById("belowGame")
-    var inventoryDiv = document.getElementById("inventory")
-    var craftingDiv = document.getElementById("crafting")
+    let signDiv = document.getElementById("signDiv")
+    let signDivUsername = document.getElementById("signDiv-username")
+    let signDivSignIn = document.getElementById("signDiv-signIn")
+    let signDivSignUp = document.getElementById("signDiv-signUp")
+    let signDivPassword = document.getElementById("signDiv-password")
+    let gameDiv = document.getElementById("gameDiv")
+    let belowGameDiv = document.getElementById("belowGame")
+    let inventoryDiv = document.getElementById("inventory")
+    let craftingDiv = document.getElementById("crafting")
+    let hotbarDiv = document.getElementById("hotbar")
 
     signDivSignIn.onclick = function(){
         socket.emit("signIn",{username:signDivUsername.value,password:signDivPassword.value})
@@ -118,16 +131,16 @@
     })
 
     // Game  ========================================================================
-    var chatText = document.getElementById("chat-text")
-    var chatInput = document.getElementById("chat-input")
-    var chatForm = document.getElementById("chat-form")
+    let chatText = document.getElementById("chat-text")
+    let chatInput = document.getElementById("chat-input")
+    let chatForm = document.getElementById("chat-form")
     
-    //var ctx = document.getElementById("ctx").getContext("2d")
+    //let ctx = document.getElementById("ctx").getContext("2d")
     //ctx.imageSmoothingEnabled = false
     //ctx.font = "15px Arial"
 
     // UI
-    var inventory = new Inventory("", socket, false);
+    let inventory = new Inventory("", socket, false);
     socket.on("updateInventory", function(data){
         inventory.items = data.items
         inventory.recipes = data.recipes
@@ -142,8 +155,8 @@
     };
     
     // init
-    var Player = function(initPack){
-        var self = {}
+    let Player = function(initPack){
+        let self = {}
         self.id = initPack.id
         self.number = initPack.number
         self.username = initPack.username
@@ -163,11 +176,11 @@
         self.currentTileStrength = initPack.currentTileStrength
 
         self.draw = function(){
-            var width = tpd*2
-            var height = tpd*2
+            let width = tpd*2
+            let height = tpd*2
 
-            var x = self.x - Player.list[selfId].x + ctx.width/2
-            var y = self.y - Player.list[selfId].y + ctx.height/2
+            let x = self.x - Player.list[selfId].x + ctx.width/2
+            let y = self.y - Player.list[selfId].y + ctx.height/2
 
             if(!self.lookingRight){
                 renderer.renderQuadAt(quads.player_left, x, y);
@@ -188,7 +201,7 @@
             ////ctx.fillRect(self.x, self.y, 20, 20)
             //ctx.fillText(self.username + ": " + self.score, x, y - height*0.65)
             //ctx.fillStyle = "#7ecf8b"
-            //var hpWidth = 45 * self.hp / self.hpMax
+            //let hpWidth = 45 * self.hp / self.hpMax
             //ctx.fillRect(x - hpWidth/2, y - height*0.55, hpWidth, 4)
             //ctx.textAlign = "left"
             //ctx.fillStyle = "#b3b3b3"
@@ -199,19 +212,19 @@
     }
     Player.list = {}
 
-    var Bullet = function(initPack){
-        var self = {}
+    let Bullet = function(initPack){
+        let self = {}
         self.id = initPack.id
         self.x = initPack.x
         self.y = initPack.y
         self.angle = initPack.angle
 
         self.draw = function(){
-            var width = Img.player_left.width/4
-            var height = Img.player_left.height/4
+            let width = Img.player_left.width/4
+            let height = Img.player_left.height/4
 
-            var x = self.x - Player.list[selfId].x + ctx.width/2
-            var y = self.y - Player.list[selfId].y + ctx.height/2
+            let x = self.x - Player.list[selfId].x + ctx.width/2
+            let y = self.y - Player.list[selfId].y + ctx.height/2
 
             x2 = x + Math.cos(Math.PI * self.angle / 180) * 32;
             y2 = y + Math.sin(Math.PI * self.angle / 180) * 32;
@@ -238,18 +251,18 @@
     }
     Bullet.list = {}
 
-    var Floof = function(initPack){
-        var self = {}
+    let Floof = function(initPack){
+        let self = {}
         self.id = initPack.id
         self.x = initPack.x
         self.y = initPack.y
 
         self.draw = function(){
-            //var width = Img.floof.width*2.5
-            //var height = Img.floof.height*2.5
+            //let width = Img.floof.width*2.5
+            //let height = Img.floof.height*2.5
 
-            var x = self.x - Player.list[selfId].x + ctx.width/2
-            var y = self.y - Player.list[selfId].y + ctx.height/2
+            let x = self.x - Player.list[selfId].x + ctx.width/2
+            let y = self.y - Player.list[selfId].y + ctx.height/2
 
             //ctx.drawImage(Img.floof, 
             //    0, 0, Img.floof.width, Img.floof.height,
@@ -264,27 +277,27 @@
     }
     Floof.list = {}
 
-    var selfId = null
+    let selfId = null
 
     socket.on("init",function(data){
         if(data.selfId)
             selfId = data.selfId
-        for (var i = 0; i < data.player.length; i++){
+        for (let i = 0; i < data.player.length; i++){
             new Player(data.player[i])
         }
-        for (var i = 0; i < data.bullet.length; i++){
+        for (let i = 0; i < data.bullet.length; i++){
             new Bullet(data.bullet[i])
         }
-        for (var i = 0; i < data.floof.length; i++){
+        for (let i = 0; i < data.floof.length; i++){
             new Floof(data.floof[i])
         }
     })
 
     // update
     socket.on("update",function(data){
-        for(var i = 0; i < data.player.length; i++){
-            var pack = data.player[i]
-            var p = Player.list[pack.id]
+        for(let i = 0; i < data.player.length; i++){
+            let pack = data.player[i]
+            let p = Player.list[pack.id]
             if(p){
                 if(pack.x !== undefined)
                     p.x = pack.x
@@ -328,9 +341,9 @@
                     p.currentTileStrength = pack.currentTileStrength
             }
         }
-        for(var i = 0; i < data.bullet.length; i++){
-            var pack = data.bullet[i]
-            var b = Bullet.list[pack.id]
+        for(let i = 0; i < data.bullet.length; i++){
+            let pack = data.bullet[i]
+            let b = Bullet.list[pack.id]
             if(b){
                 if(pack.x !== undefined)
                     b.x = pack.x
@@ -340,9 +353,9 @@
                     b.angle = pack.angle
             }
         }
-        for(var i = 0; i < data.floof.length; i++){
-            var pack = data.floof[i]
-            var f = Floof.list[pack.id]
+        for(let i = 0; i < data.floof.length; i++){
+            let pack = data.floof[i]
+            let f = Floof.list[pack.id]
             if(f){
                 if(pack.x !== undefined)
                     f.x = pack.x
@@ -379,13 +392,13 @@
     
     // remove
     socket.on("remove",function(data){
-        for(var i = 0; i < data.player.length; i++){
+        for(let i = 0; i < data.player.length; i++){
             delete Player.list[data.player[i]]
         }
-        for(var i = 0; i < data.bullet.length; i++){
+        for(let i = 0; i < data.bullet.length; i++){
             delete Bullet.list[data.bullet[i]]
         }
-        for(var i = 0; i < data.floof.length; i++){
+        for(let i = 0; i < data.floof.length; i++){
             delete Floof.list[data.floof[i]]
         }
     })
@@ -448,18 +461,18 @@
         drawMap();
 
         // Draw Entities
-        var renderDistance = ctx.width + tpd
+        let renderDistance = ctx.width + tpd
 
-        for(var i in Floof.list){
+        for(let i in Floof.list){
             if(getDistance(Floof.list[i]) < renderDistance)
                 Floof.list[i].draw()
         }        
         // below player /\ | above player \/
-        for(var i in Player.list){
+        for(let i in Player.list){
             if(getDistance(Player.list[i]) < renderDistance)
                 Player.list[i].draw()
         }
-        for(var i in Bullet.list){
+        for(let i in Bullet.list){
             if(getDistance(Bullet.list[i]) < renderDistance)
                 Bullet.list[i].draw()
         }
@@ -471,32 +484,42 @@
         //ctx.fillStyle = "rgba(145, 47, 47, " + Player.list[selfId].tileDestroyState/Player.list[selfId].currentTileStrength + ")"
         //ctx.fillRect(selectedTileX - Player.list[selfId].x + ctx.width/2, selectedTileY - Player.list[selfId].y + ctx.height/2 - 40, tpd, 90)
         //ctx.drawImage(Img.hover_tile ,selectedTileX - Player.list[selfId].x + ctx.width/2, selectedTileY - Player.list[selfId].y + ctx.height/2 - 40, tpd, 90)
+
+        renderer.renderRect(255, 255, 255, 255, 200, 200, 50, 50);
+        
+        renderer.renderRect(
+            145, 47, 47,
+            Player.list[selfId].tileDestroyState/Player.list[selfId].currentTileStrength,
+            selectedTileX - Player.list[selfId].x + ctx.width/2,
+            selectedTileY - Player.list[selfId].y + ctx.height/2 - 40,
+            50, 50);
+
         renderer.renderQuadAt(quads.hover_tile,
-            selectedTileX - Player.list[selfId].x + ctx.width / 2 - quads.hover_tile.screenSizeX / 2,
-            selectedTileY - Player.list[selfId].y + ctx.height / 2 - 40);
-        //    mouseX,
-        //    mouseY);
+            selectedTileX - Player.list[selfId].x + ctx.width / 2 + quads.hover_tile.screenSizeX / 2,
+            selectedTileY - Player.list[selfId].y + ctx.height / 2 + 5);
     }
     requestAnimationFrame(draw);
 
-    var drawMap = function(){
+    let drawMap = function(){
         renderer.renderChunk(Player.list[selfId].x, Player.list[selfId].y);
     }
 
-    var drawScore = function(){
+    let drawScore = function(){
         //ctx.fillStyle = "#b3b3b3"
         //ctx.font = "20px Arial"
         //ctx.textAlign = "left"
         //ctx.fillText("Effects: " + Player.list[selfId].effects, 30, 40)
-
-        for(var i = 0; i < 5; i++){
+        hotbar.innerHTML = "";
+        for(let i = 0; i < 5; i++){
             if(i === Player.list[selfId].activeSlot){
-                //ctx.fillText((i + 1) + " - [ " + Player.list[selfId].hotbar[i] + " ]", 30, 70 + (i*30))
+                hotbar.innerHTML += "" + (i + 1) + " - [ " + Player.list[selfId].hotbar[i] + " ]<br>\n";
             }
             else {
-                //ctx.fillText((i + 1) + " -   " + Player.list[selfId].hotbar[i], 30, 70 + (i*30))
+                hotbar.innerHTML += "" + (i + 1) + " -&nbsp;&nbsp;&nbsp;" + Player.list[selfId].hotbar[i] + "<br>\n";
             }
         }
+        hotbar.style.left = 8 + "px";
+        hotbar.style.top = 48 + "px";
         //ctx.font = "20px Arial"
 
         //ctx.textAlign = "right"
@@ -504,7 +527,7 @@
         //ctx.fillText(Player.list[selfId].y / tpd + " - y", 1780, 940)
 
         //ctx.fillStyle = "#7ecf8b"
-        //var hpWidth = 450 * Player.list[selfId].hp / Player.list[selfId].hpMax
+        //let hpWidth = 450 * Player.list[selfId].hp / Player.list[selfId].hpMax
         //ctx.fillRect(ctx.width/2 - hpWidth/2, ctx.height-25, hpWidth, 20)
         //ctx.textAlign = "left"
         //ctx.font = "10px Arial"
@@ -636,19 +659,20 @@
     //DEBUG
 
     document.onmousemove = function(event){
-        var x = -ctx.width/2 + event.clientX - 8
-        var y = -ctx.height/2 + event.clientY - 8
-        var angle = Math.atan2(y, x) / Math.PI * 180
-        //console.log(event.clientX, event.clientY)
-        var rect = document.getElementById("ctx")
-        socket.emit('keyPress',{inputId:'mouseAngle', state:angle})
-        socket.emit('keyPress',{inputId:'clientX', state:(event.clientX - rect.offsetLeft)})
-        socket.emit('keyPress',{inputId:'clientY', state:(event.clientY - rect.offsetTop)})
 
         let rect2 = ctx.getBoundingClientRect();
        
         mouseX = event.clientX - rect2.left;
         mouseY = event.clientY - rect2.top;
+
+        let x = -ctx.width/2 + mouseX - 8
+        let y = -ctx.height/2 + mouseY - 8
+        let angle = Math.atan2(y, x) / Math.PI * 180
+        //console.log(event.clientX, event.clientY)
+        let rect = document.getElementById("ctx")
+        socket.emit('keyPress',{inputId:'mouseAngle', state:angle})
+        socket.emit('keyPress',{inputId:'clientX', state:(event.clientX - rect2.left)})
+        socket.emit('keyPress',{inputId:'clientY', state:(event.clientY - rect2.top)})
 
     }
 

@@ -99,6 +99,9 @@ class Renderer {
 
         this.quadShader = new ShaderProg(gl, "client/shaders/quadvert.glsl", "client/shaders/quadfrag.glsl",
             function() { /*oh*/ test_this.postQuadShaderInit() });
+
+        this.rectShader = new ShaderProg(gl, "client/shaders/rectvert.glsl", "client/shaders/rectfrag.glsl",
+            function() { /*oh*/ test_this.postRectShaderInit() });
     }
 
     postTileShaderInit() {
@@ -151,6 +154,10 @@ class Renderer {
         gl.uniform1i(gl.getUniformLocation(this.quadShader.prog, "sheet"), 2);
     }
 
+    postRectShaderInit() {
+        //this.rectShader.use();
+    }
+
     makeTexture(chunks) {
         this.gl.activeTexture(this.gl.TEXTURE1);
         this.gl.bindTexture(this.gl.TEXTURE_2D, this.map);
@@ -183,16 +190,14 @@ class Renderer {
                 const tilex = tileidx % chunk.width;
                 const tiley = Math.floor(tileidx / chunk.width);
                 const idx = (tiley + (chunk.y - ly) * chunk.height) * width * 4 + (tilex + (chunk.x - lx) * chunk.width) * 4;
-                //console.log(tiley + (chunk.y - ly) * chunk.height, (tilex + (chunk.x - lx) * chunk.width));
+
                 data[idx] = val;
                 data[idx + 1] = 0;
                 data[idx + 2] = tileHeights[val];
                 data[idx + 3] = tileBehind[val];
                 tileidx += 1;
             }
-            //console.log(tileidx);
         }
-        //console.log(data.length, width * height * 4);
 
         this.gl.texImage2D(this.gl.TEXTURE_2D, 0, this.gl.RGBA, width, height, 0, this.gl.RGBA, this.gl.UNSIGNED_BYTE, new Uint8Array(data));
         setTexParams(this.gl);
@@ -232,6 +237,15 @@ class Renderer {
         this.gl.uniform2f(this.gl.getUniformLocation(this.quadShader.prog, "screenSize"), quad.screenSizeX / ctx.width,  quad.screenSizeY / ctx.height);
         this.gl.uniform2f(this.gl.getUniformLocation(this.quadShader.prog, "sheetPos"),   quad.sheetPosX   / this.sheetWidth, quad.sheetPosY  / this.sheetHeight);
         this.gl.uniform2f(this.gl.getUniformLocation(this.quadShader.prog, "sheetSize"),  quad.sheetSizeX  / this.sheetWidth, quad.sheetSizeY / this.sheetHeight);
+        this.gl.drawArrays(this.gl.TRIANGLE_STRIP, 0, 4);
+    }
+
+    renderRect(r, g, b, a, x, y, w, h) {
+        this.rectShader.use();
+        this.gl.blendFunc(this.gl.ONE, this.gl.ONE_MINUS_SRC_ALPHA);
+        this.gl.uniform2f(this.gl.getUniformLocation(this.rectShader.prog, "screenPos"),  x / ctx.width * 2 - 1, -(y / ctx.height * 2 - 1));
+        this.gl.uniform2f(this.gl.getUniformLocation(this.rectShader.prog, "screenSize"), w / ctx.width,  h / ctx.height);
+        this.gl.uniform4f(this.gl.getUniformLocation(this.rectShader.prog, "colour"), r / 255, g / 255, b / 255, a / 255);
         this.gl.drawArrays(this.gl.TRIANGLE_STRIP, 0, 4);
     }
 }
