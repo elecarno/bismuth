@@ -241,15 +241,20 @@ class Renderer {
     }
 
     renderQuad(quad) {
-        this.renderQuadAt(quad, quad.screenPosX,  quad.screenPosY);
+        this.renderQuadAtInvert(quad, quad.screenPosX, quad.screenPosY, false);
     }
 
     renderQuadAt(quad, x, y) {
+        this.renderQuadAtInvert(quad, x, y, false);
+    }
+
+    renderQuadAtInvert(quad, x, y, invert) {
         this.quadShader.use();
         this.gl.uniform2f(this.gl.getUniformLocation(this.quadShader.prog, "screenPos"),  x / ctx.width * 2 - 1, -(y / ctx.height * 2 - 1));
         this.gl.uniform2f(this.gl.getUniformLocation(this.quadShader.prog, "screenSize"), quad.screenSizeX / ctx.width,  quad.screenSizeY / ctx.height);
         this.gl.uniform2f(this.gl.getUniformLocation(this.quadShader.prog, "sheetPos"),   quad.sheetPosX   / this.sheetWidth, quad.sheetPosY  / this.sheetHeight);
         this.gl.uniform2f(this.gl.getUniformLocation(this.quadShader.prog, "sheetSize"),  quad.sheetSizeX  / this.sheetWidth, quad.sheetSizeY / this.sheetHeight);
+        this.gl.uniform1i(this.gl.getUniformLocation(this.quadShader.prog, "invert"), invert);
         this.gl.drawArrays(this.gl.TRIANGLE_STRIP, 0, 4);
     }
 

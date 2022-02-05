@@ -184,32 +184,24 @@
             const width  = tpd * 2
             const height = tpd * 2
 
-            const leftToolOffsetX = 130;
-            const rightToolOffsetY = 128;
+            const toolOffsetX = 130;
 
             const x = self.x - Player.list[selfId].x + ctx.width  / 2
             const y = self.y - Player.list[selfId].y + ctx.height / 2
+            const toolQuad = new Quad(
+                0, 0, width, height,
+                self.spriteId[0] * ctd + toolOffsetX,
+                self.spriteId[1] * ctd,
+                quads.player_left.sheetSizeX,
+                quads.player_left.sheetSizeY);
 
             if(!self.lookingRight){
-                renderer.renderQuadAt(quads.player_left, x, y);
-                const quad = new Quad(
-                    0, 0, width, height,
-                    self.spriteId[0] * ctd + leftToolOffsetX,
-                    self.spriteId[1] * ctd,
-                    quads.player_left.sheetSizeX,
-                    quads.player_left.sheetSizeY);
-
-                renderer.renderQuadAt(quad, x, y);
+                renderer.renderQuadAtInvert(quads.player_left, x, y, false);
+                renderer.renderQuadAtInvert(toolQuad, x, y, false);
             }
             else{
-                renderer.renderQuadAt(quads.player_right, x, y);
-                const quad = new Quad(
-                    x, y, width, height,
-                    self.spriteId[0] * ctd + leftToolOffsetX,
-                    self.spriteId[1] * ctd + rightToolOffsetY,
-                    quads.player_left.sheetSizeX,
-                    quads.player_left.sheetSizeY);
-                renderer.renderQuad(quad);
+                renderer.renderQuadAtInvert(quads.player_left, x, y, true);
+                renderer.renderQuadAtInvert(toolQuad, x, y, true);
             }
             element = document.getElementById("score")
             element.innerHTML = self.username + ": " + self.score;
