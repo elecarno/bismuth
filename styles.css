@@ -8,11 +8,14 @@ button {
     display: inline-block;
     font-size: 14px;
     font: "Arial";
+<<<<<<< HEAD
     transition-duration: 0.4s;
 }
 button:hover{
     background-color: #97a69b; /* Green */
     color: white;
+=======
+>>>>>>> 5d3b681238e66ec20a1eed1ab062f16be1cdd35a
 }
 p{
     font-family: "Arial";
@@ -33,6 +36,7 @@ body {
     top: 0;
     bottom: 0;
 }
+<<<<<<< HEAD
 #signDiv {
     width: 750px;
     height: 500px;
@@ -102,10 +106,13 @@ body {
     text-align: center;
     color: #8c8c8c;
 }
+=======
+>>>>>>> 5d3b681238e66ec20a1eed1ab062f16be1cdd35a
 #belowGame { 
     position: absolute;
     z-index: 99 !important; 
 }
+<<<<<<< HEAD
 ::placeholder { /* Chrome, Firefox, Opera, Safari 10.1+ */
     color: ghostwhite;
     opacity: 1; /* Firefox */
@@ -128,3 +135,10 @@ body {
     color: none;
     background: none;
 }
+=======
+/*
+::-webkit-scrollbar {
+    display: none;
+}
+*/
+>>>>>>> 5d3b681238e66ec20a1eed1ab062f16be1cdd35a
