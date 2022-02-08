@@ -264,15 +264,16 @@ Player = function(id, username, socket, progress){
             if(!self.inventory.hasItem(self.hotbar[i], 1) && self.hotbar[i] !== "Nothing")
                 self.hotbar[i] = "Nothing"
 
-        self.mouseCanvasX = self.mouseX + self.x - 900 // 900 = 1800/2
-        self.mouseCanvasY = self.mouseY + self.y - 480 // 480 = 960/2
+        self.mouseCanvasX = self.mouseX + self.x
+        self.mouseCanvasY = self.mouseY + self.y
 
         let currentMouseChunk = world.getChunk(Math.floor((self.mouseCanvasX / tpd) / ctd), Math.floor((self.mouseCanvasY / tpd) / ctd))
-        let mouseXInChunk = Math.floor(self.mouseCanvasX / tpd - currentMouseChunk.x * ctd)
-        let mouseYInChunk = Math.floor(self.mouseCanvasY / tpd - currentMouseChunk.y * ctd)
 
         let mouseChunkX = Math.floor((self.mouseCanvasX / tpd) / ctd)
         let mouseChunkY = Math.floor((self.mouseCanvasY / tpd) / ctd)
+
+        let mouseXInChunk = Math.floor(self.mouseCanvasX / tpd - mouseChunkX * ctd)
+        let mouseYInChunk = Math.floor(self.mouseCanvasY / tpd - mouseChunkY * ctd)
 
         let tileToPlace = 0
 

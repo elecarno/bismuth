@@ -14,8 +14,7 @@
 
 <div id="gameDiv">
     <div id="game">
-        <canvas id="ctx"></canvas>
-        
+        <canvas id="ctx"></canvas>        
         <div id="ui">
             <div id="inventory"></div>
             <div id="crafting"></div>
@@ -75,6 +74,7 @@
     let gl = null;
     let renderer = null;
     let canvas = document.querySelector("#ctx");
+    let signed_in = false;
 
     function main() {
     	gl = canvas.getContext("webgl", {
@@ -113,16 +113,17 @@
 
     
     function resizeCanvas() {
-      let width = canvas.clientWidth;
-      let height = canvas.clientHeight;
-      if (canvas.width != width ||
-          canvas.height != height) {
-        canvas.width = width;
-        canvas.height = height;
-      }
+        if (!signed_in) return;
+        let width = canvas.clientWidth;
+        let height = canvas.clientHeight;
+        if (canvas.width != width ||
+            canvas.height != height) {
+            canvas.width = width;
+            canvas.height = height;
+        }
     }
+
     window.addEventListener('resize', resizeCanvas);
-    resizeCanvas();
 
     // Sign in ======================================================================
     let signDiv = document.getElementById("signDiv")
@@ -150,6 +151,8 @@
         if(data.success){
             signDiv.style.display = "none"
             gameDiv.style.display = "inline-block"
+            signed_in = true;
+            resizeCanvas();
         } else
             alert("sign in unsuccessful")
     })
@@ -230,8 +233,6 @@
             element.innerHTML = self.username + ": " + self.score;
             element.style.left = Math.floor(x - width/2) + "px";
             element.style.top =  Math.floor(y - height*0.7) + "px";
-
-            console.log(element.style.top);
 
             const hpWidth = 45 * self.hp / self.hpMax;
             renderer.renderRect(0x7e, 0xcf, 0x8b, 0xff, x - hpWidth / 2, y - height * 0.50, hpWidth, 4);
@@ -407,8 +408,21 @@
         let chunkY = data.chunkY
         let tileX = data.tileX
         let tileY = data.tileY
+
+
+        let amouseX = mouseX + Player.list[selfId].x - ctx.width / 2;
+        let amouseY = mouseY + Player.list[selfId].y - ctx.height / 2;
+
+        let mouseChunkX = Math.floor((amouseX / tpd) / ctd)
+        let mouseChunkY = Math.floor((amouseY / tpd) / ctd)
+
+        let mouseXInChunk = Math.floor(amouseX / tpd - mouseChunkX * ctd)
+        let mouseYInChunk = Math.floor(amouseY / tpd - mouseChunkY * ctd)
+
+
         selectedTileX = (tileX * tpd) + (chunkX * ctd * tpd)
         selectedTileY = (tileY * tpd) + (chunkY * ctd * tpd)
+        renderer.tileChange(mouseChunkX, mouseChunkY, mouseXInChunk, mouseYInChunk, 8);
     })
     
     // remove
@@ -678,9 +692,9 @@
         //console.log(event.clientX, event.clientY)
         let rect = document.getElementById("ctx")
         socket.emit('keyPress',{inputId:'mouseAngle', state:angle})
-        socket.emit('keyPress',{inputId:'clientX', state:(event.clientX - rect2.left)})
-        socket.emit('keyPress',{inputId:'clientY', state:(event.clientY - rect2.top)})
-
+        socket.emit('keyPress',{inputId:'clientX', state:(event.clientX - ctx.width / 2)})
+        socket.emit('keyPress',{inputId:'clientY', state:(event.clientY - ctx.height / 2)})
+        console.log(ctx.height);
     }
 
     document.oncontextmenu = function(event){
