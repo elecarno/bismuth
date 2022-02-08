@@ -7,22 +7,36 @@ world = new World()
 
 var tpd = 50 // tile pixel dimension
 var ctd = 32 // chunk tile dimension
-var renderDistance = 925
+var renderDistance = 1800
+var wpd = 51200 // world pixel dimension
 
-var colTiles = [3, 7, 8, 11, 14, 17]
-var intTiles = [7]
+var colTiles = [3, 7, 8, 11, 14, 17, 18, 19, 20, 21, 22, 23, 25]
+var intTiles = [7, 22, 23]
 var autoGuns = ["shroom_k"]
 var singleGuns = ["hunting_rifle"]
 var meleeWeapons = ["survival_knife"]
 var miningTools = ["bronze_pickaxe", "iron_pickaxe", "iron_drill"]
-var harvestTools = ["survival_knife", "bronze_sickle"]
-var workTools = ["bronze_chisel"]
+var harvestTools = ["survival_knife", "bronze_sickle", "iron_sickle"]
+var workTools = ["bronze_chisel", "iron_chisel"]
 var placeableItems = [
 "rock", "rocky_floor", "granite", "earth", "beq_rock", 
 "stone", "organic_floor", "dirt_floor", "cave_flower", "toad_shroom", 
-"pollen_shroom", "bronze_berry", "mound"
+"pollen_shroom", "bronze_berry", "mound", "oxygen_canister", "shroom_wood", "iron_ore", 
+"carbon_dioxide_canister", "old_workbench", "old_furnace", "metalworking_bench", 
+"rock_tiles", "forge",
 ]
-var priorityTiles = [7, 3, 7, 8, 11, 14, 17]
+var priorityTiles = [3, 7, 8, 11, 14, 17, 18, 19, 20, 21, 22, 23, 25]
+var weaponStrengths = {
+    "survival_knife" : 2,
+    "shroom_k" : 1,
+    "hunting_rifle" : 5
+}
+var bullets = ["bronze_round", "iron_round", "compound_round"]
+var bulletStrengths = {
+    "bronze_round" : 1,
+    "iron_round" : 1.1,
+    "compound_round": 2,
+}
 var placeIds = {
     "rock" : 3,
     "rocky_floor" : 2,
@@ -36,7 +50,16 @@ var placeIds = {
     "toad_shroom": 4,
     "pollen_shroom": 5,
     "bronze_berry": 16,
-    "mound":18,
+    "iron_ore": 17,
+    "mound": 18,
+    "oxygen_canister": 19,
+    "shroom_wood": 20,
+    "carbon_dioxide_canister": 21,
+    "old_workbench": 7,
+    "old_furnace": 22,
+    "metalworking_bench": 23,
+    "rock_tiles": 24,
+    "forge": 25,
 }
 var miningToolStrengths = {
     "bronze_pickaxe": 1.5,
@@ -46,22 +69,25 @@ var miningToolStrengths = {
 var harvestToolStrengths = {
     "survival_knife": 0.5,
     "bronze_sickle": 1,
+    "iron_sickle": 2,
 }
 var workToolStrengths = {
     "bronze_chisel": 1,
+    "iron_chisel": 2,
 }
 var tileStrengths = {
     2: 20, 3: 40, 4: 5, 5: 5, 6: 5, 7: 100,
     8: 55, 10: 20, 11: 30, 13: 20, 14: 50, 15: 5,
-    16: 10, 17: 50, 18: 55
+    16: 10, 17: 50, 18: 55, 19: 120, 20: 30, 21: 120, 22: 135,
+    23: 120, 25: 140
 }
 var mineTiles = [2, 3, 8, 13, 14, 10, 11, 17, 18]
 var harvestTiles = [4, 5, 6, 15, 16]
-var workTiles = [7]
+var workTiles = [7, 19, 20, 21, 22, 24, 25]
 
-var floor1Tiles = [1,2,3,4,5,6,7,8,17]
+var floor1Tiles = [1,2,3,4,5,6,7,8,17,19,20,21]
 var floor2Tiles = [12,13,14,16]
-var floor3Tiles = [9,10,11,15,18]
+var floor3Tiles = [9,10,11,15,18,22,23,24,25]
 
 craftingRecipes = [
     ["toad_shroom", "stone", "shroom_wood"],
@@ -69,6 +95,9 @@ craftingRecipes = [
     ["bronze_berry","fibres","shroom_wood","bronze_pickaxe"],
     ["bronze_berry","fibres","shroom_wood","bronze_sickle"],
     ["stone","bronze_berry","fibres","shroom_wood","bronze_chisel"],
+    ["bronze_berry", "stone", "bronze_round_kit"],
+    ["iron_bar", "stone", "iron_round_kit"],
+    ["rock", "stone", "rock_tile_kit"],
 ]
 
 var initPack = {player:[],bullet:[],floof:[]}
@@ -85,6 +114,11 @@ function inverse(obj){
     }
     return retobj;
 }
+
+var randomProperty = function (obj) {
+    var keys = Object.keys(obj);
+    return obj[keys[ keys.length * Math.random() << 0]];
+};
 
 // Entity -----------------------------------------------------------------------
 Entity = function(){
@@ -106,6 +140,52 @@ Entity = function(){
     self.getDistance = function(pt){
         return Math.sqrt(Math.pow(self.x-pt.x, 2) + Math.pow(self.y-pt.y, 2))
     }
+    self.collision = function(width, height){
+        let currentChunk = world.getChunk(Math.floor((self.x / tpd) / ctd), Math.floor((self.y / tpd) / ctd))
+        let xInChunk = Math.floor(self.x / tpd - currentChunk.x * ctd)
+        let yInChunk = Math.floor(self.y / tpd - currentChunk.y * ctd)
+
+        getTile = function(xic, yic){
+            return currentChunk.tiles[Math.floor(yic) * currentChunk.width + Math.floor(xic)]
+        }
+
+        getDistanceToTile = function(xic, yic, hitbox){
+            let x2 = xic * tpd + currentChunk.x * ctd * tpd
+            let y2 = yic * tpd + currentChunk.y * ctd * tpd
+
+            let x1 = self.x
+            let y1 = self.y
+
+            if(hitbox === "left")
+                x1 = self.x - width * tpd
+            else if(hitbox === "right")
+                x1 = self.x + width * tpd
+
+            if(hitbox === "top")
+                y1 = self.y - height * tpd
+            else if(hitbox === "bottom")
+                y1 = self.y + height * tpd
+
+            if(hitbox === "left" || hitbox === "right")
+                return Math.sqrt(Math.pow(x2-x1, 2))
+
+            if(hitbox === "top" || hitbox === "bottom")
+                return Math.sqrt(Math.pow(y2-y1, 2))
+        }
+
+        let leftHit = colTiles.includes(getTile(xInChunk-width/2, yInChunk)) && getDistanceToTile(xInChunk-width/2, yInChunk, "left") <= 0
+        let rightHit = colTiles.includes(getTile(xInChunk+width, yInChunk)) && getDistanceToTile(xInChunk+width, yInChunk, "right") <= 0
+        let topHit = colTiles.includes(getTile(xInChunk, yInChunk-height)) && getDistanceToTile(xInChunk, yInChunk-height, "top") <= 0
+        let bottomHit = colTiles.includes(getTile(xInChunk, yInChunk+height)) && getDistanceToTile(xInChunk, yInChunk+height, "bottom") <= 0
+
+        return [leftHit, rightHit, topHit, bottomHit]
+    }
+    self.getCurrentTile = function(){
+        let currentChunk = world.getChunk(Math.floor((self.x / tpd) / ctd), Math.floor((self.y / tpd) / ctd))
+        let xInChunk = Math.floor(self.x / tpd - currentChunk.x * ctd)
+        let yInChunk = Math.floor(self.y / tpd - currentChunk.y * ctd)
+        return currentChunk.tiles[yInChunk * currentChunk.width + xInChunk]
+    }
     return self
 }
 Entity.getFrameUpdateData = function(){
@@ -126,6 +206,13 @@ Entity.getFrameUpdateData = function(){
             floof:Floof.update(),
         }
     }
+
+    /*
+    for (var i in Player.list){
+        var player = Player.list[i]
+        pack.updatePack.player[0]
+    }
+    */
 
     initPack.player = []
     initPack.bullet = []
@@ -182,6 +269,14 @@ Player = function(id, username, socket, progress){
     self.inventory.addItem("shroom_k", 1)
     self.inventory.addItem("hunting_rifle", 1)
     self.inventory.addItem("survival_knife", 1)
+    self.inventory.addItem("bronze_round", 10)
+    self.inventory.addItem("iron_round", 10)
+
+    self.inventory.addItem("old_workbench", 10)
+    self.inventory.addItem("old_furnace", 10)
+    self.inventory.addItem("metalworking_bench", 10)
+    self.inventory.addItem("forge", 10)
+
 
     var superUpdate = self.update;
     self.update = function(){
@@ -223,10 +318,17 @@ Player = function(id, username, socket, progress){
         if(self.currentRightClick > self.lastRightClick){
             if(intTiles.includes(getTile(mouseXInChunk, mouseYInChunk))){
                 console.log("interactable tile")
-            }      
+            }     
 
-            if(singleGuns.includes(self.hotbar[self.activeSlot])){
-                self.shootBullet(self.mouseAngle, 50, 5)
+            let bulletToUse = 0
+            for(var i = 0; i < bullets.length; i++){
+                if(self.inventory.hasItem(bullets[i], 1))
+                    bulletToUse = bullets[i]
+            }
+
+            if(self.inventory.hasItem(bulletToUse, 1) && singleGuns.includes(self.hotbar[self.activeSlot])){
+                self.shootBullet(self.mouseAngle, 50, weaponStrengths[self.hotbar[self.activeSlot]] * bulletStrengths[bulletToUse])
+                self.inventory.removeItem(bulletToUse, 1)
             }
 
             self.lastRightClick = self.currentRightClick
@@ -295,12 +397,19 @@ Player = function(id, username, socket, progress){
         }
 
         if(self.holdingMouseRight){
-            if(autoGuns.includes(self.hotbar[self.activeSlot])){
-                self.shootBullet(self.mouseAngle, 8, 1)
+            let bulletToUse = 0
+            for(var i = 0; i < bullets.length; i++){
+                if(self.inventory.hasItem(bullets[i], 1))
+                    bulletToUse = bullets[i]
+            }
+
+            if(self.inventory.hasItem(bulletToUse, 1) && autoGuns.includes(self.hotbar[self.activeSlot])){
+                self.shootBullet(self.mouseAngle, 50, weaponStrengths[self.hotbar[self.activeSlot]] * bulletStrengths[bulletToUse])
+                self.inventory.removeItem(bulletToUse, 1)
             }
 
             if(meleeWeapons.includes(self.hotbar[self.activeSlot])){
-                self.meleeAttack(self.mouseAngle, 1, 2)
+                self.meleeAttack(self.mouseAngle, 1, weaponStrengths[self.hotbar[self.activeSlot]])
             }
 
             if(placeableItems.includes(self.hotbar[self.activeSlot]) && !priorityTiles.includes(getTile(mouseXInChunk, mouseYInChunk))){
@@ -338,57 +447,21 @@ Player = function(id, username, socket, progress){
     }
 
     self.updateSpeed = function(){
-        let currentChunk = world.getChunk(Math.floor((self.x / tpd) / ctd), Math.floor((self.y / tpd) / ctd))
-        let xInChunk = Math.floor(self.x / tpd - currentChunk.x * ctd)
-        let yInChunk = Math.floor(self.y / tpd - currentChunk.y * ctd)
-
-        getTile = function(xic, yic){
-            return currentChunk.tiles[Math.floor(yic) * currentChunk.width + Math.floor(xic)]
-        }
-
-        getDistanceToTile = function(xic, yic, hitbox){
-            let x2 = xic * tpd + currentChunk.x * ctd * tpd
-            let y2 = yic * tpd + currentChunk.y * ctd * tpd
-
-            let x1 = self.x
-            let y1 = self.y
-
-            if(hitbox === "left")
-                x1 = self.x - self.width * tpd
-            else if(hitbox === "right")
-                x1 = self.x + self.width * tpd
-
-            if(hitbox === "top")
-                y1 = self.y - self.height * tpd
-            else if(hitbox === "bottom")
-                y1 = self.y + self.height * tpd
-
-            if(hitbox === "left" || hitbox === "right")
-                return Math.sqrt(Math.pow(x2-x1, 2))
-
-            if(hitbox === "top" || hitbox === "bottom")
-                return Math.sqrt(Math.pow(y2-y1, 2))
-        }
-
-        let leftHit = colTiles.includes(getTile(xInChunk-self.width/2, yInChunk)) && getDistanceToTile(xInChunk-self.width/2, yInChunk, "left") <= 0
-        let rightHit = colTiles.includes(getTile(xInChunk+self.width, yInChunk)) && getDistanceToTile(xInChunk+self.width, yInChunk, "right") <= 0
-        let topHit = colTiles.includes(getTile(xInChunk, yInChunk-self.height)) && getDistanceToTile(xInChunk, yInChunk-self.height, "top") <= 0
-        let bottomHit = colTiles.includes(getTile(xInChunk, yInChunk+self.height)) && getDistanceToTile(xInChunk, yInChunk+self.height, "bottom") <= 0
-
-        if(self.pressingRight && !rightHit)
+        let collision = self.collision(self.width, self.height)
+        
+        if(self.pressingRight && !collision[1] && self.x < wpd)
             self.speedX = self.maxSpeed
-        else if(self.pressingLeft && !leftHit)
+        else if(self.pressingLeft && !collision[0] && self.x > 0)
             self.speedX = -self.maxSpeed
         else
             self.speedX = 0
         
-        if(self.pressingDown && !bottomHit)
+        if(self.pressingDown && !collision[3] && self.y < wpd)
             self.speedY = self.maxSpeed
-        else if(self.pressingUp && !topHit)
+        else if(self.pressingUp && !collision[2] && self.y > 0)
             self.speedY = -self.maxSpeed
         else
             self.speedY = 0
-
     }
 
     self.getInitPack = function(){
@@ -605,23 +678,7 @@ Bullet = function(parent, angle, lifetime, size, damage){
             }
         }
 
-        let currentChunk = world.getChunk(Math.floor((self.x / tpd) / ctd), Math.floor((self.y / tpd) / ctd))
-        let xInChunk = Math.floor(self.x / tpd - currentChunk.x * ctd)
-        let yInChunk = Math.floor(self.y / tpd - currentChunk.y * ctd)
-
-        getTile = function(xic, yic){
-            return currentChunk.tiles[yic * currentChunk.width + xic]
-        }
-
-        let right = colTiles.includes(getTile(xInChunk + 1, yInChunk))
-        let left = colTiles.includes(getTile(xInChunk - 1, yInChunk))
-        let above = colTiles.includes(getTile(xInChunk, yInChunk - 1))
-        let under = colTiles.includes(getTile(xInChunk, yInChunk + 1))
-
-        if (left || right || above || under)
-            self.toRemove = true
-
-        if(colTiles.includes(getTile(xInChunk, yInChunk)))
+        if(colTiles.includes(self.getCurrentTile()))
             self.toRemove = true
     }
 
@@ -674,8 +731,14 @@ Bullet.getAllInitPack = function(){
 {
 Floof = function(){
     var self = Entity()
-    self.x = randomRange(480 * tpd, 520 * tpd)
-    self.y = randomRange(480 * tpd, 520 * tpd)
+    self.x = 0
+    self.y = 0
+    if(randomProperty(Player.list) != undefined){
+        self.x = randomProperty(Player.list).x + randomRange(-5 * tpd, 5 * tpd)
+        self.y = randomProperty(Player.list).y + randomRange(-5 * tpd, 5 * tpd)
+    }
+    self.width = 0.9
+    self.height = 0.8
     self.id = Math.random()
     self.speedX = 0 
     self.speedY = 0
@@ -702,6 +765,7 @@ Floof = function(){
                 self.toRemove = true
                 Player.list[b.parent].inventory.addItem("medkit", 1)
                 Player.list[b.parent].inventory.addItem("floof_wool", 1)  
+                Floof()
             }
         }
 
@@ -757,7 +821,7 @@ Floof.update = function(){
     for(var i in Floof.list){
         floofCount++
     }
-    if (Math.random() < 0.4 && floofCount < 50){
+    if (Math.random() > 0.993 && floofCount <= 150){
         Floof()
     }
 
@@ -765,15 +829,22 @@ Floof.update = function(){
     for (var i in Floof.list){
         var floof = Floof.list[i]
         floof.update()
+        let farFrom = 0
         for(var j in Player.list){
-            if(Player.list[j].getDistance(floof) < renderDistance){
+            if(Player.list[j].getDistance(floof) > renderDistance)
+                farFrom++
+
+            if(farFrom < Object.keys(Player.list).length){
                 if (floof.toRemove) {
                     delete Floof.list[i];
                     removePack.floof.push(floof.id)
                 } else
                     pack.push(floof.getUpdatePack())
-            } else
+            } else {
+                floof.toRemove = true
+                delete Floof.list[i];
                 removePack.floof.push(floof.id)
+            }
         }
     }
 

@@ -32,11 +32,8 @@ Chunk = function (x, y) {
                     else
                         self.tiles.push(5) // pollen_shroom
                 }
-                else if(Math.random() > 0.98 && value2d < 0){
+                else if(Math.random() > 0.965 && value2d < 0){
                     self.tiles.push(6) // cave_flower
-                }
-                else if(Math.random() > 0.9995 && value2d < 0){
-                    self.tiles.push(7) // old_workbench
                 }
                 else if (value2d < 0)
                     self.tiles.push(1) // floor
@@ -67,6 +64,12 @@ Chunk = function (x, y) {
             else if (valueBiome > 0.2){
                 if(Math.random() > 0.98 && value2d < 0){
                     self.tiles.push(15) // stone
+                }
+                else if(Math.random() > 0.9995 && value2d < 0){
+                    self.tiles.push(7) // old_workbench
+                }
+                else if(Math.random() > 0.9995 && value2d < 0){
+                    self.tiles.push(22) // old_furnace
                 }
                 else if (value2d < 0)
                     self.tiles.push(9) // floor_3

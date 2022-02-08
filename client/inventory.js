@@ -186,10 +186,51 @@ Item("cave_beef","Cave Beef", function(player){
 })
 
 // materials
-
 Item("floof_wool","Floof Wool", function(player){})
 Item("fibres","Fibres", function(player){})
-Item("shroom_wood","Shroom Wood", function(player){})
+Item("iron_bar","Iron Bar", function(player){})
+Item("aluminium_bar","Aluminium Bar", function(player){})
+Item("steel_bar","Steel Bar", function(player){})
+Item("blood_bag","Blood Bag", function(player){})
+Item("reinforced_bone","Reinforced Bone", function(player){})
+Item("albino_fur","Albino Fur", function(player){})
+Item("iron_panel","Iron Panel", function(player){})
+Item("bolts","Bolts", function(player){})
+Item("weaponry_mould","Weaponry Mould", function(player){})
+Item("industrial","Industrial Mould", function(player){})
+Item("precision_blade","Precision Blade", function(player){})
+Item("blade_kit","Blade Kit", function(player){})
+Item("rifle_kit","Rifle Kit", function(player){})
+Item("pistol_kit","Pistol Kit", function(player){})
+Item("electrical_parts","Electrical Parts", function(player){})
+Item("turbine","Turbine", function(player){})
+Item("drill_bit","Drill Bit", function(player){})
+Item("graphite","Graphite", function(player){})
+Item("copper","Copper", function(player){})
+Item("radium","radium", function(player){})
+
+//consumables
+Item("rock_tile_kit","Rock Tile Kit", function(player){
+    player.inventory.removeItem("rock_tile_kit", 1)
+    player.inventory.addItem("rock_tiles", 50)
+})
+
+// ammunition
+Item("bronze_round","Bronze Round", function(player){})
+Item("bronze_round_kit","Bronze Round Kit", function(player){
+    player.inventory.removeItem("bronze_round_kit", 1)
+    player.inventory.addItem("bronze_round", 15)
+})
+Item("iron_round","Iron Round", function(player){})
+Item("iron_round_kit","Bronze Round Kit", function(player){
+    player.inventory.removeItem("iron_round_kit", 1)
+    player.inventory.addItem("iron_round", 15)
+})
+Item("compound_round","Compound Round", function(player){})
+Item("compound_round_kit","Compound Round Kit", function(player){
+    player.inventory.removeItem("compound_round_kit", 1)
+    player.inventory.addItem("compound_round", 20)
+})
 
 // tools & placeables
 let spriteIds = {
@@ -231,6 +272,17 @@ Item("beq_rock","Beq Rock", function(player){itemToHotbar(player, "beq_rock")})
 Item("organic_floor","Organic Floor", function(player){itemToHotbar(player, "organic_floor")})
 Item("dirt_floor","Dirt Floor", function(player){itemToHotbar(player, "dirt_floor")})
 Item("mound","Mound", function(player){itemToHotbar(player, "mound")})
+Item("oxygen_canister","Oxygen Canister", function(player){itemToHotbar(player, "oxygen_canister")})
+Item("carbon_dioxide_canister","Carbon Dioxide Canister", function(player){itemToHotbar(player, "carbon_dioxide_canister")})
+Item("shroom_wood","Shroom Wood", function(player){itemToHotbar(player, "shroom_wood")})
+Item("iron_ore","Iron Ore", function(player){itemToHotbar(player, "iron_ore")})
+Item("rock_tiles","Rock Tiles", function(player){itemToHotbar(player, "rock_tiles")})
+
+// workbenches
+Item("old_workbench","Old Workbench", function(player){itemToHotbar(player, "old_workbench")})
+Item("old_furnace","Old Furnace", function(player){itemToHotbar(player, "old_furnace")})
+Item("metalworking_bench","Metalworking Bench", function(player){itemToHotbar(player, "metalworking_bench")})
+Item("forge","Forge", function(player){itemToHotbar(player, "forge")})
 
 // weapons
 Item("shroom_k","Shroom-K Rifle", function(player){itemToHotbar(player, "shroom_k")})
@@ -239,6 +291,7 @@ Item("hunting_rifle","Hunting Rifle", function(player){itemToHotbar(player, "hun
 // harvest tools
 Item("survival_knife","Survival Knife", function(player){itemToHotbar(player, "survival_knife")})
 Item("bronze_sickle","Bronze Sickle", function(player){itemToHotbar(player, "bronze_sickle")})
+Item("iron_sickle","Iron Sickle", function(player){itemToHotbar(player, "iron_sickle")})
 
 // mining tools
 Item("bronze_pickaxe","Bronze Pickaxe", function(player){itemToHotbar(player, "bronze_pickaxe")})
@@ -247,6 +300,7 @@ Item("iron_drill","Iron Drill", function(player){itemToHotbar(player, "iron_dril
 
 // work tools
 Item("bronze_chisel","Bronze Chisel", function(player){itemToHotbar(player, "bronze_chisel")})
+Item("iron_chisel","Iron Chisel", function(player){itemToHotbar(player, "iron_chisel")})
 
 // placeables
 Item("stone","Stone", function(player){itemToHotbar(player, "stone")})
@@ -273,3 +327,6 @@ Recipe("fibres", ["pollen_shroom", "cave_flower"])
 Recipe("bronze_pickaxe", ["bronze_berry", "fibres", "shroom_wood"])
 Recipe("bronze_sickle", ["bronze_berry", "fibres", "shroom_wood"])
 Recipe("bronze_chisel", ["bronze_berry", "fibres", "shroom_wood", "stone"])
+Recipe("bronze_round_kit", ["bronze_berry", "stone"])
+Recipe("iron_round_kit", ["iron_bar", "stone"])
+Recipe("rock_tile_kit", ["rock", "stone"])
