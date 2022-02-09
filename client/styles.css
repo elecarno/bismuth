@@ -1,3 +1,41 @@
+
+#game, #ui {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+}
+
+#hotbar {
+    position: absolute;
+    font-family: arial;
+    font-size: 20px;
+    color: #b3b3b3;
+    text-align: left;
+}
+
+#score {
+    width: 100px;
+    text-align: center;
+    color: #b3b3b3;
+    position: absolute;
+}
+
+#fpsdiv {
+    color: #b3b3b3;
+    position: absolute;
+    top: 4;
+    left: 4;
+}
+
+#coords {
+    position: absolute;
+    right: 10;
+    bottom: 10;
+    font-family: arial;
+    font-size: 20px;
+    color: #b3b3b3;
+}
+
 button {
     background-color: #666666; /* Green */
     border-color: #878787;

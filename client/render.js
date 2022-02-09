@@ -139,9 +139,6 @@ class Renderer {
         const tilemap = loadTexture(gl, "/client/img/tilemap.png", 0, function(image) {});
         const tilesidemap = loadTexture(gl, "/client/img/tilesidemap.png", 3, function(image) {});
 
-        gl.uniform1i(gl.getUniformLocation(this.tileShader.prog, "sprites"), 0);
-        gl.uniform1i(gl.getUniformLocation(this.tileShader.prog, "sideSprites"), 3);
-
         gl.uniform2f(gl.getUniformLocation(this.tileShader.prog, "inverseSpriteTextureSize"), 1.0/(tileSize * sheetWidth), 1.0/(tileSize * sheetWidth));
         gl.uniform1f(gl.getUniformLocation(this.tileShader.prog, "tileSize"), tileSize);
         gl.uniform1f(gl.getUniformLocation(this.tileShader.prog, "inverseTileSize"), 1.0/tileSize);
@@ -232,8 +229,14 @@ class Renderer {
         this.gl.texSubImage2D(this.gl.TEXTURE_2D, 0, xoff, yoff, 1, 1, this.gl.RGBA, this.gl.UNSIGNED_BYTE, data);
     }
 
-    renderChunk(dx, dy) {
+    renderChunk(dx, dy, top) {
         this.tileShader.use();
+        if (top) {
+            gl.uniform1i(gl.getUniformLocation(this.tileShader.prog, "sprites"), 3);
+        } else {
+            gl.uniform1i(gl.getUniformLocation(this.tileShader.prog, "sprites"), 0);
+        }
+        gl.uniform1i(gl.getUniformLocation(this.tileShader.prog, "isTop"), top);
         this.gl.uniform2f(this.gl.getUniformLocation(this.tileShader.prog, "inverseTileTextureSize"), 1.0/this.mapwidth, 1.0/this.mapheight);
         this.gl.uniform2f(this.gl.getUniformLocation(this.tileShader.prog, "viewportSize"), ctx.width / tileScale, ctx.height / tileScale);
         this.gl.uniform2f(this.gl.getUniformLocation(this.tileShader.prog, "viewOffset"), (dx - this.lx * 32 * 50 - ctx.width / 2) / tileScale,  (dy - this.ly * 32 * 50 - ctx.height / 2) / tileScale);

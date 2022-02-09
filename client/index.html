@@ -21,6 +21,7 @@
             <div id="score"></div>
             <div id="hotbar"></div>
             <div id="fpsdiv">fps: <span id="fps"></span><br>avg: <span id="avg"></span></div>
+            <div id="coords"></div>
         </div>
     
     </div>
@@ -36,32 +37,6 @@
 
     </div>
 </div>
-
-<style type="text/css">
-
-#hotbar {
-    position: absolute;
-    font-family: arial;
-    font-size: 20px;
-    color: #b3b3b3;
-    text-align: left;
-}
-
-#score {
-    width: 100px;
-    text-align: center;
-    color: #b3b3b3;
-    position: absolute;
-}
-
-#fpsdiv {
-    color: #b3b3b3;
-    position: absolute;
-    top: 4;
-    left: 4;
-}
-
-</style>
 
 <script src="/socket.io/socket.io.js"></script>
 <script src="/client/inventory.js"></script>
@@ -123,8 +98,6 @@
         }
     }
 
-    window.addEventListener('resize', resizeCanvas);
-
     // Sign in ======================================================================
     let signDiv = document.getElementById("signDiv")
     let signDivUsername = document.getElementById("signDiv-username")
@@ -152,6 +125,7 @@
             signDiv.style.display = "none"
             gameDiv.style.display = "inline-block"
             signed_in = true;
+            window.addEventListener('resize', resizeCanvas);
             resizeCanvas();
         } else
             alert("sign in unsuccessful")
@@ -422,7 +396,7 @@
 
         selectedTileX = (tileX * tpd) + (chunkX * ctd * tpd)
         selectedTileY = (tileY * tpd) + (chunkY * ctd * tpd)
-        renderer.tileChange(mouseChunkX, mouseChunkY, mouseXInChunk, mouseYInChunk, 8);
+        //renderer.tileChange(mouseChunkX, mouseChunkY, mouseXInChunk, mouseYInChunk, 8);
     })
     
     // remove
@@ -457,7 +431,7 @@
     let then = 0;
     function draw(now) {
         requestAnimationFrame(draw);
-        if (gl === null || renderer === null) {
+        if (gl === null || renderer === null || (!signed_in)) {
             return;
         }
 
@@ -494,7 +468,7 @@
             return;
         }
 
-        drawMap();
+        renderer.renderChunk(Player.list[selfId].x, Player.list[selfId].y, false);
 
         // Draw Entities
         let renderDistance = ctx.width + tpd
@@ -512,6 +486,7 @@
             if(getDistance(Bullet.list[i]) < renderDistance)
                 Bullet.list[i].draw()
         }
+        renderer.renderChunk(Player.list[selfId].x, Player.list[selfId].y, true);
         
         // Draw UI & HUD
         drawScore()
@@ -530,10 +505,6 @@
     }
     requestAnimationFrame(draw);
 
-    let drawMap = function(){
-        renderer.renderChunk(Player.list[selfId].x, Player.list[selfId].y);
-    }
-
     let drawScore = function(){
         hotbar.innerHTML = "Effects: " + Player.list[selfId].effects + "<br>\n";
         for(let i = 0; i < 5; i++){
@@ -549,6 +520,8 @@
 
         //ctx.fillText(Player.list[selfId].x / tpd + " - x", 1780, 915)
         //ctx.fillText(Player.list[selfId].y / tpd + " - y", 1780, 940)
+
+        coordElem.innerHTML = "X: " + Player.list[selfId].x / tpd + "<br>Y: " + Player.list[selfId].y / tpd;
 
         const hpWidth = 450 * Player.list[selfId].hp / Player.list[selfId].hpMax
         renderer.renderRect(0x7e, 0xcf, 0x8b, 0xff, ctx.width/2 - hpWidth/2, ctx.height - 25, hpWidth, 20);
