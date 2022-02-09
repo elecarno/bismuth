@@ -8,6 +8,14 @@ button {
     display: inline-block;
     font-size: 14px;
     font: "Arial";
+<<<<<<< HEAD
+    transition-duration: 0.4s;
+}
+button:hover{
+    background-color: #97a69b; /* Green */
+    color: white;
+=======
+>>>>>>> 5d3b681238e66ec20a1eed1ab062f16be1cdd35a
 }
 p{
     font-family: "Arial";
@@ -28,12 +36,109 @@ body {
     top: 0;
     bottom: 0;
 }
+<<<<<<< HEAD
+#signDiv {
+    width: 750px;
+    height: 500px;
+    position: absolute;
+    margin: auto;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    /* background-color: #969696; */
+}
+#signDiv-username {
+    width: 350px;
+    height: 50px;
+    position: absolute;
+    margin: auto;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    color: white;
+    border-radius: 10px;
+    border-color: #687866;
+    border-style: none;
+    text-align: center;
+    font-size: large;
+    background-color: #687866;
+}
+#signDiv-signIn {
+    width: 120px;
+    height: 50px;
+    position: absolute;
+    margin: auto;
+    left: 0;
+    right: 0;
+    top: 115px;
+    bottom: 0;
+    color: white;
+    border-radius: 10px;
+    border-color: #666666;
+    border-style: none;
+    text-align: center;
+    font-size: large;
+    background-color: #666666;
+}
+#game-title {
+    width: 488px;
+    height: 88px;
+    position: absolute;
+    margin: auto;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 145px;
+    image-rendering: pixelated;
+}
+#credits {
+    width: 250x;
+    height: 30px;
+    position: absolute;
+    margin: auto;
+    left: 0;
+    right: 0;
+    top: 930px;
+    bottom: 0;
+    font-size: medium;
+    text-align: center;
+    color: #8c8c8c;
+}
+=======
+>>>>>>> 5d3b681238e66ec20a1eed1ab062f16be1cdd35a
 #belowGame { 
     position: absolute;
     z-index: 99 !important; 
 }
+<<<<<<< HEAD
+::placeholder { /* Chrome, Firefox, Opera, Safari 10.1+ */
+    color: ghostwhite;
+    opacity: 1; /* Firefox */
+}
+:-ms-input-placeholder { /* Internet Explorer 10-11 */
+    color: ghostwhite;
+}
+::-ms-input-placeholder { /* Microsoft Edge */
+    color: ghostwhite;
+}
+::-webkit-scrollbar {
+    display: none;
+}
+::selection {
+    color: none;
+    background: none;
+}
+/* For Mozilla Firefox */
+::-moz-selection {
+    color: none;
+    background: none;
+}
+=======
 /*
 ::-webkit-scrollbar {
     display: none;
 }
 */
+>>>>>>> 5d3b681238e66ec20a1eed1ab062f16be1cdd35a

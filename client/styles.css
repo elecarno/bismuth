@@ -1,3 +1,41 @@
+
+#game, #ui {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+}
+
+#hotbar {
+    position: absolute;
+    font-family: arial;
+    font-size: 20px;
+    color: #b3b3b3;
+    text-align: left;
+}
+
+#score {
+    width: 100px;
+    text-align: center;
+    color: #b3b3b3;
+    position: absolute;
+}
+
+#fpsdiv {
+    color: #b3b3b3;
+    position: absolute;
+    top: 4;
+    left: 4;
+}
+
+#coords {
+    position: absolute;
+    right: 10;
+    bottom: 10;
+    font-family: arial;
+    font-size: 20px;
+    color: #b3b3b3;
+}
+
 button {
     background-color: #666666; /* Green */
     border-color: #878787;
@@ -28,13 +66,26 @@ body {
     height: 100%;
     margin: 0;
     background-color: #303030;
+    text-align: center;
 }
 canvas {
     display: block;
     position: absolute;
+    text-align: center;
+    width: 100%;
+    height: 100%;
     top: 0;
     left: 0;
     right: 0;
+    bottom: 0;
+}
+#gameDiv {
+    text-align: center;
+    position: absolute;
+    margin: auto;
+    left: 0;
+    right: 0;
+    top: 0;
     bottom: 0;
     width: 100%;
     height: 100%;
@@ -52,6 +103,7 @@ canvas {
     right: 10px;
     top: 10px;
     text-align: right;
+    align-items: right;
 }
 #crafting{
     position:absolute;
@@ -67,15 +119,20 @@ canvas {
     top: 330px;
     text-align: right;
 }
-#gameDiv {
-    width: 1800px;
-    height: 960px;
-    position: absolute;
-    margin: auto;
-    left: 0;
-    right: 0;
-    top: 0;
-    bottom: 0;
+
+#workbench{
+    position:absolute;
+    overflow-y:scroll;
+    width:400px;
+    height:200px;
+    float:right;
+    background-color:rgba(135, 135, 135, 0.0);
+    border-color: rgba(135, 135, 135, 0.0);
+    border-width: 7px;
+    border-style: solid;
+    right: 10px;
+    top: 550px;
+    text-align: right;
 }
 #signDiv {
     width: 750px;
@@ -86,6 +143,7 @@ canvas {
     right: 0;
     top: 0;
     bottom: 0;
+    display: inline-block;
     /* background-color: #969696; */
 }
 #signDiv-username {
@@ -130,9 +188,23 @@ canvas {
     left: 0;
     right: 0;
     top: 0;
-    bottom: 145px;
+    bottom: 185px;
     image-rendering: pixelated;
 }
+#version {
+    width: 488px;
+    height: 88px;
+    position: absolute;
+    margin: auto;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 10px;
+    font-size: large;
+    text-align: center;
+    color: rgb(240, 240, 240);
+}
+
 #credits {
     width: 250x;
     height: 30px;
