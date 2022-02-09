@@ -59,6 +59,7 @@ io.sockets.on("connection", function(socket){
     })
 
     socket.on("disconnect", function(){
+        console.log(socket.id + " has disconnected")
         delete SOCKET_LIST[socket.id]
         Player.onDisconnect(socket)
     })

@@ -120,6 +120,20 @@ canvas {
     text-align: right;
 }
 
+#workbench{
+    position:absolute;
+    overflow-y:scroll;
+    width:400px;
+    height:200px;
+    float:right;
+    background-color:rgba(135, 135, 135, 0.0);
+    border-color: rgba(135, 135, 135, 0.0);
+    border-width: 7px;
+    border-style: solid;
+    right: 10px;
+    top: 550px;
+    text-align: right;
+}
 #signDiv {
     width: 750px;
     height: 500px;
@@ -129,6 +143,7 @@ canvas {
     right: 0;
     top: 0;
     bottom: 0;
+    display: inline-block;
     /* background-color: #969696; */
 }
 #signDiv-username {

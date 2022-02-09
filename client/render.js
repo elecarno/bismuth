@@ -17,45 +17,15 @@ const tileScale = 6.25/2;
 const sheetWidth = 10;
 
 const tileHeights = {
-    1: 0,
-    2: 0,
-    3: 14,
-    4: 0,
-    5: 0,
-    6: 0,
-    7: 14,
-    8: 14,
-    9: 0,
-    10: 0,
-    11: 11,
-    12: 0,
-    13: 0,
-    14: 13,
-    15: 0,
-    16: 0,
-    17: 14,
-    18: 13,
+    1: 0, 2: 0, 3: 14, 4: 0, 5: 0, 6: 0, 7: 6, 8: 15, 9: 0, 10: 0, 
+    11: 8, 12: 0, 13: 0, 14: 12, 15: 0, 16: 0, 17: 14, 18: 13, 19: 0,
+    20: 16, 21: 0, 22:7, 23: 7, 24: 0, 25:10,
 };
 
 const tileBehind = {
-    1: 0,
-    2: 0,
-    3: 0,
-    4: 1,
-    5: 1,
-    6: 1,
-    7: 1,
-    8: 0,
-    9: 0,
-    10: 0,
-    11: 0,
-    12: 0,
-    13: 0,
-    14: 0,
-    15: 1,
-    16: 1,
-    17: 0,
-    18: 0,
+    1: 0, 2: 0, 3: 0, 4: 1, 5: 1, 6: 1, 7: 24, 8: 0, 9: 0, 10: 0,
+    11: 0, 12: 0, 13: 0, 14: 0, 15: 9, 16: 12, 17: 0, 18: 0, 19: 1,
+    20: 1, 21:1, 22: 9, 23: 24, 24: 0, 25: 24,
 }
 
 let using_texture = false;
@@ -237,6 +207,7 @@ class Renderer {
             gl.uniform1i(gl.getUniformLocation(this.tileShader.prog, "sprites"), 0);
         }
         gl.uniform1i(gl.getUniformLocation(this.tileShader.prog, "isTop"), top);
+
         this.gl.uniform2f(this.gl.getUniformLocation(this.tileShader.prog, "inverseTileTextureSize"), 1.0/this.mapwidth, 1.0/this.mapheight);
         this.gl.uniform2f(this.gl.getUniformLocation(this.tileShader.prog, "viewportSize"), ctx.width / tileScale, ctx.height / tileScale);
         this.gl.uniform2f(this.gl.getUniformLocation(this.tileShader.prog, "viewOffset"), (dx - this.lx * 32 * 50 - ctx.width / 2) / tileScale,  (dy - this.ly * 32 * 50 - ctx.height / 2) / tileScale);

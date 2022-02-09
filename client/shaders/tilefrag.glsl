@@ -24,6 +24,7 @@ void main(void) {
     vec4 texColour;
 
     if (from_bottom < down_tile.z * 255.0 && isTop) {
+
         vec2 downSpritePos = floor(vec2(mod(down_tile.x * 255.0, sheetWidth), down_tile.x * 255.0 / sheetWidth));
         vec2 downSpriteOffset = downSpritePos * tileSize;
         vec2 downSpriteCoord = mod(pixelCoord, tileSize) - vec2(0, tileSize - down_tile.z * 255.0);
@@ -34,7 +35,7 @@ void main(void) {
     } else {
         vec2 spritePos = floor(vec2(mod(tile.x * 255.0, sheetWidth), tile.x * 255.0 / sheetWidth));
         vec2 spriteOffset = spritePos * tileSize;
-        texColour = texture2D(sprites, (spriteOffset + spriteCoord) * inverseSpriteTextureSize);
+        texColour = texture2D(sprites, (spriteOffset + spriteCoord + vec2(0, tile.z * 255.0 * float(isTop))) * inverseSpriteTextureSize);
     }
 
     if (tile.w > 0.0 && texColour.w < 1.0) {
