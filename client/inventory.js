@@ -257,14 +257,6 @@ Item("compound_round_kit","Compound Round Kit", function(player){
     player.inventory.addItem("compound_round", 20)
 })
 
-// ammunition
-Item("bronze_round","Bronze Round", function(player){})
-Item("bronze_round_kit","Bronze Round Kit", function(player){
-    player.inventory.removeItem("bronze_round_kit", 1)
-    player.inventory.addItem("bronze_round", 15)
-})
-Item("iron_round","Iron Round", function(player){})
-
 // tools & placeables
 let spriteIds = {
     // guns
@@ -374,6 +366,7 @@ Recipe("bronze_sickle", ["bronze_berry", "fibres", "shroom_wood"])
 Recipe("bronze_chisel", ["bronze_berry", "fibres", "shroom_wood", "stone"])
 Recipe("bronze_round_kit", ["bronze_berry", "stone"])
 Recipe("iron_round_kit", ["iron_bar", "stone"])
+Recipe("compound_round_kit", ["copper", "bronze_berry", "stone"])
 Recipe("rock_tile_kit", ["rock", "stone"])
 
 // old_workbench

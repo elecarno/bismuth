@@ -11,13 +11,12 @@ var renderDistance = 1800
 var wpd = 51200 // world pixel dimension
 
 var colTiles = [3, 7, 8, 11, 14, 17, 18, 19, 20, 21, 22, 23, 25, 26, 27, 28, 29, 30, 31, 
-32, 33, 34]
+32, 33, 34, 35]
 var intTiles = [7, 22, 23, 25, 26, 27, 28, 29, 30, 31, 32, 33]
 var autoGuns = ["shroom_k"]
 var singleGuns = ["hunting_rifle"]
 var meleeWeapons = ["survival_knife"]
 var miningTools = ["bronze_pickaxe", "iron_pickaxe", "iron_drill"]
-
 var harvestTools = ["survival_knife", "bronze_sickle", "iron_sickle"]
 var workTools = ["bronze_chisel", "iron_chisel"]
 var placeableItems = [
@@ -26,20 +25,19 @@ var placeableItems = [
 "pollen_shroom", "bronze_berry", "mound", "oxygen_canister", "shroom_wood", "iron_ore", 
 "carbon_dioxide_canister", "old_workbench", "old_furnace", "metalworking_bench", 
 "rock_tiles", "forge", "lysis_machine", "air_extractor", "smelter", "alchemy_table",
-"masonry_bench", "shaper", "armoury", "refinery", "aluminium_ore"
+"masonry_bench", "shaper", "armoury", "refinery", "aluminium_ore", "blood_core",
 ]
 var priorityTiles = [3, 7, 8, 11, 14, 17, 18, 19, 20, 21, 22, 23, 25, 26, 27, 28, 29, 30,
-31, 32, 33, 34]
+31, 32, 33, 34, 35]
 var weaponStrengths = {
     "survival_knife" : 2,
     "shroom_k" : 1,
     "hunting_rifle" : 5
 }
-
 var bullets = ["bronze_round", "iron_round", "compound_round"]
 var bulletStrengths = {
     "bronze_round" : 1,
-    "iron_round" : 1.1,
+    "iron_round" : 1.5,
     "compound_round": 2,
 }
 var placeIds = {
@@ -49,7 +47,8 @@ var placeIds = {
     "oxygen_canister": 19, "shroom_wood": 20, "carbon_dioxide_canister": 21,
     "old_workbench": 7, "old_furnace": 22, "metalworking_bench": 23, "rock_tiles": 24,
     "forge": 25, "lysis_machine": 26, "air_extractor": 27, "smelter": 28, "alchemy_table": 29,
-    "masonry_bench": 30, "shaper": 31, "armoury": 32, "refinery": 33, "aluminium_ore": 34
+    "masonry_bench": 30, "shaper": 31, "armoury": 32, "refinery": 33, "aluminium_ore": 34,
+    "blood_core": 35,
 }
 var miningToolStrengths = {
     "bronze_pickaxe": 1.5,
@@ -68,17 +67,17 @@ var workToolStrengths = {
 var tileStrengths = {
     2:20, 3:40, 4:5, 5:5, 6:5, 7:100,
     8:55, 10:20, 11:30, 13:20, 14:50, 15:5,
-    16:10, 17:50, 18:55,19:120, 20:30, 21:120, 22:135,
+    16:10, 17:50, 18:55, 19:120, 20:30, 21:120, 22:135, 24:35,
     23:120, 25:140, 26:140, 27:135, 28:140, 29:110, 30:115,
-    31:140, 32:140, 33:150, 34:75
+    31:140, 32:140, 33:150, 34:75, 35:250,
 }
 var mineTiles = [2,3,8,13,14,10,11,17,18,34]
-var harvestTiles = [4,5,6,15,16]
+var harvestTiles = [4,5,6,15,16,35]
 var workTiles = [7,19,20,21,22,24,25,26,27,28,29,30,31,32,33]
 
-var floor1Tiles = [1,2,3,4,5,6,7,8,17,19,20,21]
+var floor1Tiles = [1,2,3,4,5,6,7,8,17,20]
 var floor2Tiles = [12,13,14,16]
-var floor3Tiles = [9,10,11,15,18,22,23,24,25,26,27,28,29,30,31,32,33,34]
+var floor3Tiles = [9,10,11,15,18,22,23,24,25,26,27,28,29,30,31,32,33,34,35,19,21]
 
 craftingRecipes = [
     ["toad_shroom", "stone", "shroom_wood"],
@@ -88,7 +87,7 @@ craftingRecipes = [
     ["stone","bronze_berry","fibres","shroom_wood","bronze_chisel"],
     ["bronze_berry", "stone", "bronze_round_kit"],
     ["iron_bar", "stone", "iron_round_kit"],
-    ["copper", "bronze_berry", "compound_round_kit"],
+    ["copper", "bronze_berry", "stone", "compound_round_kit"],
 ]
 workbenchRecipes = [
     ["iron_panel", "bolts", "fibres", "forge"],
@@ -319,6 +318,7 @@ Player = function(id, username, socket, progress){
 
     self.inventory.addItem("old_workbench", 1)
     self.inventory.addItem("old_furnace", 1)
+    self.inventory.addItem("blood_core", 1)
     /*
     self.inventory.addItem("shroom_k", 1)
     self.inventory.addItem("hunting_rifle", 1)
