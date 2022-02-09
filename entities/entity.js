@@ -38,27 +38,11 @@ var bulletStrengths = {
     "compound_round": 2,
 }
 var placeIds = {
-    "rock" : 3,
-    "rocky_floor" : 2,
-    "granite": 8,
-    "organic_floor": 13,
-    "beq_rock": 14,
-    "dirt_floor": 10,
-    "earth": 11,
-    "stone": 15,
-    "cave_flower": 6,
-    "toad_shroom": 4,
-    "pollen_shroom": 5,
-    "bronze_berry": 16,
-    "iron_ore": 17,
-    "mound": 18,
-    "oxygen_canister": 19,
-    "shroom_wood": 20,
-    "carbon_dioxide_canister": 21,
-    "old_workbench": 7,
-    "old_furnace": 22,
-    "metalworking_bench": 23,
-    "rock_tiles": 24,
+    "rock" : 3, "rocky_floor" : 2, "granite": 8, "organic_floor": 13, "beq_rock": 14,
+    "dirt_floor": 10, "earth": 11, "stone": 15, "cave_flower": 6, "toad_shroom": 4, 
+    "pollen_shroom": 5, "bronze_berry": 16, "iron_ore": 17, "mound": 18,
+    "oxygen_canister": 19, "shroom_wood": 20, "carbon_dioxide_canister": 21,
+    "old_workbench": 7, "old_furnace": 22, "metalworking_bench": 23, "rock_tiles": 24,
     "forge": 25,
 }
 var miningToolStrengths = {
@@ -97,7 +81,52 @@ craftingRecipes = [
     ["stone","bronze_berry","fibres","shroom_wood","bronze_chisel"],
     ["bronze_berry", "stone", "bronze_round_kit"],
     ["iron_bar", "stone", "iron_round_kit"],
-    ["rock", "stone", "rock_tile_kit"],
+]
+workbenchRecipes = [
+    ["iron_panel", "bolts", "fibres", "forge"],
+    ["iron_bar", "stone", "metalworking_bench"]
+]
+furnaceRecipes = [
+    ["iron_ore", "iron_bar"],
+]
+metalworkRecipes = [
+    ["iron_bar", "iron_panel"],
+    ["iron_bar", "bolts"],
+    ["iron_bar", "weaponry_mould"],
+    ["iron_bar", "industrial_mould"],
+]
+forgeRecipes = [
+    ["iron_bar", "aluminium_bar", "industrial_mould", "turbine"],
+    ["aluminium_bar", "industrial_mould", "precision_blade"],
+    ["radium", "aluminium_bar", "electrical_parts"],
+    ["iron_bar", "industrial_mould", "drill_bit"],
+    ["aluminium_bar", "weaponry_mould", "blade_kit"],
+    ["iron_bar", "weaponry_mould", "rifle_kit"],
+    ["iron_bar", "weaponry_mould", "pistol_kit"],
+]
+smelterRecipes = [
+    ["iron_bar", "graphite", "steel_bar"],
+]
+airRecipes = [
+    ["cave_flower", "carbon_dioxide_canister"],
+]
+lysisRecipes = [
+    ["carbon_dioxide_canister", "oxygen_canister"],
+    ["carbon_dioxide_canister", "graphite"],
+]
+alchemyRecipes = [
+    ["blood_bag", "blood_core"],
+]
+masonryRecipes = [
+    ["rock", "rock_tile_kit"],
+]
+shaperRecipes = [
+    ["drill_bit", "electrical_parts", "blood_core", "iron_panel", "iron_drill"],
+    //["drill_bit", "electrical_parts", "blood_core", "steel_bar", "steel_drill"],
+]
+armouryRecipes = [
+    ["rifle_kit", "shroom_wood", "shroom_k"],
+    ["rifle_kit", "shroom_wood", "hunting_rifle"],
 ]
 
 var initPack = {player:[],bullet:[],floof:[]}
@@ -277,6 +306,10 @@ Player = function(id, username, socket, progress){
     self.inventory.addItem("metalworking_bench", 10)
     self.inventory.addItem("forge", 10)
 
+    self.inventory.addItem("iron_panel", 120)
+    self.inventory.addItem("bolts", 120)
+    
+    let selectedIntTileRecipes = []
 
     var superUpdate = self.update;
     self.update = function(){
@@ -315,10 +348,52 @@ Player = function(id, username, socket, progress){
             tileY: mouseYInChunk,
         })
 
+        updateCrafting = function(){
+            let recipesToSend = []
+            for(var i = 0; i < craftingRecipes.length; i++){
+                let hasNeededItems = 0
+                for(var j = 0; j < craftingRecipes[i].length-1; j++){
+                    if(self.inventory.hasItem(craftingRecipes[i][j], 1)){
+                        hasNeededItems += 1
+                    }
+                }
+                if(hasNeededItems == craftingRecipes[i].length-1){
+                    //console.log(craftingRecipes[i][craftingRecipes[i].length-1])
+                    recipesToSend.push(craftingRecipes[i][craftingRecipes[i].length-1])
+                }
+            }
+            self.inventory.addRecipes(recipesToSend)
+
+            let workToSend = []
+            for(var i = 0; i < selectedIntTileRecipes.length; i++){
+                let hasNeededItems = 0
+                for(var j = 0; j < selectedIntTileRecipes[i].length-1; j++){
+                    if(self.inventory.hasItem(selectedIntTileRecipes[i][j], 1)){
+                        hasNeededItems += 1
+                    }
+                }
+                if(hasNeededItems == selectedIntTileRecipes[i].length-1){
+                    //console.log(craftingRecipes[i][craftingRecipes[i].length-1])
+                    workToSend.push(selectedIntTileRecipes[i][selectedIntTileRecipes[i].length-1])
+                }
+            }
+            self.inventory.addWorkbenchRecipes(workToSend)
+        }
+
         if(self.currentRightClick > self.lastRightClick){
             if(intTiles.includes(getTile(mouseXInChunk, mouseYInChunk))){
-                console.log("interactable tile")
-            }     
+                let intTile = getTile(mouseXInChunk, mouseYInChunk)
+                socket.emit("workbenchUI", "inline-block")
+                if (intTile === 7)
+                    selectedIntTileRecipes = workbenchRecipes
+                else if (intTile === 22)
+                    selectedIntTileRecipes = furnaceRecipes
+                else{
+                    selectedIntTileRecipes = []
+                }     
+            } else 
+                socket.emit("workbenchUI", "none")
+            updateCrafting()    
 
             let bulletToUse = 0
             for(var i = 0; i < bullets.length; i++){
@@ -376,22 +451,7 @@ Player = function(id, username, socket, progress){
         }
 
         if(self.currentLeftClick > self.lastLeftClick){
-            let recipesToSend = []
-            for(var i = 0; i < craftingRecipes.length; i++){
-                let hasNeededItems = 0
-                for(var j = 0; j < craftingRecipes[i].length-1; j++){
-                    if(self.inventory.hasItem(craftingRecipes[i][j], 1)){
-                        hasNeededItems += 1
-                    }
-                }
-                if(hasNeededItems == craftingRecipes[i].length-1){
-                    //console.log(craftingRecipes[i][craftingRecipes[i].length-1])
-                    recipesToSend.push(craftingRecipes[i][craftingRecipes[i].length-1])
-                }
-            }
-
-            self.inventory.addRecipes(recipesToSend)
-
+            updateCrafting()  
             self.tileDestroyState = 0
             self.lastLeftClick = self.currentLeftClick
         }
@@ -547,6 +607,7 @@ Player.list = {}
 
 Player.onConnect = function(socket, username, progress){
     var player = Player(socket.id, username, socket, progress)
+    console.log(socket.id + " has connected")
     player.inventory.refreshRender()
     socket.on("keyPress", function(data){
         if(data.inputId === 'left'){

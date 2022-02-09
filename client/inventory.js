@@ -14,6 +14,7 @@ Inventory = function(items, socket, server){
     var self = {
         items:items, //{id:"itemId",amount:1}
         recipes:[],
+        workbenches:[],
         socket:socket,
         server:server,
     }
@@ -61,6 +62,7 @@ Inventory = function(items, socket, server){
             self.socket.emit("updateInventory", {
                 items:self.items,
                 recipes:self.recipes,
+                workbenches:self.workbenches,
             })
             return
         }   
@@ -95,11 +97,33 @@ Inventory = function(items, socket, server){
 
         for(var i = 0; i < self.recipes.length; i++)
             addCraftingButton(self.recipes[i])
+
+        var work = document.getElementById("workbench")
+        work.innerHTML = ""
+        var addWorkButton = function(data){
+            console.log(data)
+            let button = document.createElement('button')
+            button.onclick = function(){
+                self.socket.emit("craft", data)
+            }
+            button.innerText = data + " (" + Recipe.list[data].requiredItems + ")"
+            work.appendChild(button)
+        }
+
+        for(var i = 0; i < self.workbenches.length; i++)
+            addWorkButton(self.workbenches[i])
     }
     self.addRecipes = function(sentRecipes){
         self.recipes = []
         for(var i = 0; i < sentRecipes.length; i++){
             self.recipes.push(sentRecipes[i])
+        }
+        self.refreshRender()
+    }
+    self.addWorkbenchRecipes = function(sentWorks){
+        self.workbenches = []
+        for(var i = 0; i < sentWorks.length; i++){
+            self.workbenches.push(sentWorks[i])
         }
         self.refreshRender()
     }
@@ -222,7 +246,7 @@ Item("bronze_round_kit","Bronze Round Kit", function(player){
     player.inventory.addItem("bronze_round", 15)
 })
 Item("iron_round","Iron Round", function(player){})
-Item("iron_round_kit","Bronze Round Kit", function(player){
+Item("iron_round_kit","Iron Round Kit", function(player){
     player.inventory.removeItem("iron_round_kit", 1)
     player.inventory.addItem("iron_round", 15)
 })
@@ -272,8 +296,6 @@ Item("beq_rock","Beq Rock", function(player){itemToHotbar(player, "beq_rock")})
 Item("organic_floor","Organic Floor", function(player){itemToHotbar(player, "organic_floor")})
 Item("dirt_floor","Dirt Floor", function(player){itemToHotbar(player, "dirt_floor")})
 Item("mound","Mound", function(player){itemToHotbar(player, "mound")})
-Item("oxygen_canister","Oxygen Canister", function(player){itemToHotbar(player, "oxygen_canister")})
-Item("carbon_dioxide_canister","Carbon Dioxide Canister", function(player){itemToHotbar(player, "carbon_dioxide_canister")})
 Item("shroom_wood","Shroom Wood", function(player){itemToHotbar(player, "shroom_wood")})
 Item("iron_ore","Iron Ore", function(player){itemToHotbar(player, "iron_ore")})
 Item("rock_tiles","Rock Tiles", function(player){itemToHotbar(player, "rock_tiles")})
@@ -308,7 +330,9 @@ Item("cave_flower","Cave Flower", function(player){itemToHotbar(player, "cave_fl
 Item("toad_shroom","Toad Shroom", function(player){itemToHotbar(player, "toad_shroom")})
 Item("pollen_shroom","Pollen Shroom", function(player){itemToHotbar(player, "pollen_shroom")})
 Item("bronze_berry","Bronze Berry", function(player){itemToHotbar(player, "bronze_berry")})
-
+Item("oxygen_canister","Oxygen Canister", function(player){itemToHotbar(player, "oxygen_canister")})
+Item("carbon_dioxide_canister","Carbon Dioxide Canister", function(player){itemToHotbar(player, "carbon_dioxide_canister")})
+Item("blood_core","Blood Core", function(player){itemToHotbar(player, "blood_core")})
 
 // ---------------------------------------------------------------------------
 
@@ -322,6 +346,7 @@ Recipe = function(resultItem, requiredItems){
 }
 Recipe.list = {}
 
+// non-workbench
 Recipe("shroom_wood", ["toad_shroom", "stone"])
 Recipe("fibres", ["pollen_shroom", "cave_flower"])
 Recipe("bronze_pickaxe", ["bronze_berry", "fibres", "shroom_wood"])
@@ -330,3 +355,10 @@ Recipe("bronze_chisel", ["bronze_berry", "fibres", "shroom_wood", "stone"])
 Recipe("bronze_round_kit", ["bronze_berry", "stone"])
 Recipe("iron_round_kit", ["iron_bar", "stone"])
 Recipe("rock_tile_kit", ["rock", "stone"])
+
+// old_workbench
+Recipe("forge", ["iron_panel", "bolts", "fibres"])
+Recipe("metalworking_bench", ["iron_bar", "stone"])
+
+// old_furnace
+Recipe("iron_bar", ["iron_ore"])

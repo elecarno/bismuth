@@ -81,7 +81,20 @@ canvas {
     top: 330px;
     text-align: right;
 }
-
+#workbench{
+    position:absolute;
+    overflow-y:scroll;
+    width:400px;
+    height:200px;
+    float:right;
+    background-color:rgba(135, 135, 135, 0.0);
+    border-color: rgba(135, 135, 135, 0.0);
+    border-width: 7px;
+    border-style: solid;
+    right: 10px;
+    top: 550px;
+    text-align: right;
+}
 #signDiv {
     width: 750px;
     height: 500px;

@@ -19,6 +19,7 @@
         <div id="ui">
             <div id="inventory"></div>
             <div id="crafting"></div>
+            <div id="workbench"></div>
             <div id="score"></div>
             <div id="hotbar"></div>
             <div id="fpsdiv">fps: <span id="fps"></span><br>avg: <span id="avg"></span></div>
@@ -135,6 +136,7 @@
     let inventoryDiv = document.getElementById("inventory")
     let craftingDiv = document.getElementById("crafting")
     let hotbarDiv = document.getElementById("hotbar")
+    let workbench = document.getElementById("workbench")
 
     signDivSignIn.onclick = function(){
         socket.emit("signIn",{username:signDivUsername.value,password:signDivPassword.value})
@@ -171,6 +173,7 @@
     socket.on("updateInventory", function(data){
         inventory.items = data.items
         inventory.recipes = data.recipes
+        inventory.workbenches = data.workbenches
         inventory.refreshRender()
     })
 
@@ -180,6 +183,10 @@
         floof:        new Quad(0, 0, 40,  40,  64, 0, 16, 16),
         hover_tile:   new Quad(0, 0, 50,  90,  80, 0, 50, 90),
     };
+
+    socket.on("workbenchUI", function(data){
+            workbench.style.display = data
+    })
     
     // init
     let Player = function(initPack){
