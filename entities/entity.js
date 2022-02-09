@@ -311,6 +311,7 @@ Player = function(id, username, socket, progress){
     self.lastLeftClick = 0
     self.tileDestroyState = 0
     self.currentTileStrength = 100
+    self.hiddenFloofs = [];
 
     self.inventory.addItem("bronze_pickaxe", 1)
     self.inventory.addItem("bronze_chisel", 1)
@@ -707,6 +708,7 @@ Player.onConnect = function(socket, username, progress){
         bullet:Bullet.getAllInitPack(),
         floof:f,
     })
+    return player;
 }
 
 Player.getAllInitPack = function(){

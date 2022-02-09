@@ -194,6 +194,14 @@
             
             const x = self.x - Player.list[selfId].x + ctx.width  / 2
             const y = self.y - Player.list[selfId].y + ctx.height / 2
+
+            if (x > ctx.width ||
+                x < 0 ||
+                y > ctx.height ||
+                y < 0) {
+                    return;
+            }
+            
             const toolQuad = new Quad(
                 0, 0, width, height,
                 self.spriteId[0] * ctd + toolOffsetX,
