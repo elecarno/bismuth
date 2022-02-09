@@ -10,9 +10,9 @@ var ctd = 32 // chunk tile dimension
 var renderDistance = 1800
 var wpd = 51200 // world pixel dimension
 
-
-var colTiles = [3, 7, 8, 11, 14, 17, 18, 19, 20, 21, 22, 23, 25]
-var intTiles = [7, 22, 23]
+var colTiles = [3, 7, 8, 11, 14, 17, 18, 19, 20, 21, 22, 23, 25, 26, 27, 28, 29, 30, 31, 
+32, 33, 34]
+var intTiles = [7, 22, 23, 25, 26, 27, 28, 29, 30, 31, 32, 33]
 var autoGuns = ["shroom_k"]
 var singleGuns = ["hunting_rifle"]
 var meleeWeapons = ["survival_knife"]
@@ -25,9 +25,11 @@ var placeableItems = [
 "stone", "organic_floor", "dirt_floor", "cave_flower", "toad_shroom", 
 "pollen_shroom", "bronze_berry", "mound", "oxygen_canister", "shroom_wood", "iron_ore", 
 "carbon_dioxide_canister", "old_workbench", "old_furnace", "metalworking_bench", 
-"rock_tiles", "forge",
+"rock_tiles", "forge", "lysis_machine", "air_extractor", "smelter", "alchemy_table",
+"masonry_bench", "shaper", "armoury", "refinery", "aluminium_ore"
 ]
-var priorityTiles = [3, 7, 8, 11, 14, 17, 18, 19, 20, 21, 22, 23, 25]
+var priorityTiles = [3, 7, 8, 11, 14, 17, 18, 19, 20, 21, 22, 23, 25, 26, 27, 28, 29, 30,
+31, 32, 33, 34]
 var weaponStrengths = {
     "survival_knife" : 2,
     "shroom_k" : 1,
@@ -46,7 +48,8 @@ var placeIds = {
     "pollen_shroom": 5, "bronze_berry": 16, "iron_ore": 17, "mound": 18,
     "oxygen_canister": 19, "shroom_wood": 20, "carbon_dioxide_canister": 21,
     "old_workbench": 7, "old_furnace": 22, "metalworking_bench": 23, "rock_tiles": 24,
-    "forge": 25,
+    "forge": 25, "lysis_machine": 26, "air_extractor": 27, "smelter": 28, "alchemy_table": 29,
+    "masonry_bench": 30, "shaper": 31, "armoury": 32, "refinery": 33, "aluminium_ore": 34
 }
 var miningToolStrengths = {
     "bronze_pickaxe": 1.5,
@@ -63,18 +66,19 @@ var workToolStrengths = {
     "iron_chisel": 2,
 }
 var tileStrengths = {
-    2: 20, 3: 40, 4: 5, 5: 5, 6: 5, 7: 100,
-    8: 55, 10: 20, 11: 30, 13: 20, 14: 50, 15: 5,
-    16: 10, 17: 50, 18: 55, 19: 120, 20: 30, 21: 120, 22: 135,
-    23: 120, 25: 140
+    2:20, 3:40, 4:5, 5:5, 6:5, 7:100,
+    8:55, 10:20, 11:30, 13:20, 14:50, 15:5,
+    16:10, 17:50, 18:55,19:120, 20:30, 21:120, 22:135,
+    23:120, 25:140, 26:140, 27:135, 28:140, 29:110, 30:115,
+    31:140, 32:140, 33:150, 34:75
 }
-var mineTiles = [2, 3, 8, 13, 14, 10, 11, 17, 18]
-var harvestTiles = [4, 5, 6, 15, 16]
-var workTiles = [7, 19, 20, 21, 22, 24, 25]
+var mineTiles = [2,3,8,13,14,10,11,17,18,34]
+var harvestTiles = [4,5,6,15,16]
+var workTiles = [7,19,20,21,22,24,25,26,27,28,29,30,31,32,33]
 
 var floor1Tiles = [1,2,3,4,5,6,7,8,17,19,20,21]
 var floor2Tiles = [12,13,14,16]
-var floor3Tiles = [9,10,11,15,18,22,23,24,25]
+var floor3Tiles = [9,10,11,15,18,22,23,24,25,26,27,28,29,30,31,32,33,34]
 
 craftingRecipes = [
     ["toad_shroom", "stone", "shroom_wood"],
@@ -84,9 +88,18 @@ craftingRecipes = [
     ["stone","bronze_berry","fibres","shroom_wood","bronze_chisel"],
     ["bronze_berry", "stone", "bronze_round_kit"],
     ["iron_bar", "stone", "iron_round_kit"],
+    ["copper", "bronze_berry", "compound_round_kit"],
 ]
 workbenchRecipes = [
     ["iron_panel", "bolts", "fibres", "forge"],
+    ["iron_panel", "bolts", "stone", "refinery"],
+    ["turbine", "precision_blade", "bolts", "iron_panel", "air_extractor"],
+    ["electrical_parts", "turbine", "iron_panel", "lysis_machine"],
+    ["reinforced_bone", "shroom_wood", "pollen_shroom", "fibres", "alchemy_table"],
+    ["stone", "iron_bar", "shroom_wood", "fibres", "masonry_bench"],
+    ["iron_panel", "bolts", "turbine", "stone", "smelter"],
+    ["precision_blade", "drill_bit", "shroom_wood", "bolts", "shaper"],
+    ["precision_blade", "shroom_wood", "bolts", "armoury"],
     ["iron_bar", "stone", "metalworking_bench"]
 ]
 furnaceRecipes = [
@@ -116,6 +129,8 @@ airRecipes = [
 lysisRecipes = [
     ["carbon_dioxide_canister", "oxygen_canister"],
     ["carbon_dioxide_canister", "graphite"],
+    ["bronze_berry", "bronze_leaf"],
+    ["bronze_berry", "copper"],
 ]
 alchemyRecipes = [
     ["blood_bag", "blood_core"],
@@ -130,6 +145,9 @@ shaperRecipes = [
 armouryRecipes = [
     ["rifle_kit", "shroom_wood", "shroom_k"],
     ["rifle_kit", "shroom_wood", "hunting_rifle"],
+]
+refineryRecipes = [
+    ["aluminium_ore", "aluminium_bar"],
 ]
 
 var initPack = {player:[],bullet:[],floof:[]}
@@ -295,22 +313,18 @@ Player = function(id, username, socket, progress){
     self.tileDestroyState = 0
     self.currentTileStrength = 100
 
-    self.inventory.addItem("iron_drill", 1)
+    self.inventory.addItem("bronze_pickaxe", 1)
     self.inventory.addItem("bronze_chisel", 1)
     self.inventory.addItem("bronze_sickle", 1)
+
+    self.inventory.addItem("old_workbench", 1)
+    self.inventory.addItem("old_furnace", 1)
+    /*
     self.inventory.addItem("shroom_k", 1)
     self.inventory.addItem("hunting_rifle", 1)
     self.inventory.addItem("survival_knife", 1)
-    self.inventory.addItem("bronze_round", 10)
-    self.inventory.addItem("iron_round", 10)
-
-    self.inventory.addItem("old_workbench", 10)
-    self.inventory.addItem("old_furnace", 10)
-    self.inventory.addItem("metalworking_bench", 10)
-    self.inventory.addItem("forge", 10)
-
-    self.inventory.addItem("iron_panel", 120)
-    self.inventory.addItem("bolts", 120)
+    self.inventory.addItem("bronze_round", 1000)
+    */
     
     let selectedIntTileRecipes = []
 
@@ -389,13 +403,32 @@ Player = function(id, username, socket, progress){
             if(intTiles.includes(getTile(mouseXInChunk, mouseYInChunk))){
                 let intTile = getTile(mouseXInChunk, mouseYInChunk)
                 socket.emit("workbenchUI", "inline-block")
-                if (intTile === 7)
+                if(intTile == 7)
                     selectedIntTileRecipes = workbenchRecipes
-                else if (intTile === 22)
+                else if(intTile == 22)
                     selectedIntTileRecipes = furnaceRecipes
-                else{
-                    selectedIntTileRecipes = []
-                }     
+                else if(intTile == 23)
+                    selectedIntTileRecipes = metalworkRecipes
+                else if(intTile == 25)
+                    selectedIntTileRecipes = forgeRecipes
+                else if(intTile == 26)
+                    selectedIntTileRecipes = lysisRecipes
+                else if(intTile == 27)
+                    selectedIntTileRecipes = airRecipes
+                else if(intTile == 28)
+                    selectedIntTileRecipes = smelterRecipes
+                else if(intTile == 29)
+                    selectedIntTileRecipes = alchemyRecipes
+                else if(intTile == 30)
+                    selectedIntTileRecipes = masonryRecipes
+                else if(intTile == 31)
+                    selectedIntTileRecipes = shaperRecipes
+                else if(intTile == 32)
+                    selectedIntTileRecipes = armouryRecipes
+                else if(intTile == 33)
+                    selectedIntTileRecipes = refineryRecipes
+                else
+                    selectedIntTileRecipes = []  
             } else 
                 socket.emit("workbenchUI", "none")
             updateCrafting()    

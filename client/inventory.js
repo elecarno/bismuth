@@ -221,7 +221,7 @@ Item("albino_fur","Albino Fur", function(player){})
 Item("iron_panel","Iron Panel", function(player){})
 Item("bolts","Bolts", function(player){})
 Item("weaponry_mould","Weaponry Mould", function(player){})
-Item("industrial","Industrial Mould", function(player){})
+Item("industrial_mould","Industrial Mould", function(player){})
 Item("precision_blade","Precision Blade", function(player){})
 Item("blade_kit","Blade Kit", function(player){})
 Item("rifle_kit","Rifle Kit", function(player){})
@@ -231,6 +231,7 @@ Item("turbine","Turbine", function(player){})
 Item("drill_bit","Drill Bit", function(player){})
 Item("graphite","Graphite", function(player){})
 Item("copper","Copper", function(player){})
+Item("bronze_leaf","Bronze Leaf", function(player){})
 Item("radium","radium", function(player){})
 
 //consumables
@@ -272,13 +273,15 @@ let spriteIds = {
     // harvest tools
     "survival_knife": [3, 0],
     "bronze_sickle": [3, 1],
+    "iron_sickle": [3, 2],
     // mining tools
     "bronze_pickaxe": [4, 0],
     "iron_pickaxe": [4, 2],
     "iron_drill": [4, 3],
     // work tools
     "bronze_chisel": [5, 0],
-    // tiles & placeables
+    "iron_chisel": [5, 2],
+    // tiles & placeables < maybe just don't
     "rock": [1, 0],
     "rocky_floor": [1, 0],
     "granite": [1, 0],
@@ -306,6 +309,7 @@ Item("dirt_floor","Dirt Floor", function(player){itemToHotbar(player, "dirt_floo
 Item("mound","Mound", function(player){itemToHotbar(player, "mound")})
 Item("shroom_wood","Shroom Wood", function(player){itemToHotbar(player, "shroom_wood")})
 Item("iron_ore","Iron Ore", function(player){itemToHotbar(player, "iron_ore")})
+Item("aluminium_ore","Aluminium Ore", function(player){itemToHotbar(player, "aluminium_ore")})
 Item("rock_tiles","Rock Tiles", function(player){itemToHotbar(player, "rock_tiles")})
 
 // workbenches
@@ -313,6 +317,14 @@ Item("old_workbench","Old Workbench", function(player){itemToHotbar(player, "old
 Item("old_furnace","Old Furnace", function(player){itemToHotbar(player, "old_furnace")})
 Item("metalworking_bench","Metalworking Bench", function(player){itemToHotbar(player, "metalworking_bench")})
 Item("forge","Forge", function(player){itemToHotbar(player, "forge")})
+Item("lysis_machine","Lysis Machine", function(player){itemToHotbar(player, "lysis_machine")})
+Item("air_extractor","Air Extractor", function(player){itemToHotbar(player, "air_extractor")})
+Item("smelter","Smelter", function(player){itemToHotbar(player, "smelter")})
+Item("alchemy_table","Alchemy Table", function(player){itemToHotbar(player, "alchemy_table")})
+Item("masonry_bench","Masonry Bench", function(player){itemToHotbar(player, "masonry_bench")})
+Item("shaper","Shaper", function(player){itemToHotbar(player, "shaper")})
+Item("armoury","Armoury", function(player){itemToHotbar(player, "armoury")})
+Item("refinery","Refinery", function(player){itemToHotbar(player, "refinery")})
 
 // weapons
 Item("shroom_k","Shroom-K Rifle", function(player){itemToHotbar(player, "shroom_k")})
@@ -366,7 +378,58 @@ Recipe("rock_tile_kit", ["rock", "stone"])
 
 // old_workbench
 Recipe("forge", ["iron_panel", "bolts", "fibres"])
+Recipe("refinery", ["iron_panel", "bolts", "stone"])
 Recipe("metalworking_bench", ["iron_bar", "stone"])
+Recipe("air_extractor", ["turbine", "precision_blade", "bolts", "iron_panel"])
+Recipe("lysis_machine", ["electrical_parts", "turbine", "iron_panel"])
+Recipe("alchemy_table", ["reinforced_bone", "shroom_wood", "pollen_shroom", "fibres"])
+Recipe("masonry_bench", ["stone", "iron_bar", "shroom_wood", "fibres"])
+Recipe("smelter", ["iron_panel", "bolts", "turbine", "stone"])
+Recipe("shaper", ["precision_blade", "drill_bit", "shroom_wood", "bolts"])
+Recipe("armoury", ["precision_blade", "shroom_wood", "bolts"])
 
 // old_furnace
 Recipe("iron_bar", ["iron_ore"])
+
+// metalworking_bench
+Recipe("iron_panel", ["iron_bar"])
+Recipe("bolts", ["iron_bar"])
+Recipe("weaponry_mould", ["iron_bar"])
+Recipe("industrial_mould", ["iron_bar"])
+
+// forge
+Recipe("turbine", ["iron_bar", "aluminium_bar", "industrial_mould"])
+Recipe("precision_blade", ["aluminium_bar", "industrial_mould"])
+Recipe("electrical_parts", ["radium", "aluminium_bar"])
+Recipe("drill_bit", ["iron_bar", "industrial_mould"])
+Recipe("blade_kit", ["aluminium_bar", "weaponry_mould"])
+Recipe("rifle_kit", ["iron_bar", "weaponry_mould"])
+Recipe("pistol_kit", ["iron_bar", "weaponry_mould"])
+
+// smelter
+Recipe("steel_bar", ["iron_bar", "graphite"])
+
+// air_extractor
+Recipe("carbon_dioxide_canister", ["cave_flower"])
+
+// lysis_machine
+Recipe("oxygen_canister", ["carbon_dioxide_canister"])
+Recipe("graphite", ["carbon_dioxide_canister"])
+Recipe("bronze_leaf", ["bronze_berry"])
+Recipe("copper", ["bronze_berry"])
+
+// alchemy_table
+Recipe("blood_core", ["blood_bag"])
+
+// masonry_bench
+Recipe("rock_tile_kit", ["rock"])
+
+// shaper
+Recipe("iron_drill", ["drill_bit", "electrical_parts", "blood_core", "iron_panel"])
+
+// armoury
+Recipe("shroom_k", ["rifle_kit", "shroom_wood"])
+Recipe("hunting_rifle", ["rifle_kit", "shroom_wood"])
+
+// refinery
+Recipe("aluminium_bar", ["aluminium_ore"])
