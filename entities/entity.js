@@ -311,7 +311,6 @@ Player = function(id, username, socket, progress){
     self.lastLeftClick = 0
     self.tileDestroyState = 0
     self.currentTileStrength = 100
-    self.hiddenFloofs = [];
 
     self.inventory.addItem("bronze_pickaxe", 1)
     self.inventory.addItem("bronze_chisel", 1)
@@ -320,12 +319,12 @@ Player = function(id, username, socket, progress){
     self.inventory.addItem("old_workbench", 1)
     self.inventory.addItem("old_furnace", 1)
     self.inventory.addItem("blood_core", 1)
-    /*
-    self.inventory.addItem("shroom_k", 1)
-    self.inventory.addItem("hunting_rifle", 1)
-    self.inventory.addItem("survival_knife", 1)
-    self.inventory.addItem("bronze_round", 1000)
-    */
+    
+    //self.inventory.addItem("shroom_k", 1)
+    //self.inventory.addItem("compound_round", 1000)
+
+    //self.inventory.addItem("hunting_rifle", 1)
+    //self.inventory.addItem("survival_knife", 1)
     
     let selectedIntTileRecipes = []
 
@@ -708,7 +707,6 @@ Player.onConnect = function(socket, username, progress){
         bullet:Bullet.getAllInitPack(),
         floof:f,
     })
-    return player;
 }
 
 Player.getAllInitPack = function(){
@@ -772,6 +770,9 @@ Bullet = function(parent, angle, lifetime, size, damage){
                     var shooter = Player.list[self.parent]
                     if(shooter){
                         shooter.score += Math.round(p.score / 2 + 5)
+                        shooter.inventory.addItem("blood_bag", 1) 
+                        shooter.inventory.addItem("albino_fur", 10)
+                        shooter.inventory.addItem("reinforced_bone", 25)
                         p.score = Math.round(p.score / 2)
                     }
                 }
@@ -845,6 +846,9 @@ Floof = function(){
     self.speedY = 0
     self.timer = 0
     self.toRemove = false
+    self.target = randomProperty(Player.list)
+    self.offsetX = Math.random()
+    self.offsetY = Math.random()
     var superUpdate = self.update
 
     if(Math.random() > 0.5){
@@ -858,15 +862,26 @@ Floof = function(){
     self.update = function(){
         superUpdate()
 
+        /* FOLLOW CODE
+        if(self.target !== undefined){
+            if (!Player.list.hasOwnProperty(self.target.id)){
+                self.target = randomProperty(Player.list)
+            }
+        }    
+
+        if(self.target !== undefined && !right && !left && !above && !under){
+            self.speedX = (self.target.x - self.x)/50 * self.offsetX
+            self.speedY = (self.target.y - self.y)/50 * self.offsetY
+        }
+        */
+
         // Collision
         for (var i in Bullet.list){
             var b = Bullet.list[i]
             if(self.getDistance(b) < 32){
                 // handle collision
                 self.toRemove = true
-                Player.list[b.parent].inventory.addItem("medkit", 1)
                 Player.list[b.parent].inventory.addItem("floof_wool", 1)  
-                Floof()
             }
         }
 
@@ -922,7 +937,7 @@ Floof.update = function(){
     for(var i in Floof.list){
         floofCount++
     }
-    if (Math.random() > 0.993 && floofCount <= 150){
+    if (Math.random() > 0.9993 && floofCount <= 150){
         Floof()
     }
 

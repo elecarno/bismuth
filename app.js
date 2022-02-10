@@ -6,10 +6,10 @@ require('./database')
 require('./world')
 require('./client/inventory')
 
-let express = require("express")
+var express = require("express")
 const { ftruncate } = require("fs")
-let app = express()
-let serv = require("http").Server(app)
+var app = express()
+var serv = require("http").Server(app)
 
 app.get("/", function(req, res){
     res.sendFile(__dirname + "/client/index.html")
@@ -27,10 +27,10 @@ SOCKET_LIST = {}
 // Connections & Server Stuff ---------------------------------------------------
 
 //!!!!!!!!!!!!!!!!!!!!!!!!!!!
-let DEBUG = false // IMPORTANT
+var DEBUG = false // IMPORTANT
 //!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-let io = require("socket.io") (serv, {})
+var io = require("socket.io") (serv, {})
 io.sockets.on("connection", function(socket){
     socket.id = Math.random()
     SOCKET_LIST[socket.id] = socket  
@@ -40,11 +40,10 @@ io.sockets.on("connection", function(socket){
             if(!result)
                 return socket.emit("signInResponse",{success: false})
             Database.getPlayerProgress(data.username, function(progress){
-                let player = Player.onConnect(socket, data.username, progress)
+                Player.onConnect(socket, data.username, progress)
                 socket.emit("signInResponse",{success: true})
-                SOCKET_LIST[socket.id].player = player;
             })
-        })
+        })  
     })
 
     socket.on("signUp", function(data){
@@ -69,49 +68,18 @@ io.sockets.on("connection", function(socket){
         if(!DEBUG)
             return
 
-        let result = eval(data)
+        var result = eval(data)
         socket.emit("evalAnswer", result)
     })
 })
 
-const ENTITY_RENDER_DISTANCE = 2 * 32 * 50; //2 chunks
-
 // Game Loop
 setInterval(function(){
-    let packs = Entity.getFrameUpdateData()
-    for (let i in SOCKET_LIST){
-        let socket = SOCKET_LIST[i]
-        let player = socket.player;
-        if (player === null || player === undefined) continue;
-
-        let updatePack = {
-            floof: [],
-            player: structuredClone(packs.updatePack.player),
-            bullet: packs.updatePack.bullet
-        };
-
-        for (let floof of packs.updatePack.floof) {
-            if (Math.abs(floof.x - player.x) < ENTITY_RENDER_DISTANCE &&
-                Math.abs(floof.y - player.y) < ENTITY_RENDER_DISTANCE) {
-                    updatePack.floof.push(floof);
-                    if (player.hiddenFloofs.includes(floof.id)) {
-                        packs.initPack.floof.push(floof);
-                        player.hiddenFloofs.splice(player.hiddenFloofs.indexOf(floof.id), 1);
-                    }
-            } else {
-                packs.removePack.floof.push(floof.id);
-                player.hiddenFloofs.push(floof.id);
-            }
-        }
-
-        for (let p2 of updatePack.player) {
-            if (p2.id != player.id) {
-                p2.chunk = [];
-            }
-        }
-        
+    var packs = Entity.getFrameUpdateData()
+    for (var i in SOCKET_LIST){
+        var socket = SOCKET_LIST[i]
         socket.emit("init", packs.initPack)
-        socket.emit("update", updatePack)
+        socket.emit("update", packs.updatePack)
         socket.emit("remove", packs.removePack)
     }
 }, 1000/75) // 144 updates per second (so people with 144Hz monitors won't complain)
