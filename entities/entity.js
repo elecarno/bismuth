@@ -772,6 +772,9 @@ Bullet = function(parent, angle, lifetime, size, damage){
                     var shooter = Player.list[self.parent]
                     if(shooter){
                         shooter.score += Math.round(p.score / 2 + 5)
+                        shooter.inventory.addItem("blood_bag", 1) 
+                        shooter.inventory.addItem("albino_fur", 10)
+                        shooter.inventory.addItem("reinforced_bone", 25)
                         p.score = Math.round(p.score / 2)
                     }
                 }
@@ -844,6 +847,9 @@ Floof = function(){
     self.speedX = 0 
     self.speedY = 0
     self.timer = 0
+    self.target = randomProperty(Player.list)
+    self.offsetX = Math.random()
+    self.offsetY = Math.random()
     self.toRemove = false
     var superUpdate = self.update
 
@@ -857,6 +863,18 @@ Floof = function(){
 
     self.update = function(){
         superUpdate()
+        /* FOLLOW CODE
+        if(self.target !== undefined){
+            if (!Player.list.hasOwnProperty(self.target.id)){
+                self.target = randomProperty(Player.list)
+            }
+        }    
+
+        if(self.target !== undefined && !right && !left && !above && !under){
+            self.speedX = (self.target.x - self.x)/50 * self.offsetX
+            self.speedY = (self.target.y - self.y)/50 * self.offsetY
+        }
+        */
 
         // Collision
         for (var i in Bullet.list){
