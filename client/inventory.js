@@ -303,6 +303,7 @@ Item("shroom_wood","Shroom Wood", function(player){itemToHotbar(player, "shroom_
 Item("iron_ore","Iron Ore", function(player){itemToHotbar(player, "iron_ore")})
 Item("aluminium_ore","Aluminium Ore", function(player){itemToHotbar(player, "aluminium_ore")})
 Item("rock_tiles","Rock Tiles", function(player){itemToHotbar(player, "rock_tiles")})
+Item("rock_wall","Rock Wall", function(player){itemToHotbar(player, "rock_wall")})
 
 // workbenches
 Item("old_workbench","Old Workbench", function(player){itemToHotbar(player, "old_workbench")})
@@ -367,7 +368,6 @@ Recipe("bronze_chisel", ["bronze_berry", "fibres", "shroom_wood", "stone"])
 Recipe("bronze_round_kit", ["bronze_berry", "stone"])
 Recipe("iron_round_kit", ["iron_bar", "stone"])
 Recipe("compound_round_kit", ["copper", "bronze_berry", "stone"])
-Recipe("rock_tile_kit", ["rock", "stone"])
 
 // old_workbench
 Recipe("forge", ["iron_panel", "bolts", "fibres"])
@@ -416,6 +416,7 @@ Recipe("blood_core", ["blood_bag"])
 
 // masonry_bench
 Recipe("rock_tile_kit", ["rock"])
+Recipe("rock_wall", ["rock"])
 
 // shaper
 Recipe("iron_drill", ["drill_bit", "electrical_parts", "blood_core", "iron_panel"])

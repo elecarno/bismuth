@@ -11,7 +11,7 @@ var renderDistance = 1800
 var wpd = 51200 // world pixel dimension
 
 var colTiles = [3, 7, 8, 11, 14, 17, 18, 19, 20, 21, 22, 23, 25, 26, 27, 28, 29, 30, 31, 
-32, 33, 34, 35]
+32, 33, 34, 35, 36]
 var intTiles = [7, 22, 23, 25, 26, 27, 28, 29, 30, 31, 32, 33]
 var autoGuns = ["shroom_k"]
 var singleGuns = ["hunting_rifle"]
@@ -26,9 +26,10 @@ var placeableItems = [
 "carbon_dioxide_canister", "old_workbench", "old_furnace", "metalworking_bench", 
 "rock_tiles", "forge", "lysis_machine", "air_extractor", "smelter", "alchemy_table",
 "masonry_bench", "shaper", "armoury", "refinery", "aluminium_ore", "blood_core",
+"rock_wall"
 ]
 var priorityTiles = [3, 7, 8, 11, 14, 17, 18, 19, 20, 21, 22, 23, 25, 26, 27, 28, 29, 30,
-31, 32, 33, 34, 35]
+31, 32, 33, 34, 35, 36]
 var weaponStrengths = {
     "survival_knife" : 2,
     "shroom_k" : 1,
@@ -48,7 +49,7 @@ var placeIds = {
     "old_workbench": 7, "old_furnace": 22, "metalworking_bench": 23, "rock_tiles": 24,
     "forge": 25, "lysis_machine": 26, "air_extractor": 27, "smelter": 28, "alchemy_table": 29,
     "masonry_bench": 30, "shaper": 31, "armoury": 32, "refinery": 33, "aluminium_ore": 34,
-    "blood_core": 35,
+    "blood_core": 35, "rock_wall": 36,
 }
 var miningToolStrengths = {
     "bronze_pickaxe": 1.5,
@@ -69,15 +70,15 @@ var tileStrengths = {
     8:55, 10:20, 11:30, 13:20, 14:50, 15:5,
     16:10, 17:50, 18:55, 19:120, 20:30, 21:120, 22:135, 24:35,
     23:120, 25:140, 26:140, 27:135, 28:140, 29:110, 30:115,
-    31:140, 32:140, 33:150, 34:75, 35:250,
+    31:140, 32:140, 33:150, 34:75, 35:250, 36:300
 }
-var mineTiles = [2,3,8,13,14,10,11,17,18,34]
+var mineTiles = [2,3,8,13,14,10,11,17,18,34,36]
 var harvestTiles = [4,5,6,15,16,35]
 var workTiles = [7,19,20,21,22,24,25,26,27,28,29,30,31,32,33]
 
 var floor1Tiles = [1,2,3,4,5,6,7,8,17,20]
 var floor2Tiles = [12,13,14,16]
-var floor3Tiles = [9,10,11,15,18,22,23,24,25,26,27,28,29,30,31,32,33,34,35,19,21]
+var floor3Tiles = [9,10,11,15,18,22,23,24,25,26,27,28,29,30,31,32,33,34,35,19,21,36]
 
 craftingRecipes = [
     ["toad_shroom", "stone", "shroom_wood"],
@@ -136,6 +137,7 @@ alchemyRecipes = [
 ]
 masonryRecipes = [
     ["rock", "rock_tile_kit"],
+    ["rock", "rock_wall"],
 ]
 shaperRecipes = [
     ["drill_bit", "electrical_parts", "blood_core", "iron_panel", "iron_drill"],
@@ -319,14 +321,14 @@ Player = function(id, username, socket, progress){
 
     self.inventory.addItem("old_workbench", 1)
     self.inventory.addItem("old_furnace", 1)
+    self.inventory.addItem("masonry_bench", 1)
     self.inventory.addItem("blood_core", 1)
-    /*
-    self.inventory.addItem("shroom_k", 1)
-    self.inventory.addItem("hunting_rifle", 1)
-    self.inventory.addItem("survival_knife", 1)
-    self.inventory.addItem("bronze_round", 1000)
-    */
     
+    //self.inventory.addItem("compound_round", 1000)
+    //self.inventory.addItem("shroom_k", 1)
+    //self.inventory.addItem("hunting_rifle", 1)
+    //self.inventory.addItem("survival_knife", 1)
+
     let selectedIntTileRecipes = []
 
     var superUpdate = self.update;
