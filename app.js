@@ -86,7 +86,7 @@ setInterval(function(){
 
         let updatePack = {
             floof: [],
-            player: packs.updatePack.player,
+            player: structuredClone(packs.updatePack.player),
             bullet: packs.updatePack.bullet
         };
 
@@ -101,6 +101,12 @@ setInterval(function(){
             } else {
                 packs.removePack.floof.push(floof.id);
                 player.hiddenFloofs.push(floof.id);
+            }
+        }
+
+        for (let p2 of updatePack.player) {
+            if (p2.id != player.id) {
+                p2.chunk = [];
             }
         }
         
