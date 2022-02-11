@@ -182,7 +182,7 @@ canvas {
 }
 #game-title {
     width: 488px;
-    height: 88px;
+    height: 108px;
     position: absolute;
     margin: auto;
     left: 0;
@@ -204,7 +204,6 @@ canvas {
     text-align: center;
     color: rgb(240, 240, 240);
 }
-
 #credits {
     width: 250x;
     height: 30px;
