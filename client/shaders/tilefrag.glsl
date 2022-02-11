@@ -2,6 +2,7 @@ precision mediump float;
 
 varying vec2 pixelCoord;
 varying vec2 texCoord;
+varying vec2 screenCoord;
 
 uniform sampler2D tiles;
 uniform sampler2D sprites;
@@ -10,6 +11,8 @@ uniform vec2 inverseTileTextureSize;
 uniform vec2 inverseSpriteTextureSize;
 uniform float tileSize;
 uniform bool isTop;
+
+const vec2 light = vec2(1920/2, 1080/2);
 
 void main(void) {
     const float sheetWidth = 10.0;
@@ -45,6 +48,15 @@ void main(void) {
         gl_FragColor = texture2D(sprites, (underSpriteOffset + underSpriteCoord) * inverseSpriteTextureSize);
     } else {
         gl_FragColor = texColour;
+    }
+    if (true) {
+        vec2 delta = light - gl_FragCoord.xy;
+        delta.y = abs(delta.y);
+        delta.x = abs(delta.x);
+        float dist = sqrt(delta.x * delta.x + delta.y * delta.y);
+        float invDist = 1.0 / dist * 100.0;
+        //gl_FragColor += vec4(0.988, 0.8588, 0.5803, 0) * min(invDist, 0.7);
+        gl_FragColor.rgb *= min(invDist, 1.0);
     }
     gl_FragColor.rgb *= gl_FragColor.a;
 }

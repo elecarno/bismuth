@@ -5,6 +5,7 @@ attribute vec2 texture;
 
 varying vec2 pixelCoord;
 varying vec2 texCoord;
+varying vec2 screenCoord;
 
 uniform vec2 viewOffset;
 uniform vec2 viewportSize;
@@ -14,5 +15,6 @@ uniform float inverseTileSize;
 void main(void) {
    pixelCoord = (texture * viewportSize) + viewOffset;
    texCoord = pixelCoord * inverseTileTextureSize * inverseTileSize;
+   screenCoord = position;
    gl_Position = vec4(position, 0.0, 1.0);
 }
