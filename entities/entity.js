@@ -2,8 +2,9 @@ const e = require('express')
 const { send, render } = require('express/lib/response')
 
 require('../world')
+const SAVE_NAME = "testsave.json";
 
-world = new World()
+world = new World(SAVE_NAME)
 
 var tpd = 50 // tile pixel dimension
 var ctd = 32 // chunk tile dimension

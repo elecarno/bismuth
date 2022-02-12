@@ -75,7 +75,10 @@ io.sockets.on("connection", function(socket){
 })
 
 const ENTITY_RENDER_DISTANCE = 2 * 32 * 50; //2 chunks
+const TIME_BETWEEN_SAVES = 10 * 75; //10 seconds (in ticks)
+const SAVE_NAME = "testsave.json";
 
+let save_timer = 0;
 // Game Loop
 setInterval(function(){
     let packs = Entity.getFrameUpdateData()
@@ -113,6 +116,11 @@ setInterval(function(){
         socket.emit("init", packs.initPack)
         socket.emit("update", updatePack)
         socket.emit("remove", packs.removePack)
+    }
+    save_timer += 1;
+    if (save_timer >= TIME_BETWEEN_SAVES) {
+        save_timer = 0;
+        world.save(SAVE_NAME);
     }
 }, 1000/75) // 144 updates per second (so people with 144Hz monitors won't complain)
 // Connections & Server Stuff ---------------------------------------------------

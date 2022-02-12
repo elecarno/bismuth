@@ -211,7 +211,7 @@ class Renderer {
         gl.uniform1i(gl.getUniformLocation(this.tileShader.prog, "isTop"), top);
 
         this.gl.uniform2f(this.gl.getUniformLocation(this.tileShader.prog, "inverseTileTextureSize"), 1.0/this.mapwidth, 1.0/this.mapheight);
-        this.gl.uniform2f(this.gl.getUniformLocation(this.tileShader.prog, "viewportSize"), ctx.width / tileScale, ctx.height / tileScale);
+        this.gl.uniform2f(this.gl.getUniformLocation(this.tileShader.prog, "viewportSize"), Math.floor(ctx.width / tileScale), Math.floor(ctx.height / tileScale));
         this.gl.uniform2f(this.gl.getUniformLocation(this.tileShader.prog, "viewOffset"), (dx - this.lx * 32 * 50 - ctx.width / 2) / tileScale,  (dy - this.ly * 32 * 50 - ctx.height / 2) / tileScale);
         this.gl.drawArrays(this.gl.TRIANGLE_STRIP, 0, 4);
     }
@@ -226,8 +226,10 @@ class Renderer {
 
     renderQuadAtInvert(quad, x, y, invert) {
         this.quadShader.use();
-        this.gl.uniform2f(this.gl.getUniformLocation(this.quadShader.prog, "screenPos"),  x / ctx.width * 2 - 1, -(y / ctx.height * 2 - 1));
-        this.gl.uniform2f(this.gl.getUniformLocation(this.quadShader.prog, "screenSize"), quad.screenSizeX / ctx.width,  quad.screenSizeY / ctx.height);
+        let cw = Math.floor(ctx.width  / tileScale) * tileScale;
+        let ch = Math.floor(ctx.height / tileScale) * tileScale;
+        this.gl.uniform2f(this.gl.getUniformLocation(this.quadShader.prog, "screenPos"),  Math.floor(x) / cw * 2 - 1, -(Math.floor(y) / ch * 2 - 1));
+        this.gl.uniform2f(this.gl.getUniformLocation(this.quadShader.prog, "screenSize"), quad.screenSizeX / cw,  quad.screenSizeY / ch);
         this.gl.uniform2f(this.gl.getUniformLocation(this.quadShader.prog, "sheetPos"),   quad.sheetPosX   / this.sheetWidth, quad.sheetPosY  / this.sheetHeight);
         this.gl.uniform2f(this.gl.getUniformLocation(this.quadShader.prog, "sheetSize"),  quad.sheetSizeX  / this.sheetWidth, quad.sheetSizeY / this.sheetHeight);
         this.gl.uniform1i(this.gl.getUniformLocation(this.quadShader.prog, "invert"), invert);
@@ -237,9 +239,11 @@ class Renderer {
     renderRect(r, g, b, a, x, y, w, h) {
         x = x + w/2;
         y = y + h/2;
+        let cw = Math.floor(ctx.width  / tileScale) * tileScale;
+        let ch = Math.floor(ctx.height / tileScale) * tileScale;
         this.rectShader.use();
-        this.gl.uniform2f(this.gl.getUniformLocation(this.rectShader.prog, "screenPos"),  x / ctx.width * 2 - 1, -(y / ctx.height * 2 - 1));
-        this.gl.uniform2f(this.gl.getUniformLocation(this.rectShader.prog, "screenSize"), w / ctx.width,  h / ctx.height);
+        this.gl.uniform2f(this.gl.getUniformLocation(this.rectShader.prog, "screenPos"),  x / cw * 2 - 1, -(y / ch * 2 - 1));
+        this.gl.uniform2f(this.gl.getUniformLocation(this.rectShader.prog, "screenSize"), w / cw,  h / ch);
         this.gl.uniform4f(this.gl.getUniformLocation(this.rectShader.prog, "colour"), r / 255, g / 255, b / 255, a / 255);
         this.gl.drawArrays(this.gl.TRIANGLE_STRIP, 0, 4);
     }

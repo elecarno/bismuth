@@ -3,6 +3,7 @@ Good seeds (i.e: spawn not in a wall):
 0.07089678959081125
 0.010675218994110391
 */
+const fs = require("fs")
 
 const seed = 0.010675218994110391 //Math.random()
 //console.log(seed)
@@ -90,9 +91,19 @@ Chunk = function (x, y) {
     return self
 }
 
-World = function () {
+World = function (filename) {
     var self = {
         map:{}
+    }
+
+    try {
+        if (fs.statSync(filename).isFile()) {
+            self.map = JSON.parse(fs.readFileSync(filename, "utf8"));
+        } else {
+            console.log("Unable to read world file '" + filename + "': not a file");
+        }
+    } catch (e) {
+        console.log("Unable to read world file '" + filename + "': " + e);
     }
 
     self.getChunk = function(x, y) {
@@ -121,6 +132,10 @@ World = function () {
     self.addChunk = function(chunk){
         const idx = (chunk.x << 16) | chunk.y
         self.map[idx] = chunk
+    }
+
+    self.save = function(filename) {
+        fs.writeFileSync(filename, JSON.stringify(self.map));
     }
 
     return self

@@ -106,6 +106,7 @@
     let signDivSignUp = document.getElementById("signDiv-signUp")
     let signDivPassword = document.getElementById("signDiv-password")
     let gameDiv = document.getElementById("gameDiv")
+    let gameDiv2 = document.getElementById("game");
     let belowGameDiv = document.getElementById("belowGame")
     let inventoryDiv = document.getElementById("inventory")
     let craftingDiv = document.getElementById("crafting")
@@ -126,6 +127,8 @@
         if(data.success){
             signDiv.style.display = "none"
             gameDiv.style.display = "inline-block"
+            gameDiv2.style.display = "inline-block"
+            
             signed_in = true;
             window.addEventListener('resize', resizeCanvas);
             resizeCanvas();
