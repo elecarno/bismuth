@@ -16,7 +16,7 @@
     text-align: left;
 }
 
-#score {
+.score {
     width: 100px;
     text-align: center;
     color: #b3b3b3;

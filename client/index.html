@@ -19,7 +19,6 @@
             <div id="inventory"></div>
             <div id="crafting"></div>
             <div id="workbench"></div>
-            <div id="score"></div>
             <div id="hotbar"></div>
             <div id="fpsdiv">fps: <span id="fps"></span><br>avg: <span id="avg"></span></div>
             <div id="coords"></div>
@@ -112,6 +111,7 @@
     let craftingDiv = document.getElementById("crafting")
     let hotbarDiv = document.getElementById("hotbar")
     let workbench = document.getElementById("workbench")
+    let uiDiv = document.getElementById("ui")
 
     signDivSignIn.onclick = function(){
         socket.emit("signIn",{username:signDivUsername.value,password:signDivPassword.value})
@@ -128,6 +128,7 @@
             signDiv.style.display = "none"
             gameDiv.style.display = "inline-block"
             gameDiv2.style.display = "inline-block"
+            uiDiv.style.display = "inline-block"
             
             signed_in = true;
             window.addEventListener('resize', resizeCanvas);
@@ -188,7 +189,9 @@
         self.spriteId = initPack.spriteId
         self.tileDestroyState = initPack.tileDestroyState
         self.currentTileStrength = initPack.currentTileStrength
-
+        self.scoreDiv = document.createElement("div");
+        self.scoreDiv.className = "score";
+        uiDiv.appendChild(self.scoreDiv);
         self.draw = function(){
             const width  = tpd * 2
             const height = tpd * 2
@@ -221,10 +224,9 @@
                 renderer.renderQuadAtInvert(toolQuad, x, y, true);
             }
             
-            let element = document.getElementById("score")
-            element.innerHTML = self.username + ": " + self.score;
-            element.style.left = Math.floor(x - width/2) + "px";
-            element.style.top =  Math.floor(y - height*0.7) + "px";
+            self.scoreDiv.innerHTML = self.username + ": " + self.score;
+            self.scoreDiv.style.left = Math.floor(x - width/2) + "px";
+            self.scoreDiv.style.top =  Math.floor(y - height*0.7) + "px";
 
             const hpWidth = 45 * self.hp / self.hpMax;
             renderer.renderRect(0x7e, 0xcf, 0x8b, 0xff, x - hpWidth / 2, y - height * 0.50, hpWidth, 4);
@@ -421,6 +423,7 @@
     // remove
     socket.on("remove",function(data){
         for(let i = 0; i < data.player.length; i++){
+            uiDiv.removeChild(Player.list[data.player[i]].scoreDiv);
             delete Player.list[data.player[i]]
         }
         for(let i = 0; i < data.bullet.length; i++){
