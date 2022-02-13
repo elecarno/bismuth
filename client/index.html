@@ -5,9 +5,9 @@
 
 <div id="signDiv" style="position:absolute;display:inline-block;">
     <img id="game-title" src="/client/img/title_logo.png">
-    <input id="signDiv-username" type="text" placeholder="enter a name" maxlength="20"></input>
+    <input id="signDiv-username" type="text" placeholder="enter a name" maxlength="25"></input>
     <button id="signDiv-signIn">Play</button><br>
-    <h1 id="credits">Alpha 1.2 - Developed by Elecarno and KingJellyfish</h1>
+    <h1 id="credits">Alpha 1.2 - Developed by Elecarno and KingJellyfish & Hosted by ImmAdam</h1>
     <input id="signDiv-password" type="password" style="display:none;"></input><br>
     <button id="signDiv-signUp" style="display:none;">Sign Up</button>
 </div>
@@ -26,13 +26,13 @@
     
     </div>
 
-    <div id="belowGame" style="margin-left: 10px;">
-        <div id="chat-text" style="width:500px;overflow-y:scroll;height:100px;margin-top:830px;">
+    <div id="belowGame">
+        <div id="chat-text">
             <div>Welcome to Bismuth!</div>
         </div>
 
         <form id="chat-form">
-            <input id="chat-input" type="text" style="width:500px"></input>
+            <input id="chat-input" type="text"></input>
         </form>
 
     </div>
@@ -42,6 +42,7 @@
 <script src="/client/inventory.js"></script>
 <script src="/client/render.js"></script>
 <script src="/client/shaders.js"></script>
+<script src="/client/keypress.js"></script>
 <script>
     let tpd = 50 // tile pixel dimension
     let ctd = 32 // chunk tile dimension
@@ -85,7 +86,6 @@
 
         return self
     }
-
     
     function resizeCanvas() {
         if (!signed_in) return;
@@ -98,7 +98,6 @@
         }
     }
 
-    // Sign in ======================================================================
     let signDiv = document.getElementById("signDiv")
     let signDivUsername = document.getElementById("signDiv-username")
     let signDivSignIn = document.getElementById("signDiv-signIn")
@@ -112,7 +111,11 @@
     let hotbarDiv = document.getElementById("hotbar")
     let workbench = document.getElementById("workbench")
     let uiDiv = document.getElementById("ui")
-
+    let chatText = document.getElementById("chat-text")
+    let chatInput = document.getElementById("chat-input")
+    let chatForm = document.getElementById("chat-form")
+    
+    // Sign in ======================================================================
     signDivSignIn.onclick = function(){
         socket.emit("signIn",{username:signDivUsername.value,password:signDivPassword.value})
     }
@@ -145,11 +148,6 @@
     })
 
     // Game  ========================================================================
-    let chatText = document.getElementById("chat-text")
-    let chatInput = document.getElementById("chat-input")
-    let chatForm = document.getElementById("chat-form")
-
-    // UI
     let inventory = new Inventory("", socket, false);
     socket.on("updateInventory", function(data){
         inventory.items = data.items
@@ -569,134 +567,4 @@
         chatInput.value = ''
     }
     // Chat  -------------------------------------------------------------------
-
-    // Key-press Detection -----------------------------------------------------
-    document.onkeydown = function(event){
-        if(event.keyCode === 68) // d
-            socket.emit("keyPress", {inputId:"right", state:true})
-        else if(event.keyCode === 83) // s
-            socket.emit("keyPress", {inputId:"down", state:true})
-        else if(event.keyCode === 65)// a
-            socket.emit("keyPress", {inputId:"left", state:true})
-        else if(event.keyCode === 87) // w
-            socket.emit("keyPress", {inputId:"up", state:true})
-        else if(event.keyCode === 49) // 1
-            socket.emit("keyPress", {inputId:"one", state:true})
-        else if(event.keyCode === 50) // 2
-            socket.emit("keyPress", {inputId:"two", state:true})
-        else if(event.keyCode === 51) // 3
-            socket.emit("keyPress", {inputId:"three", state:true})
-        else if(event.keyCode === 52) // 4
-            socket.emit("keyPress", {inputId:"four", state:true})
-        else if(event.keyCode === 53) // 5
-            socket.emit("keyPress", {inputId:"five", state:true})
-    }
-
-    document.onkeyup = function(event){
-        if(event.keyCode === 68) // d
-            socket.emit("keyPress", {inputId:"right", state:false})
-        else if(event.keyCode === 83) // s
-            socket.emit("keyPress", {inputId:"down", state:false})
-        else if(event.keyCode === 65) // a
-            socket.emit("keyPress", {inputId:"left", state:false})
-        else if(event.keyCode === 87) // w
-            socket.emit("keyPress", {inputId:"up", state:false})
-        else if(event.keyCode === 49) // 1
-            socket.emit("keyPress", {inputId:"one", state:false})
-        else if(event.keyCode === 50) // 2
-            socket.emit("keyPress", {inputId:"two", state:false})
-        else if(event.keyCode === 51) // 3
-            socket.emit("keyPress", {inputId:"three", state:false})
-        else if(event.keyCode === 52) // 4
-            socket.emit("keyPress", {inputId:"four", state:false})
-        else if(event.keyCode === 53) // 5
-            socket.emit("keyPress", {inputId:"five", state:false})
-        else if(event.keyCode === 69){ // e
-            if(inventoryDiv.style.display === "none"){
-                inventoryDiv.style.display = "inline-block"
-                craftingDiv.style.display = "inline-block"
-            } else {
-                inventoryDiv.style.display = "none"
-                craftingDiv.style.display = "none"
-            }
-        }
-        else if(event.keyCode === 81){ // q
-            if(belowGameDiv.style.display === "none")
-                belowGameDiv.style.display = "inline-block"
-            else
-                belowGameDiv.style.display = "none"
-        }
-    }
-
-    document.onmousedown = function(event){
-        switch (event.which) {
-            case 1:
-                socket.emit('keyPress',{inputId:'hold_left', state:true})
-                break;
-            case 2:
-                //console.log("mid")
-                break;
-            case 3:
-                socket.emit('keyPress',{inputId:'hold_right', state:true})
-                break;
-            default:
-                console.log("else")
-        }
-    }
-
-    document.onmouseup = function(event){
-        socket.emit('keyPress',{inputId:'hold_left', state:false})
-        socket.emit('keyPress',{inputId:'hold_right', state:false})
-        switch (event.which) {
-            case 1:
-                socket.emit('keyPress',{inputId:'left_click', state:true})
-                /*
-                setTimeout(function(){
-                    socket.emit('keyPress',{inputId:'left_click', state:false})
-                }, 1)
-                */
-                break;
-            case 2:
-                //console.log("mid")
-                break;
-            case 3:
-                socket.emit('keyPress',{inputId:'right_click', state:true})
-                /*
-                setTimeout(function(){
-                    socket.emit('keyPress',{inputId:'right_click', state:false})
-                }, 1/2)
-                */
-                break;
-            default:
-                console.log("else")
-        }
-    }
-
-    //DEBUG
-    let mouseX = 0;
-    let mouseY = 0;
-    //DEBUG
-
-    document.onmousemove = function(event){
-
-        let rect2 = ctx.getBoundingClientRect();
-       
-        mouseX = event.clientX - rect2.left;
-        mouseY = event.clientY - rect2.top;
-
-        let x = -ctx.width/2 + mouseX - 8
-        let y = -ctx.height/2 + mouseY - 8
-        let angle = Math.atan2(y, x) / Math.PI * 180
-        //console.log(event.clientX, event.clientY)
-        let rect = document.getElementById("ctx")
-        socket.emit('keyPress',{inputId:'mouseAngle', state:angle})
-        socket.emit('keyPress',{inputId:'clientX', state:(event.clientX - ctx.width / 2)})
-        socket.emit('keyPress',{inputId:'clientY', state:(event.clientY - ctx.height / 2)})
-
-    }
-
-    document.oncontextmenu = function(event){
-        event.preventDefault()
-    }
-    // Key-press Detection -----------------------------------------------------
 </script>

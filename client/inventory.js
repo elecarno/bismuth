@@ -239,6 +239,11 @@ Item("rock_tile_kit","Rock Tile Kit", function(player){
     player.inventory.removeItem("rock_tile_kit", 1)
     player.inventory.addItem("rock_tiles", 50)
 })
+Item("rock_fence_kit","Rock Fence Kit", function(player){
+    player.inventory.removeItem("rock_fence_kit", 1)
+    player.inventory.addItem("rock_fence_horizontal", 2)
+    player.inventory.addItem("rock_fence_vertical", 2)
+})
 
 // ammunition
 Item("bronze_round","Bronze Round", function(player){})
@@ -304,6 +309,9 @@ Item("iron_ore","Iron Ore", function(player){itemToHotbar(player, "iron_ore")})
 Item("aluminium_ore","Aluminium Ore", function(player){itemToHotbar(player, "aluminium_ore")})
 Item("rock_tiles","Rock Tiles", function(player){itemToHotbar(player, "rock_tiles")})
 Item("rock_wall","Rock Wall", function(player){itemToHotbar(player, "rock_wall")})
+Item("rock_fence_horizontal","Rock Fence Horizontal", function(player){itemToHotbar(player, "rock_fence_horizontal")})
+Item("rock_fence_vertical","Rock Fence Vertical", function(player){itemToHotbar(player, "rock_fence_vertical")})
+Item("rock_pillar","Rock Pillar", function(player){itemToHotbar(player, "rock_pillar")})
 
 // workbenches
 Item("old_workbench","Old Workbench", function(player){itemToHotbar(player, "old_workbench")})
@@ -404,6 +412,7 @@ Recipe("steel_bar", ["iron_bar", "graphite"])
 
 // air_extractor
 Recipe("carbon_dioxide_canister", ["cave_flower"])
+Recipe("radium", ["cave_flower"])
 
 // lysis_machine
 Recipe("oxygen_canister", ["carbon_dioxide_canister"])
@@ -417,6 +426,8 @@ Recipe("blood_core", ["blood_bag"])
 // masonry_bench
 Recipe("rock_tile_kit", ["rock"])
 Recipe("rock_wall", ["rock"])
+Recipe("rock_fence_kit", ["rock"])
+Recipe("rock_pillar", ["rock"])
 
 // shaper
 Recipe("iron_drill", ["drill_bit", "electrical_parts", "blood_core", "iron_panel"])

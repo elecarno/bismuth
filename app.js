@@ -1,10 +1,10 @@
 // Initialisation or Something --------------------------------------------------
 const { timeEnd } = require("console")
 
-require('./entities/entity')
-require('./database')
-require('./world')
-require('./client/inventory')
+require('./entities/entity.js')
+require('./database.js')
+require('./world.js')
+require('./client/inventory.js')
 
 let express = require("express")
 const { ftruncate } = require("fs")
@@ -22,10 +22,8 @@ serv.listen(8080)
 console.log("Bismuth started")
 
 SOCKET_LIST = {}
-// Initialisation or Something --------------------------------------------------
 
 // Connections & Server Stuff ---------------------------------------------------
-
 //!!!!!!!!!!!!!!!!!!!!!!!!!!!
 let DEBUG = false // IMPORTANT
 //!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -123,4 +121,3 @@ setInterval(function(){
         world.save(SAVE_NAME);
     }
 }, 1000/75) // 144 updates per second (so people with 144Hz monitors won't complain)
-// Connections & Server Stuff ---------------------------------------------------

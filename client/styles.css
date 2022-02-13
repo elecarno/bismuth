@@ -165,6 +165,7 @@ canvas {
     text-align: center;
     font-size: large;
     background-color: #687866;
+    z-index: 1;
 }
 #signDiv-signIn {
     width: 120px;
@@ -182,6 +183,19 @@ canvas {
     text-align: center;
     font-size: large;
     background-color: #666666;
+}
+#belowGame{
+    margin-left: 10px;
+    text-align: left;
+}
+#chat-text{
+    width:500px;
+    overflow-y:scroll;
+    height:100px;
+    margin-top:830px;
+}
+#chat-input{
+    width:500px
 }
 #game-title {
     width: 488px;
