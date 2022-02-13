@@ -1,3 +1,44 @@
+
+#game, #ui {
+    position: absolute;
+    display: none;
+    width: 100%;
+    height: 100%;
+    left: 0;
+    top: 0;
+}
+
+#hotbar {
+    position: absolute;
+    font-family: arial;
+    font-size: 20px;
+    color: #b3b3b3;
+    text-align: left;
+}
+
+.score {
+    width: 100px;
+    text-align: center;
+    color: #b3b3b3;
+    position: absolute;
+}
+
+#fpsdiv {
+    color: #b3b3b3;
+    position: absolute;
+    top: 4;
+    left: 4;
+}
+
+#coords {
+    position: absolute;
+    right: 10;
+    bottom: 10;
+    font-family: arial;
+    font-size: 20px;
+    color: #b3b3b3;
+}
+
 button {
     background-color: #666666; /* Green */
     border-color: #878787;
@@ -34,6 +75,8 @@ canvas {
     display: block;
     position: absolute;
     text-align: center;
+    width: 100%;
+    height: 100%;
     top: 0;
     left: 0;
     right: 0;
@@ -47,6 +90,8 @@ canvas {
     right: 0;
     top: 0;
     bottom: 0;
+    width: 100%;
+    height: 100%;
 }
 #inventory{
     position:absolute;
@@ -77,6 +122,21 @@ canvas {
     top: 330px;
     text-align: right;
 }
+
+#workbench{
+    position:absolute;
+    overflow-y:scroll;
+    width:400px;
+    height:200px;
+    float:right;
+    background-color:rgba(135, 135, 135, 0.0);
+    border-color: rgba(135, 135, 135, 0.0);
+    border-width: 7px;
+    border-style: solid;
+    right: 10px;
+    top: 550px;
+    text-align: right;
+}
 #signDiv {
     width: 750px;
     height: 500px;
@@ -86,6 +146,7 @@ canvas {
     right: 0;
     top: 0;
     bottom: 0;
+    display: inline-block;
     /* background-color: #969696; */
 }
 #signDiv-username {
@@ -104,6 +165,7 @@ canvas {
     text-align: center;
     font-size: large;
     background-color: #687866;
+    z-index: 1;
 }
 #signDiv-signIn {
     width: 120px;
@@ -122,9 +184,22 @@ canvas {
     font-size: large;
     background-color: #666666;
 }
+#belowGame{
+    margin-left: 10px;
+    text-align: left;
+}
+#chat-text{
+    width:500px;
+    overflow-y:scroll;
+    height:100px;
+    margin-top:830px;
+}
+#chat-input{
+    width:500px
+}
 #game-title {
     width: 488px;
-    height: 88px;
+    height: 108px;
     position: absolute;
     margin: auto;
     left: 0;

@@ -3,6 +3,7 @@ Good seeds (i.e: spawn not in a wall):
 0.07089678959081125
 0.010675218994110391
 */
+const fs = require("fs")
 
 const seed = 0.010675218994110391 //Math.random()
 //console.log(seed)
@@ -32,11 +33,8 @@ Chunk = function (x, y) {
                     else
                         self.tiles.push(5) // pollen_shroom
                 }
-                else if(Math.random() > 0.98 && value2d < 0){
+                else if(Math.random() > 0.965 && value2d < 0){
                     self.tiles.push(6) // cave_flower
-                }
-                else if(Math.random() > 0.9995 && value2d < 0){
-                    self.tiles.push(7) // old_workbench
                 }
                 else if (value2d < 0)
                     self.tiles.push(1) // floor
@@ -68,14 +66,24 @@ Chunk = function (x, y) {
                 if(Math.random() > 0.98 && value2d < 0){
                     self.tiles.push(15) // stone
                 }
+                else if(Math.random() > 0.9995 && value2d < 0){
+                    self.tiles.push(7) // old_workbench
+                }
+                else if(Math.random() > 0.9995 && value2d < 0){
+                    self.tiles.push(22) // old_furnace
+                }
                 else if (value2d < 0)
                     self.tiles.push(9) // floor_3
                 else if (value2d < 0.6)
                     self.tiles.push(10) // dirt_floor
                 else if (value2d < 0.8)
                     self.tiles.push(11) // earth
-                else if (value2d > 0.8)
-                    self.tiles.push(18) // mound
+                else if (value2d > 0.8){
+                    if(valueOre < 0.6)
+                        self.tiles.push(18) // mound
+                    else
+                        self.tiles.push(34) // aluminium_ore
+                }
             }
         }
     }
@@ -83,9 +91,19 @@ Chunk = function (x, y) {
     return self
 }
 
-World = function () {
+World = function (filename) {
     var self = {
         map:{}
+    }
+
+    try {
+        if (fs.statSync(filename).isFile()) {
+            self.map = JSON.parse(fs.readFileSync(filename, "utf8"));
+        } else {
+            console.log("Unable to read world file '" + filename + "': not a file");
+        }
+    } catch (e) {
+        console.log("Unable to read world file '" + filename + "': " + e);
     }
 
     self.getChunk = function(x, y) {
@@ -114,6 +132,10 @@ World = function () {
     self.addChunk = function(chunk){
         const idx = (chunk.x << 16) | chunk.y
         self.map[idx] = chunk
+    }
+
+    self.save = function(filename) {
+        fs.writeFileSync(filename, JSON.stringify(self.map));
     }
 
     return self
