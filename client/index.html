@@ -245,14 +245,17 @@
         self.angle = initPack.angle
 
         self.draw = function(){
-            let width = Img.player_left.width/4
-            let height = Img.player_left.height/4
+            let width = quads.player_left.screenSizeX/4
+            let height = quads.player_left.screenSizeY/4
 
             let x = self.x - Player.list[selfId].x + ctx.width/2
             let y = self.y - Player.list[selfId].y + ctx.height/2
 
             x2 = x + Math.cos(Math.PI * self.angle / 180) * 32;
             y2 = y + Math.sin(Math.PI * self.angle / 180) * 32;
+
+            //renderer.renderRect(0, 0, 0, 255, x, y, 4, 4);
+            renderer.renderLine(x, y, x2, y2, 5, 0, 0, 0, 255);
 
             //ctx.filter = "blur(4px)"
             //ctx.beginPath()

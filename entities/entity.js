@@ -324,6 +324,8 @@ Player = function(id, username, socket, progress){
     self.inventory.addItem("old_furnace", 1)
     self.inventory.addItem("masonry_bench", 1)
     self.inventory.addItem("blood_core", 1)
+    self.inventory.addItem("shroom_k", 1)
+    self.inventory.addItem("bronze_round", 100000)
     
     //self.inventory.addItem("compound_round", 1000)
     //self.inventory.addItem("shroom_k", 1)

@@ -91,20 +91,20 @@ class Renderer {
         const vertexPos   = gl.getAttribLocation(this.tileShader.prog, "position");
         const texCoordPos = gl.getAttribLocation(this.tileShader.prog, "texture");
 
-        const posBuffer = gl.createBuffer();
-        const texBuffer = gl.createBuffer();
-        gl.bindBuffer(gl.ARRAY_BUFFER, posBuffer);
+        this.posBuffer = gl.createBuffer();
+        this.texBuffer = gl.createBuffer();
         
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.posBuffer);
         gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(quadCoords), gl.STATIC_DRAW);
 
-        gl.bindBuffer(gl.ARRAY_BUFFER, texBuffer);
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.texBuffer);
         gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(quadTexCoords), gl.STATIC_DRAW);
 
-        gl.bindBuffer(gl.ARRAY_BUFFER, posBuffer);
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.posBuffer);
         gl.vertexAttribPointer(vertexPos, 2, gl.FLOAT, false, 0, 0);
         gl.enableVertexAttribArray(vertexPos);
 
-        gl.bindBuffer(gl.ARRAY_BUFFER, texBuffer);
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.texBuffer);
         gl.vertexAttribPointer(texCoordPos, 2, gl.FLOAT, false, 0, 0);
         gl.enableVertexAttribArray(texCoordPos);
 
@@ -246,6 +246,40 @@ class Renderer {
         this.gl.uniform2f(this.gl.getUniformLocation(this.rectShader.prog, "screenSize"), w / cw,  h / ch);
         this.gl.uniform4f(this.gl.getUniformLocation(this.rectShader.prog, "colour"), r / 255, g / 255, b / 255, a / 255);
         this.gl.drawArrays(this.gl.TRIANGLE_STRIP, 0, 4);
+    }
+
+    renderLine(x1, y1, x2, y2, width, r, g, b, a) {
+        //TODO really, really bad, janky and slow code
+        const w = ctx.width / 2;
+        const h = ctx.height / 2;
+
+        //use y=mx+c cos based also y-b=m(x-a)
+        //EDIT actually turns out it is way more complex than that, gotta use a**2+b**2=c**2 too
+        const m = (y2-y1)/(x2-x1);
+        const newm = -1/m; //perpendicular gradient
+        //weird maths, trust me it works
+        //b**2 = w**2/(1/m**2+1)
+        //a**2 = w**2/(m**2(1/m**2+1))
+        const xoff = Math.sqrt(width*width/(newm*newm*(1/(newm*newm)+1)));
+        const yoff = xoff*newm;
+
+        //wtf??
+        const quadCoords2 = [
+             (x1+xoff/2) / w - 1,  -((y1+yoff/2) / h - 1),
+             (x1-xoff/2) / w - 1,  -((y1-yoff/2) / h - 1),
+             (x2+xoff/2) / w - 1,  -((y2+yoff/2) / h - 1),
+             (x2-xoff/2) / w - 1,  -((y2-yoff/2) / h - 1),
+        ];
+
+        //seriously, this is a bad idea
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.posBuffer);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(quadCoords2), gl.STATIC_DRAW);
+        //you should just stop
+        this.renderRect(r, g, b, a, 0, 0, w * 2, h * 2);
+        //NOOO
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.posBuffer);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(quadCoords), gl.STATIC_DRAW);
+        //it's already too late
     }
 }
 
